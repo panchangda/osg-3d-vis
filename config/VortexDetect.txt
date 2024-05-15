@@ -1,0 +1,7 @@
+vecDataPathU="../data/U.DAT"
+vecDataPathV="../data/V.DAT"
+longitudeNum=205
+latitudeNum=249
+alpha=0.7
+
+# alpha值为可调节的透明度。

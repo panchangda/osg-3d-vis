@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StreamLineMainWindow</class>
+ <widget class="QWidget" name="StreamLineMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>465</width>
+    <height>392</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>streamline</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0,0">
+   <item row="2" column="1" colspan="3">
+    <widget class="QSlider" name="horizontalSlider_LineWidth">
+     <property name="sliderPosition">
+      <number>40</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QComboBox" name="comboBox_RandomSeedSelection">
+     <item>
+      <property name="text">
+       <string>Pseudorandom glsl</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Based on Area Density </string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Based on Area  Information Entropy</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Speed Factor</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="3">
+    <widget class="QSlider" name="horizontalSlider_DropRate">
+     <property name="sliderPosition">
+      <number>3</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QComboBox" name="comboBox_Smooth">
+     <item>
+      <property name="text">
+       <string>Straight Line Interpolation</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Quadratic Bezier</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Circule Arc Spline</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Drop Rate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="2">
+    <widget class="QSlider" name="horizontalSlider_DecayRate">
+     <property name="sliderPosition">
+      <number>2</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Line Width</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Smooth</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QComboBox" name="comboBox_ColorTemplate">
+     <item>
+      <property name="text">
+       <string>rainbow</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../pcd/shaders/彩色.png</normaloff>../../pcd/shaders/彩色.png</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Template1</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../pcd/shaders/t1.png</normaloff>../../pcd/shaders/t1.png</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Template2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Template3</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Template4</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Decay Rate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Random Seed
+Selection</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="3">
+    <widget class="QSlider" name="horizontalSlider_SpeedFactor">
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="sliderPosition">
+      <number>4</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Color Template</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

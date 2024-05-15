@@ -1,0 +1,23 @@
+vecDataPathU="../data/U.DAT"
+vecDataPathV="../data/V.DAT"
+noiseTexPath="../data/noise1.jpg"
+vertexShaderPath1="../shader/LICTexVS.glsl"
+fragmentShaderPath1="../shader/LICTexPSWindow.glsl"
+vertexShaderPath2="../shader/VelocityLICVS.glsl"
+fragmentShaderPath2="../shader/VelocityLICPS.glsl"
+longitudeNum=205
+latitudeNum=249
+isUniformColor=0
+isSingleMoving=1
+periodT=64
+deltaPhi=1.0
+alpha=0.7
+
+# isUniformColor为0时，动画为彩色；否则为黑白色。
+
+# isSingleMoving为0时，画面静止；否则运动。
+# 在SingleMoving（单时间点数据动态展示）下有两个参数：periodT（流动周期）和deltaPhi（相位速度）。
+# periodT越小，条带的重复频次越高，动画的颗粒感越强。缺省值为64。
+# deltaPhi越大，条带的流动速度越快。缺省值为1.0。
+
+# alpha值为可调节的透明度。
