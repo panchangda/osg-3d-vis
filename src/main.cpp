@@ -112,11 +112,11 @@ int main(int argc, char *argv[])
 	//root->addChild(vlicGeode);
 
 	/* Show Radar */
-
 	Radar::initRadar(llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
 	Radar::addRadar(llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
 	Radar::addRadar(llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
 	Radar::addRadar(llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
+	Radar::ExportRadar();
 	Radar::submitRadar(root);
 
 	/* Show Vortex Detect */

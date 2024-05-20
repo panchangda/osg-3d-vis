@@ -71,6 +71,9 @@ namespace Radar {
 		//voxelsTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 		voxelsTexture->setImage(voxelsImage);
 
+
+
+
 		static const std::array<uint32_t, 3> dim = { 256, 256, 256 };
 		static const std::array<float, 2> lonRng = { float (_range.minLongtitude / M_PI * 180.f - 360.f), float (_range.maxLongtitude / M_PI * 180.f - 360.f) };
 		static const std::array<float, 2> latRng = { float(_range.minLatitude / M_PI * 180.f), float (_range.maxLatitude / M_PI * 180.f) };
@@ -114,6 +117,32 @@ namespace Radar {
 				for (int k = 0; k < 256; k++)
 					voxelsData[i * 256 * 256 + j * 256 + k] = voxels[j][k][i];
 		
+	}
+
+	void ExportRadar()
+	{
+		std::string filePath = std::string(OSG_3D_VIS_DATA_PREFIX) + "OutPutVoxelData.binary";
+		// 打开文件进行二进制写入
+		std::ofstream outFile(filePath, std::ios::binary);
+		if (!outFile) {
+			std::cerr << "Failed to open file: " << filePath << std::endl;
+			return;
+		}
+
+		// 写入数据到文件
+		outFile.write(reinterpret_cast<const char*>(voxelsData), sizeof(float) * 256 * 256 * 256);
+
+		// 关闭文件
+		outFile.close();
+
+		if (outFile.good()) {
+			std::cout << "Voxel data successfully saved to " << filePath << std::endl;
+		}
+		else {
+			std::cerr << "Failed to write voxel data to " << filePath << std::endl;
+		}
+
+
 	}
 
 	osg::ref_ptr<osg::Geode> OldGenerate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange())
