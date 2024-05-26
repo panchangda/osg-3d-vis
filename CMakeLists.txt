@@ -17,12 +17,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # 查找PCL依赖
-set(PCL_PATH "E:/Libraries/PCL 1.14.1")
+set(PCL_PATH "F:/PCL 1.14.1")
 find_package(PCL REQUIRED)
 add_definitions(${PCL_DEFINITIONS})
 
 # 查找Qt5依赖
-set(QT_PATH "E:/Libraries/Qt/Qt5.12.12/5.12.12/msvc2017_64") 
+set(QT_PATH "F:/QT/5.12.12/msvc2017_64") 
 set(CMAKE_PREFIX_PATH ${QT_PATH}/lib/cmake)
 find_package(Qt5 COMPONENTS Core Widgets Gui REQUIRED)
 
