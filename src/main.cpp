@@ -210,10 +210,10 @@ auto createLightModel(osg::ref_ptr<osg::Camera> camera ) {
 	}
 
 	osg::Vec3 lightPositions[4] = {
-	osg::Vec3(10.0f, 10.0f, 8.0f),
-	osg::Vec3(-10.0f, 10.0f, 8.0f),
-	osg::Vec3(10.0f, -10.0f, 8.0f),
-	osg::Vec3(-10.0f, -10.0f, 8.0f)
+	osg::Vec3(20.0f, 20.0f, 8.0f),
+	osg::Vec3(-20.0f, 20.0f, 8.0f),
+	osg::Vec3(20.0f, -20.0f, 8.0f),
+	osg::Vec3(-20.0f, -20.0f, 8.0f)
 	};
 
 	osg::Vec3 lightColors[4] = {
@@ -273,7 +273,7 @@ auto createLightModel(osg::ref_ptr<osg::Camera> camera ) {
 	stateset->addUniform(new osg::Uniform("view", osg::Matrixf(camera->getViewMatrix())));
 	stateset->addUniform(new osg::Uniform("projection", osg::Matrixf(camera->getProjectionMatrix())));
 
-	stateset->addUniform(new osg::Uniform("ao", float(0.2)));
+	stateset->addUniform(new osg::Uniform("ao", float(0.5)));
 	osg::ref_ptr<osg::Uniform> lightColorsUniform = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "lightColors", 4);
 	for (int i = 0; i < 4; ++i) {
 		lightColorsUniform->setElement(i, lightColors[i]);
@@ -318,11 +318,10 @@ int main(int argc, char *argv[])
 	//auto mainWindow = new main_window();
 	//mainWindow->show();
 
+
 	/* show light model */
 	auto geode = createLightModel(camera);
 	root->addChild(geode);
-
-
 
 
 	///* Show Streamline: GPU */

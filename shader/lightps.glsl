@@ -39,20 +39,14 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 
 //----------------------------------------------
 float DistributionBM(vec3 n, vec3 h, float roughness){
-    // 计算 cos(theta_h)
-    float cosThetaH = max(dot(n, h), 0.0);
-    
-
-    // 计算 tan^2(theta_h)
-    float cosThetaH2 = cosThetaH * cosThetaH;
-    float tanThetaH2 = (1.0 - cosThetaH2) / cosThetaH2;
-    
-    // 计算 Beckmann 法线分布函数
-    float m2 = roughness * roughness;
-    float exponent = -tanThetaH2 / m2;
-    float denominator = PI * m2 * cosThetaH2 * cosThetaH2;
-    
-    return exp(exponent) / denominator;
+    float NdotH  = max(dot(n,h),0.01);
+    float roughnessSqr = roughness*roughness;  
+    float NdotHSqr = NdotH*NdotH;  
+    return max(0.04,(1.0 / (3.1415926535*roughnessSqr*NdotHSqr*NdotHSqr)) * exp((NdotHSqr-1)/(roughnessSqr*NdotHSqr)));
+//    // Gaussian
+//    float roughnessSqr = roughness*roughness;  
+//    float thetaH = acos(NdotH);  
+//    return exp(-thetaH*thetaH/roughnessSqr); 
 }
 // ----------------------------------------------------------------------------
 float GeometrySchlickGGX(float NdotV, float roughness)
@@ -106,7 +100,7 @@ void main()
         float NDF = DistributionGGX(N, H, roughness);   
         float G   = GeometrySmith(N, V, L, roughness);      
         vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
-           
+
         vec3 numerator    = NDF * G * F; 
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
         vec3 specular = numerator / denominator;
@@ -140,5 +134,5 @@ void main()
     // gamma correct
     color = pow(color, vec3(1.0/2.2)); 
 
-    FragColor = vec4(Lo, 1.0);
+    FragColor = vec4(color, 1.0);
 }
