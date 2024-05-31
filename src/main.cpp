@@ -27,6 +27,10 @@
 #include "VolumeLIC.h"
 #include "VortexDetect.h"
 #include "Radar.h"
+#include "Axis.h"
+#include "DotChart.h"
+#include "ColumnChart.h"
+#include "chart.h"
 
 
 // use high definition earth image
@@ -77,9 +81,12 @@ int main(int argc, char *argv[])
 	osg::ref_ptr<osg::Group> root = new osg::Group();
 	
 	// create earth
-	osg::ref_ptr<osg::CoordinateSystemNode> csn = createEarth();
-	root->addChild(csn);
+	//osg::ref_ptr<osg::CoordinateSystemNode> csn = createEarth();
+	//root->addChild(csn);
 
+	auto chartWindow = new Chart(root, &viewer);
+	chartWindow->SetUIButtonConnections();
+	chartWindow->show();
 
 	/* Show Main Window */
 	//auto mainWindow = new main_window();
@@ -108,16 +115,16 @@ int main(int argc, char *argv[])
 
 
 	/* Show LIC */
-	//osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
-	//root->addChild(vlicGeode);
+	/*osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
+	root->addChild(vlicGeode);*/
 
 	/* Show Radar */
 
-	Radar::initRadar(llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
-	Radar::addRadar(llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
-	Radar::addRadar(llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
-	Radar::addRadar(llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
-	Radar::submitRadar(root);
+	//Radar::initRadar(llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
+	//Radar::addRadar(llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
+	//Radar::addRadar(llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
+	//Radar::addRadar(llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
+	//Radar::submitRadar(root);
 
 	/* Show Vortex Detect */
 	//osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
@@ -137,6 +144,16 @@ int main(int argc, char *argv[])
 	//loader->LoadFromFileXYZI(std::string(OSG_3D_VIS_DATA_PREFIX) +"Statues_4.pcd");
 	//root->addChild(loader->geode);
 
+	
+
+	//DotChart* dot = new DotChart();
+	//root->addChild(dot->generateDot());
+
+	//ColumnChart* col = new ColumnChart();
+	//root->addChild(col->generateColumn());
+    
+
+
 
 
 
@@ -148,6 +165,7 @@ int main(int argc, char *argv[])
 
 	// calculate fps
 	float prevTime = osg::Timer::instance()->time_s();
+	int flag = 0;
 	while (!viewer.done()) {
 
 		a.processEvents();
@@ -156,6 +174,19 @@ int main(int argc, char *argv[])
 		//std::cout << "FPS: " << 1.0f / (currentTime - prevTime) << std::endl;
 		prevTime = currentTime;
 		viewer.frame();
+
+
+		//viewer.setCameraManipulator(new osgGA::TrackballManipulator);
+
+	/*if (flag == 0) {
+			Axis* axis = new Axis();
+			root->addChild(axis->DrawAxis(0, 0, 0, 21, 21, 21, 1));
+			flag = 1;
+
+			//viewer.setCameraManipulator(new osgGA::TrackballManipulator, true);
+		}
+		*/	
+
 	}
 
 	/*a.exec();*/

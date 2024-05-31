@@ -2,6 +2,8 @@
 
 #include "streamline_cpu.h"
 #include "ui_main_window.h"
+#include<iostream>
+using namespace std;
 
 main_window::main_window(QWidget *parent) :
     QWidget(parent),
@@ -26,7 +28,7 @@ void main_window::SetUIButtonConnections()
 
 void main_window::createStreamLine()
 {
-    /*Selection::StreamLine* sl = new Selection::StreamLine(viewer, root,  camera.get(), llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+    /*Selection::StreamLine* sl = new Selection::StreamLine(viewer, root, camera.get(), llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 	auto wnd = new streamline_cpu();
 	wnd->setStreamLineConnections(sl);
 	wnd->show();*/
