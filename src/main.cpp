@@ -314,21 +314,21 @@ int main(int argc, char *argv[])
 	camera->setProjectionMatrixAsPerspective(45.0, 1.78, 0.1, 100.0);
 
 	// create earth
-	//osg::ref_ptr<osg::CoordinateSystemNode> csn = createEarth();
-	//root->addChild(csn);
+	osg::ref_ptr<osg::CoordinateSystemNode> csn = createEarth();
+	root->addChild(csn);
 
 	auto chartWindow = new Chart(root, &viewer);
 	chartWindow->SetUIButtonConnections();
 	chartWindow->show();
 
 	///* Show Main Window */
-	//auto mainWindow = new main_window();
-	//mainWindow->show();
+	auto mainWindow = new main_window();
+	mainWindow->show();
 
 
 	/* show light model */
-	auto geode = createLightModel(camera);
-	root->addChild(geode);
+	//auto geode = createLightModel(camera);
+	//root->addChild(geode);
 
 
 	///* Show Streamline: GPU */
@@ -351,31 +351,21 @@ int main(int argc, char *argv[])
 
 
 
-<<<<<<< HEAD
 	/* Show LIC */
-	/*osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
-	root->addChild(vlicGeode);*/
-
-	/* Show Radar */
-
-=======
-	///* Show LIC */
+	VelocityLIC::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
 	//osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
 	//root->addChild(vlicGeode);
 
-	///* Show Radar */
->>>>>>> 996a6bb019c466a2dbbc2647e1b9620260442318
+	/* Show Radar */
 	//Radar::initRadar(llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
 	//Radar::addRadar(llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
 	//Radar::addRadar(llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
 	//Radar::addRadar(llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
-<<<<<<< HEAD
-=======
 	//Radar::ExportRadar();
->>>>>>> 996a6bb019c466a2dbbc2647e1b9620260442318
 	//Radar::submitRadar(root);
 
 	/* Show Vortex Detect */
+	VortexDetect::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
 	//osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
 	//root->addChild(vortexGeode);
 

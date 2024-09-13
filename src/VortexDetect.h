@@ -442,15 +442,12 @@ namespace VortexDetect {
 		return ans;
 	}
 
-	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange())
+	vector<osg::Vec2> vecdata;
+
+	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), float alphaCoef = 1.0f)
 	{
 		osg::Geode* geode = new osg::Geode;
 		osg::Geometry* geometry = new osg::Geometry;
-
-		// 读取参数
-		getParas();
-		// 读取流场数据
-		vector <osg::Vec2> vecdata = loadVecData(vecDataPathU, vecDataPathV);
 
 		vector<osg::Vec2> vertices = detection(vecdata);
 		vector<osg::Vec2> texCoord;
@@ -459,7 +456,7 @@ namespace VortexDetect {
 		for (int i = 0; i < vertices.size(); i++) {
 			double x = vertices[i].x() / latitudeNum; 
 			double y = vertices[i].y() / longitudeNum;
-			double z = 0.01;
+			double z = 0;
 			double tx, ty, tz;
 			llh2xyz_Ellipsoid(range,
 				x, y, z,
@@ -476,12 +473,60 @@ namespace VortexDetect {
 		
 		// 设置绘制点的颜色
 		osg::Vec4Array* colors = new osg::Vec4Array;
-		colors->push_back(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		colors->push_back(osg::Vec4(1.0f, 0.0f, 0.0f, alphaCoef));
 		geometry->setColorArray(colors);
 		geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
+		//stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+		//stateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 		geode->addDrawable(geometry);
 
 		return geode;
+	}
+
+	void Generate3D(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), int height = 1)
+	{
+		// 读取参数
+		getParas();
+		// 读取流场数据
+		vecdata = loadVecData(vecDataPathU, vecDataPathV);
+		if (height == 1)
+		{
+			grp->addChild(Generate(grp, camera, range));
+			return;
+		}
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < vecdata.size(); j++)
+			{
+				if (i % 3 == 0)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() -= 0.1;
+						vecdata[j].y() /= 2;
+					}
+				}
+				else if (i % 3 == 1)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() += 0.3;
+						vecdata[j].y() *= 2;
+					}
+				}
+				else if (i % 3 == 2)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() -= 0.2;
+						vecdata[j].y() -= 0.01;
+					}
+				}
+			}
+			llhRange newRange = range;
+			newRange.minHeight = float(i) / height * (range.maxHeight - range.minHeight) + range.minHeight;
+			grp->addChild(Generate(grp, camera, newRange, 1.0f / height));
+		}
 	}
 };

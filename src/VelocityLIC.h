@@ -197,7 +197,9 @@ namespace VelocityLIC {
 		float phi_ = 0;
 	};
 
-	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange())
+	vector <osg::Vec2> vecdata;
+
+	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), float alphaCoef = 1.0f)
 	{
 		// 生成顶点
 		vector<osg::Vec2> vertices;
@@ -213,11 +215,6 @@ namespace VelocityLIC {
 		}
 		
 		osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
-
-		// 读取参数
-		getParas();
-		// 读取流场数据
-		vector <osg::Vec2> vecdata = loadVecData(vecDataPathU, vecDataPathV);
 
 		unsigned char* tempVelocityData = new unsigned char[sizeof(float) * 3 * longitudeNum * latitudeNum];
 		for (int i = 0; i < longitudeNum * latitudeNum; i++)
@@ -287,7 +284,7 @@ namespace VelocityLIC {
 		stateset->addUniform(phiUniform);
 
 		// 设置透明度
-		osg::ref_ptr<osg::Uniform> alphaUniform = new osg::Uniform("alpha", alpha);
+		osg::ref_ptr<osg::Uniform> alphaUniform = new osg::Uniform("alpha", alpha * alphaCoef);
 		stateset->addUniform(alphaUniform);
 
 		// 设置回调。通过修改相位，让积分结果运动起来
@@ -388,4 +385,51 @@ namespace VelocityLIC {
 		
 		return geode2.get();
 	}
+
+	void Generate3D(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), int height = 1)
+	{
+		// 读取参数
+		getParas();
+		// 读取流场数据
+		vecdata = loadVecData(vecDataPathU, vecDataPathV);
+		if (height == 1)
+		{
+			grp->addChild(Generate(grp, camera, range));
+			return;
+		}
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < vecdata.size(); j++)
+			{
+				if (i % 3 == 0)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() -= 0.1;
+						vecdata[j].y() /= 2;
+					}
+				}
+				else if (i % 3 == 1)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() += 0.3;
+						vecdata[j].y() *= 2;
+					}
+				}
+				else if (i % 3 == 2)
+				{
+					if (vecdata[j].x() != 9999 && vecdata[j].y() != 9999)
+					{
+						vecdata[j].x() -= 0.2;
+						vecdata[j].y() -= 0.01;
+					}
+				}
+			}
+			llhRange newRange = range;
+			newRange.minHeight = float(i) / height * (range.maxHeight - range.minHeight) + range.minHeight;
+			grp->addChild(Generate(grp, camera, newRange, 1.0f / height));
+		}
+	}
+
 };

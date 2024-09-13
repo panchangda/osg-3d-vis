@@ -14,3 +14,4 @@ lib/*
 !lib/OpenSceneGraph-3.6.5-VC2022-64-Release-2023-01/**
 
 .vs/*
+/CMakeLists.txt
