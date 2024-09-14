@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 
 
 	/* Show LIC */
-	VelocityLIC::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+	//VelocityLIC::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
 	//osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
 	//root->addChild(vlicGeode);
 
@@ -365,7 +365,8 @@ int main(int argc, char *argv[])
 	//Radar::submitRadar(root);
 
 	/* Show Vortex Detect */
-	VortexDetect::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+	//VortexDetect::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+	VortexDetect::GenerateML(root, camera.get(), llhRange(0.f, 30.f, 120.f, 150.f, 100000.f, 1000000.f));
 	//osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
 	//root->addChild(vortexGeode);
 

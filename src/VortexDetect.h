@@ -529,4 +529,101 @@ namespace VortexDetect {
 			grp->addChild(Generate(grp, camera, newRange, 1.0f / height));
 		}
 	}
+
+	void Generate3DVertices(vector<osg::Vec3>& vertices, vector<osg::Vec2>& texCoord)
+	{
+		vertices.resize(0);
+		texCoord.resize(0);
+		int longitudeNum = 10;
+		int latitudeNum = 10;
+		double longstep = 1.0f / longitudeNum;
+		double latstep = 1.0f / latitudeNum;
+
+		// 绘制小矩形，宽为longstep，长为latstep，共有longitudeNum * latitudeNum个小矩形，铺满整个大矩形
+		bool fromLeft = 1;
+		for (int i = 0; i < latitudeNum; i++)
+		{
+			if (fromLeft)
+				for (int j = 0; j <= longitudeNum; j++)
+				{
+					vertices.push_back(osg::Vec3(longstep * j, latstep * i, 0));
+					vertices.push_back(osg::Vec3(longstep * j, latstep * (i + 1), 0));
+					texCoord.push_back(osg::Vec2(latstep * i, longstep * j));
+					texCoord.push_back(osg::Vec2(latstep * (i + 1), longstep * j));
+				}
+			else
+				for (int j = longitudeNum; j >= 0; j--)
+				{
+					vertices.push_back(osg::Vec3(longstep * j, latstep * i, 0));
+					vertices.push_back(osg::Vec3(longstep * j, latstep * (i + 1), 0));
+					texCoord.push_back(osg::Vec2(latstep * i, longstep * j));
+					texCoord.push_back(osg::Vec2(latstep * (i + 1), longstep * j));
+				}
+
+			fromLeft = !fromLeft;
+		}
+
+	}
+
+	void GenerateML(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange())
+	{
+		// 第二次渲染：使用framebuffer的结果作为纹理，用program2进行渲染，渲染到屏幕上
+		// 第二次渲染使用的面片
+		osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+		vector<osg::Vec3> vertices;
+		vector<osg::Vec2> texCoord;
+		osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array();
+		osg::ref_ptr<osg::Vec2Array> vt = new osg::Vec2Array();
+		Generate3DVertices(vertices, texCoord);
+
+		for (int i = 0; i < vertices.size(); i++) {
+			double x = vertices[i].x();
+			double y = vertices[i].y();
+			double z = vertices[i].z();
+			double tx, ty, tz;
+			llh2xyz_Ellipsoid(range,
+				x, y, z,
+				tx, ty, tz);
+			v->push_back(osg::Vec3(tx, ty, tz));
+			vt->push_back(texCoord[i]);
+		}
+		geometry->setVertexAttribArray(0, v.get(), osg::Array::BIND_PER_VERTEX);
+		geometry->setVertexAttribArray(1, vt.get(), osg::Array::BIND_PER_VERTEX);
+		geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUAD_STRIP, 0, vertices.size()));
+
+		// 第二次渲染使用的program2
+		osg::ref_ptr<osg::Shader> vertexShader = new osg::Shader(osg::Shader::VERTEX);
+		osg::ref_ptr<osg::Shader> fragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
+		vertexShader->loadShaderSourceFromFile("../shader/VelocityLICVS.glsl");
+		fragmentShader->loadShaderSourceFromFile("../shader/VortexMLPS.glsl");
+		osg::ref_ptr<osg::Program> program = new osg::Program;
+		program->addShader(vertexShader.get());
+		program->addShader(fragmentShader.get());
+
+		osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+		geode->addDrawable(geometry.get());
+		osg::ref_ptr<osg::StateSet> stateset = geode->getOrCreateStateSet();
+		stateset->setAttributeAndModes(program);
+
+		// 绑定 texLIC
+		auto filename = "../data/vortexML.png";
+		osg::Uniform* texLICUniform = new osg::Uniform("texLIC", 2);
+		stateset->setTextureAttributeAndModes(2, new osg::Texture2D(osgDB::readImageFile(filename)));
+		stateset->addUniform(texLICUniform);
+
+		// 绑定 mvp
+		osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
+		mvpUniform->setUpdateCallback(new ModelViewProjectionMatrixCallback(camera));
+		stateset->addUniform(mvpUniform);
+
+		stateset->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);//管理深度测试
+		//stateset2->setMode(GL_DEPTH, osg::StateAttribute::OFF);//管理深度测试
+
+		// Blend Rendering Related 使用颜色的ALPHA通道进行透明材质渲染
+		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+
+		grp->addChild(geode);
+	}
+
 };
