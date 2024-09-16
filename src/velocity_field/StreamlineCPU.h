@@ -14,9 +14,9 @@
 #include <osgDB/WriteFile>
 #include <random>
 
-#include "Util.h"
+#include "../util.h"
 
-namespace Selection {
+namespace osg_3d_vis {
 	class updateNodeGeometryCallback;
 
 	inline 	osg::ref_ptr<osg::Geometry>createScreenQuad() {
@@ -72,10 +72,10 @@ namespace Selection {
 		return osg::Vec3(R, G, B);
 	}
 
-	class StreamLine {
+	class StreamLineCPU {
 	public:
-		StreamLine() {};
-		StreamLine(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root, osg::ref_ptr<osg::Camera> mainCamera, llhRange range = llhRange());
+		StreamLineCPU() {};
+		StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range);
 
 		float dimX, dimY;
 		float h;
@@ -106,7 +106,7 @@ namespace Selection {
 		
 		std::map<int, bool> selected;
 
-		void initFromDatFile(std::string str1, std::string str2, llhRange range);
+		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range);
 		void initializeTexturesAndImages();
 		void initializeLineGeometryRenderState();
 		void initializeArrowGeometryRenderState();
@@ -324,8 +324,8 @@ namespace Selection {
 		void initializeTileWeightTexture();
 		float calculateAreaInformationEntropy(int x, int y);
 		float calculateAreaDensity(int x, int y);
-		osg::Vec2 StreamLine::constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
-		osg::Vec2 StreamLine::constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
+		osg::Vec2 StreamLineCPU::constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
+		osg::Vec2 StreamLineCPU::constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
 		void initializeSmoothAlgorithm() {
 			smoothAlgorithm = STRAIGHT_LINE;
 			lineSegmentSubdivision = 5;
@@ -366,8 +366,8 @@ namespace Selection {
 	// line selection 
 	class PickHandler : public osgGA::GUIEventHandler {
 	public:
-		StreamLine* sl;
-		PickHandler(StreamLine* _sl) : sl(_sl) {}
+		StreamLineCPU* sl;
+		PickHandler(StreamLineCPU* _sl) : sl(_sl) {}
 
 		~PickHandler() {}
 
@@ -463,7 +463,7 @@ namespace Selection {
 	class updateNodeGeometryCallback : public osg::NodeCallback {
 	public:
 
-		Selection::StreamLine* sl;
+		StreamLineCPU* sl;
 		long long int time_t;
 		long long int animation_t;
 		int updateFrameInterval;
@@ -471,7 +471,7 @@ namespace Selection {
 		static constexpr int SOLID = 0;
 		static constexpr int DOTTED = 1;
 
-		updateNodeGeometryCallback(Selection::StreamLine* _sl) : sl(_sl) {
+		updateNodeGeometryCallback(StreamLineCPU* _sl) : sl(_sl) {
 			time_t = 0;
 			animation_t = 0;
 			updateFrameInterval = 3;
@@ -505,8 +505,8 @@ namespace Selection {
 	class MVPRedrawCallback : public osg::Uniform::Callback {
 	public:
 		osg::Camera* camera;
-		Selection::StreamLine* sl;
-		MVPRedrawCallback(osg::Camera* _camera, Selection::StreamLine* _sl) :
+		StreamLineCPU* sl;
+		MVPRedrawCallback(osg::Camera* _camera, StreamLineCPU* _sl) :
 			camera(_camera), sl(_sl) {
 		}
 

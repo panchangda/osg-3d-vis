@@ -4,7 +4,7 @@
 
 #include <ui_streamline_cpu.h>
 
-#include "Selection.h"
+#include "StreamlineCPU.h"
 
 
 class streamline_cpu : public QWidget
@@ -24,7 +24,7 @@ public:
     5. color template (rainbow, full black/white,  others)
     6. line width, decay rate, line length, h, speed scale factor...
     */
-    void setStreamLineConnections(Selection::StreamLine* _sl) {
+    void setStreamLineConnections(osg_3d_vis::StreamLineCPU* _sl) {
         sl = _sl;
 
         /* lines attribute */
@@ -157,5 +157,5 @@ private slots:
     }
 private:
     Ui::streamline_cpuClass ui;
-    Selection::StreamLine* sl;
+    osg_3d_vis::StreamLineCPU* sl;
 };

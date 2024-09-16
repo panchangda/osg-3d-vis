@@ -11,7 +11,7 @@
 #include <osgDB/WriteFile>
 #include <osg/Geometry>
 #include <osg/LineWidth>
-#include "Util.h"
+#include "../util.h"
 
 namespace VelocityFieldGPU {
 
@@ -54,8 +54,8 @@ namespace VelocityFieldGPU {
 		geometry->addPrimitiveSet(quad.get());
 		return geometry;
 	}
-	// µÚ¶þ´ÎäÖÈ¾µÄ¶¥µã
-	inline osg::ref_ptr<osg::Geometry> createEarthQuads(llhRange range, int longitudeNum, int latitudeNum)
+	// ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½Ä¶ï¿½ï¿½ï¿½
+	inline osg::ref_ptr<osg::Geometry> createEarthQuads(osg_3d_vis::llhRange range, int longitudeNum, int latitudeNum)
 	{
 		osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
 		std::vector<osg::Vec3> vertices;
@@ -66,8 +66,8 @@ namespace VelocityFieldGPU {
 		texCoord.resize(0);
                 double longstep = 1.0f / longitudeNum;
                 double latstep = 1.0f / latitudeNum;
-		// »æÖÆÐ¡¾ØÐÎ£¬¿íÎªlongstep£¬³¤Îªlatstep£¬¹²ÓÐlongitudeNum * latitudeNum¸öÐ¡¾ØÐÎ£¬ÆÌÂúÕû¸ö´ó¾ØÐÎ
-		bool fromLeft = 1;
+		/* ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½Îªlongstepï¿½ï¿½ï¿½ï¿½Îªlatstepï¿½ï¿½ï¿½ï¿½ï¿½ï¿½longitudeNum * latitudeNumï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+		bool fromLeft = true;
 		for (int i = 0; i < latitudeNum; i++)
 		{
 			if (fromLeft)
@@ -191,11 +191,11 @@ namespace VelocityFieldGPU {
 		osg::ref_ptr<osg::Camera> copyblendTexToLastFrameTexRTTCamera; 
 		osg::ref_ptr<osg::Camera> testCamera;
 
-		llhRange OriginalRange;
+		osg_3d_vis::llhRange OriginalRange;
 		float OriginalMinLat, OriginalMaxLat, OriginalMinLon, OriginalMaxLon;
 		float latStart, latInterval, lonStart, lonInterval;
 
-		llhRange range;
+		osg_3d_vis::llhRange range;
 
 		osg::Matrixd viewMatrix;
 		
@@ -206,7 +206,7 @@ namespace VelocityFieldGPU {
 		osg::Timer* timer_t;
 		double prevTimeTick;
 
-		void initFromDatFile(std::string str1, std::string str2, llhRange range) {
+		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range) {
 			std::ifstream fs(str1, std::ios::binary);
 			if (!fs.is_open()) std::cout << "Cannot open file from path: " << "str1" << std::endl;
 			float temp;
@@ -393,12 +393,12 @@ namespace VelocityFieldGPU {
 			//unsigned char* windTexturesV = new unsigned char[sizeof(float) * 3 * longitudeNum * latitudeNum];
 			for (int i = 0; i < longitudeNum * latitudeNum; i++)
 			{
-				// Çø·ÖÕý¸ººÅ£º128-255ÎªÕý£¬0-127Îª¸º£¬ÔÚshaderÖÐ¶îÍâ´¦Àí
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½128-255Îªï¿½ï¿½ï¿½ï¿½0-127Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½shaderï¿½Ð¶ï¿½ï¿½â´¦ï¿½ï¿½
 				windTexturesU[i * 3] = u[i]/10.0f + 0.5f;
 				windTexturesV[i * 3] = v[i]/10.0f + 0.5f;
 				//windTexturesU[i * 3] = u[i]*128 + 128;                                                                                                                                                                                                                                                                                                       
 				//windTexturesV[i * 3] = v[i]*128 + 128;
-				// ±ê¼ÇÎÞÐ§ÖµµÄµÚ¶þÎ¬Îª0£¬ÓÐÐ§ÖµÎª1
+				// ï¿½ï¿½ï¿½ï¿½ï¿½Ð§Öµï¿½ÄµÚ¶ï¿½Î¬Îª0ï¿½ï¿½ï¿½ï¿½Ð§ÖµÎª1
 				if (u[i] == 9999 || v[i] == 9999)
 				{
 					windTexturesU[i * 3 + 1] = 1.0f;
@@ -411,7 +411,7 @@ namespace VelocityFieldGPU {
 				}
 			}
 
-			// Éú³É·ç³¡ÎÆÀí
+			// ï¿½ï¿½ï¿½É·ç³¡ï¿½ï¿½ï¿½ï¿½
 			windTexturesUImage = new osg::Image();
 			windTexturesVImage = new osg::Image();
 			windTexturesUImage->setImage(longitudeNum, latitudeNum, 1, GL_RGB, GL_RGB, GL_FLOAT, (unsigned char*)windTexturesU, osg::Image::USE_NEW_DELETE);
@@ -1108,7 +1108,7 @@ namespace VelocityFieldGPU {
 			stateset->setTextureAttributeAndModes(0, blendTex.get(), osg::StateAttribute::ON);
 			stateset->addUniform(blendTexUniform);
 
-			//ÎªÊ²Ã´¿ª»ìºÏ¾Í¼ÄÁË?
+			//ÎªÊ²Ã´ï¿½ï¿½ï¿½ï¿½Ï¾Í¼ï¿½ï¿½ï¿½?
 			//stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
 			//stateset->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 			//stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
@@ -1147,7 +1147,7 @@ namespace VelocityFieldGPU {
 			program->addShader(fragmentShader.get());
 			stateset->setAttributeAndModes(program);
 
-			// °ó¶¨ mvp
+			// ï¿½ï¿½ mvp
 			osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "ModelViewProjectionMatrix");
 			mvpUniform->setUpdateCallback(new MVPRedrawCallback(mainCamera, this));
 			stateset->addUniform(mvpUniform);
@@ -1163,7 +1163,7 @@ namespace VelocityFieldGPU {
 			osg::ref_ptr<osg::Uniform> jumpFrameUniform = new osg::Uniform("jumpFrame", this->jumpFrame);
 			stateset->addUniform(jumpFrameUniform);
 
-			// Blend Rendering Related Ê¹ÓÃÑÕÉ«µÄALPHAÍ¨µÀ½øÐÐÍ¸Ã÷²ÄÖÊäÖÈ¾
+			// Blend Rendering Related Ê¹ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ALPHAÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾
 			stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
 			stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 			renderPassGeometry->setStateSet(stateset);
@@ -1321,7 +1321,7 @@ namespace VelocityFieldGPU {
 
 			if (eye.length() > dis)
 			{
-				//ËµÃ÷Ô¶ÀëµØÇò
+				//Ëµï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½
 				s = acos(6378137.0/eye.length());
 				scale = (eye.length()-6378137.0)*tan(osg::DegreesToRadians(fovy/2.0))/(s*6378137.0);
 			}
@@ -1388,7 +1388,7 @@ namespace VelocityFieldGPU {
 
 			updateCalculatePassTextureBindings(minLat,maxLat,minLon,maxLon);
 			
-			this->range = llhRange(minLat, maxLat, minLon, maxLon, range.minHeight, range.maxHeight);
+			this->range = osg_3d_vis::llhRange(minLat, maxLat, minLon, maxLon, range.minHeight, range.maxHeight);
 			
 			// set LastFrameTex to transparent
 			osg::ref_ptr<osg::Image> tmpImage = new osg::Image;
@@ -1428,7 +1428,7 @@ namespace VelocityFieldGPU {
 		void setMainCamera(osg::Camera* _camera) {
 			this->mainCamera = _camera;
 		}
-		void setLlhRange(llhRange _range) {
+		void setLlhRange(osg_3d_vis::llhRange _range) {
 			OriginalMinLat = osg::RadiansToDegrees(_range.minLatitude);
 			OriginalMaxLat = osg::RadiansToDegrees(_range.maxLatitude);
 			OriginalMinLon = osg::RadiansToDegrees(_range.minLongtitude);
@@ -1564,7 +1564,7 @@ namespace VelocityFieldGPU {
 
 
 inline StreamLine* Generate(
-	osg::Group* root, osg::Camera* camera, llhRange range = llhRange()) {
+	osg::Group* root, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange()) {
 		// 1. sample points
 		// 2. generate wind speed
 		// 3. Pos = points + wind speed

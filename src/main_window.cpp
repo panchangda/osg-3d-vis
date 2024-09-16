@@ -1,6 +1,6 @@
 #include "main_window.h"
 
-#include "streamline_cpu.h"
+// #include "streamline_cpu.h"
 #include "ui_main_window.h"
 #include<iostream>
 using namespace std;
@@ -20,8 +20,8 @@ main_window::~main_window()
 void main_window::SetUIButtonConnections()
 {
 
-    connect(ui->StreamlineButton, &QPushButton::clicked, this, &main_window::createStreamLine);
-    connect(ui->LICButton, &QPushButton::clicked, this, &main_window::createLIC);
+    // connect(ui->StreamlineButton, &QPushButton::clicked, this, &main_window::createStreamLine);
+    // connect(ui->LICButton, &QPushButton::clicked, this, &main_window::createLIC);
 
 }
 

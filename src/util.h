@@ -1,6 +1,9 @@
 #pragma once
 #include <osgViewer/Viewer>
 
+namespace osg_3d_vis {
+
+
 struct llhRange{
 	double minLatitude;
 	double maxLatitude;
@@ -93,3 +96,5 @@ struct CameraEyeCallback : public osg::Uniform::Callback
 	}
 	osg::Camera* _camera;
 };
+
+}

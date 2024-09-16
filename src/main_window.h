@@ -2,7 +2,6 @@
 #define MAIN_WINDOW_H
 
 #include <QWidget>
-#include "Selection.h"
 
 
 namespace Ui {

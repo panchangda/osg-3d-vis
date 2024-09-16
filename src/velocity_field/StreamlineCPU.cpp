@@ -1,8 +1,9 @@
-#include "Selection.h"
+#include "StreamlineCPU.h"
+#include "streamline_cpu.h"
 
 
-namespace Selection {
-	StreamLine::StreamLine(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root, osg::ref_ptr<osg::Camera> mainCamera, llhRange range) {
+namespace osg_3d_vis {
+	StreamLineCPU::StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range) {
 		this->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT", std::string(OSG_3D_VIS_DATA_PREFIX) + "V.DAT", range);
 		this->setRoot(root);
 		this->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX));
@@ -33,10 +34,17 @@ namespace Selection {
 		this->createScreenDrawPass();
 
 		/* add pickHandler to viewer */
-		viewer.addEventHandler(new Selection::PickHandler(this));
+		viewer.addEventHandler(new PickHandler(this));
+
+		/* connect to ui */
+		auto wnd = new streamline_cpu();
+		wnd->setStreamLineConnections(this);
+		wnd->show();
+
+
 	}
 
-	void StreamLine::initFromDatFile(std::string str1, std::string str2, llhRange range) {
+	void StreamLineCPU::initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range) {
 		std::ifstream fs(str1, std::ios::binary);
 		if (!fs.is_open()) std::cout << "Cannot open file from path: " << "str1" << std::endl;
 		float temp;
@@ -108,7 +116,7 @@ namespace Selection {
 		arrowRGBA = osg::Vec4(0.0, 0.0, 0.0, 1.0);
 	}
 
-	void StreamLine::initializeTexturesAndImages() {
+	void StreamLineCPU::initializeTexturesAndImages() {
 
 		
 
@@ -196,7 +204,7 @@ namespace Selection {
 
 	}
 
-	void StreamLine::initializeLineGeometryRenderState() {
+	void StreamLineCPU::initializeLineGeometryRenderState() {
 		//geometry->setVertexArray(linePoints.get());
 		//geometry->setColorArray(lineColors.get());
 		//geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
@@ -210,14 +218,14 @@ namespace Selection {
 		//geometry->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 	}
-	void StreamLine::initializeArrowGeometryRenderState() {
+	void StreamLineCPU::initializeArrowGeometryRenderState() {
 		arrowGeometry->setVertexArray(arrowPoints.get());
 		arrowGeometry->setColorArray(arrowColors.get());
 		arrowGeometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
 		arrowGeometry->addPrimitiveSet(arrowsDrawArray.get());
 		root->addChild(arrowGeometry);
 	}
-	void StreamLine::regenerateRandomPointsAndSteamLines() {
+	void StreamLineCPU::regenerateRandomPointsAndSteamLines() {
 		lines.clear();
 		colors.clear();
 		speeds.clear();
@@ -278,10 +286,10 @@ namespace Selection {
 		std::cout << "randomPoints generation completed!" << std::endl;
 		updateGeometry(0);
 	}
-	osg::Vec2 StreamLine::Rotate(osg::Vec2 v, float theta) {
+	osg::Vec2 StreamLineCPU::Rotate(osg::Vec2 v, float theta) {
 		return osg::Vec2(v.x() * cos(theta) - v.y() * cos(theta), v.x() * sin(theta) + v.y() * cos(theta));
 	}
-	osg::Vec2 StreamLine::constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition) {
+	osg::Vec2 StreamLineCPU::constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition) {
 		float h = 0.5f;
 		osg::Vec2 A = osg::Vec2(prevPosition.x(), prevPosition.y());
 		osg::Vec2 B = osg::Vec2(nextPosition.x(), nextPosition.y());
@@ -302,7 +310,7 @@ namespace Selection {
 		float y = center.y() + radius * std::sin(angle);
 		return osg::Vec2(x, y);
 	}
-	osg::Vec2 StreamLine::constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition) {
+	osg::Vec2 StreamLineCPU::constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition) {
 		float u = 1.0 - t;
 		float tt = t * t;
 		float uu = u * u;
@@ -317,7 +325,7 @@ namespace Selection {
 		return osg::Vec2(p.x(), p.y());
 	}
 
-	osg::Vec3 StreamLine::calculateSpeed(osg::Vec3 y_n) {
+	osg::Vec3 StreamLineCPU::calculateSpeed(osg::Vec3 y_n) {
 		osg::Vec3 speed = osg::Vec3();
 		switch (differentialMethod) {
 		case FORWARD_EULER: {
@@ -340,7 +348,7 @@ namespace Selection {
 
 	}
 
-	void StreamLine::processPosAndSpeed(int index, osg::Vec3 nextPos, osg::Vec3 speed) {
+	void StreamLineCPU::processPosAndSpeed(int index, osg::Vec3 nextPos, osg::Vec3 speed) {
 		double x, y, z;
 		llh2xyz_Ellipsoid(osg::DegreesToRadians(nextPos.x()), osg::DegreesToRadians(nextPos.y() + 180.0), 1000, x, y, z);
 		lines[index].push_back(osg::Vec3(x, y, z));
@@ -366,7 +374,7 @@ namespace Selection {
 		rightArrows[index].push_back(osg::Vec3(x, y, z));
 	}
 
-	void StreamLine::regenerateLineColors() {
+	void StreamLineCPU::regenerateLineColors() {
 		for (int i = 0; i < speeds.size(); i++) {
 			for (int j = 0; j < speeds[i].size(); j++) {
 				osg::Vec3 tmpSpeed = speeds[i][j];
@@ -375,7 +383,7 @@ namespace Selection {
 		}
 	}
 
-	void StreamLine::makeStreamLine(int index, float x0, float y0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors) {
+	void StreamLineCPU::makeStreamLine(int index, float x0, float y0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors) {
 		// Runge-Kutta Second-order methods with two stages 
 		// aka midpoint method
 		osg::Vec3 y_n = osg::Vec3(x0, y0, 0);
@@ -485,7 +493,7 @@ namespace Selection {
 
 	}
 
-	void StreamLine::updateGeometry(int time_t) {
+	void StreamLineCPU::updateGeometry(int time_t) {
 		for (int i = 0; i < linesSum; i++) {
 			if (lines[i].size() == 0 || lines[i].size() == 1) {
 				(*linePoints)[i * 2].set(osg::Vec3(0.0, 0.0, 0.0));
@@ -631,7 +639,7 @@ namespace Selection {
 
 	}
 
-	osg::Vec3 StreamLine::linearInterpolation(osg::Vec3 lonLatLev) {
+	osg::Vec3 StreamLineCPU::linearInterpolation(osg::Vec3 lonLatLev) {
 		float x = lonLatLev.x();
 		float y = lonLatLev.y();
 
@@ -686,7 +694,7 @@ namespace Selection {
 
 
 
-	osg::ref_ptr<osg::Camera> StreamLine::createSegmentDrawPass(osg::ref_ptr<osg::Camera> mainCamera) {
+	osg::ref_ptr<osg::Camera> StreamLineCPU::createSegmentDrawPass(osg::ref_ptr<osg::Camera> mainCamera) {
 		segmentDrawCamera = new osg::Camera;
 
 		osg::ref_ptr<osg::StateSet> stateset = this->geometry->getOrCreateStateSet();
@@ -705,7 +713,7 @@ namespace Selection {
 		program->addShader(fragmentShader.get());
 		stateset->setAttributeAndModes(program);
 
-		// °ó¶¨ mvp
+		// ï¿½ï¿½ mvp
 		osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "ModelViewProjectionMatrix");
 		mvpUniform->setUpdateCallback(new MVPRedrawCallback(mainCamera, this));
 		stateset->addUniform(mvpUniform);
@@ -733,8 +741,8 @@ namespace Selection {
 	}
 	class updateTrailDrawPassCallback : public osg::Camera::DrawCallback {
 	public:
-		StreamLine* sl;
-		updateTrailDrawPassCallback(StreamLine* _sl) {
+		StreamLineCPU* sl;
+		updateTrailDrawPassCallback(StreamLineCPU* _sl) {
 			sl = _sl;
 		}
 		virtual void operator()(osg::RenderInfo& renderInfo) const
@@ -764,7 +772,7 @@ namespace Selection {
 
 		}
 	};
-	osg::ref_ptr<osg::Camera> StreamLine::createTrailDrawPass() {
+	osg::ref_ptr<osg::Camera> StreamLineCPU::createTrailDrawPass() {
 		trailDrawCamera = new osg::Camera;
 
 		osg::ref_ptr<osg::Geometry> trailDrawPassGometry = createScreenQuad();
@@ -825,7 +833,7 @@ namespace Selection {
 	}
 
 
-	osg::ref_ptr<osg::Camera> StreamLine::createScreenDrawPass() {
+	osg::ref_ptr<osg::Camera> StreamLineCPU::createScreenDrawPass() {
 		osg::ref_ptr<osg::Camera> screenDrawCamera = new osg::Camera;
 
 		osg::ref_ptr<osg::Geometry> renderPassGeometry = createScreenQuad();
@@ -864,7 +872,7 @@ namespace Selection {
 		stateset->addUniform(uniformSegmentDepth);
 
 
-		// Blend Rendering Related Ê¹ÓÃÑÕÉ«µÄALPHAÍ¨µÀ½øÐÐÍ¸Ã÷²ÄÖÊäÖÈ¾
+		// Blend Rendering Related Ê¹ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ALPHAÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾
 		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
 		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 		//stateset->setRenderBinDetails(11, "RenderBin");
@@ -892,7 +900,7 @@ namespace Selection {
 		return screenDrawCamera;
 	}
 
-	osg::ref_ptr<osg::Camera> StreamLine::createCopyPass() {
+	osg::ref_ptr<osg::Camera> StreamLineCPU::createCopyPass() {
 		osg::ref_ptr<osg::Camera> copyCamera = new osg::Camera;
 		osg::ref_ptr<osg::Geometry> copyPassGeometry = createScreenQuad();
 		osg::ref_ptr<osg::StateSet> stateset = copyPassGeometry->getOrCreateStateSet();
@@ -933,7 +941,7 @@ namespace Selection {
 
 
 
-	void StreamLine::initializeTileWeightTexture() {
+	void StreamLineCPU::initializeTileWeightTexture() {
 
 		samplerLength = 8192;
 		tileDivideXSum = tileDivideYSum = 50;
@@ -1033,7 +1041,7 @@ namespace Selection {
 	*
 	*/
 
-	float StreamLine::calculateAreaInformationEntropy(int x, int y) {
+	float StreamLineCPU::calculateAreaInformationEntropy(int x, int y) {
 		int lonStart = int(float(x) / tileDivideXSum * longitudeNum);
 		int latStart = int(float(y) / tileDivideYSum * latitudeNum);
 		int lonEnd = lonStart + int(tileDivideXInterval * longitudeNum);
@@ -1069,7 +1077,7 @@ namespace Selection {
 		}
 		return areaInformationEntropy;
 	}
-	float StreamLine::calculateAreaDensity(int x, int y) {
+	float StreamLineCPU::calculateAreaDensity(int x, int y) {
 		int lonStart = int(float(x) / tileDivideXSum * longitudeNum);
 		int latStart = int(float(y) / tileDivideYSum * latitudeNum);
 		int lonEnd = lonStart + int(tileDivideXInterval * longitudeNum);
@@ -1088,7 +1096,7 @@ namespace Selection {
 	}
 
 
-	void StreamLine::updateLineStyle(int value) {
+	void StreamLineCPU::updateLineStyle(int value) {
 		lineStyle = value;
 		updateNodeGeometryCallbackPtr->updateLineStyle(lineStyle);
 	}

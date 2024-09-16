@@ -27,15 +27,17 @@
 #include <osgText/Text>
 #include <osg/LineWidth>
 #include <string>
+#include "math.h"
 
-class PolylineChart {
+class PieChart {
 public:
 
-	PolylineChart() {
+	PieChart() {
 
 	}
 
-	osg::ref_ptr<osg::Geode> generateLineChart();
+	osg::ref_ptr<osg::Geode> generatePieChart();
 
-
+private:
+	osg::ref_ptr<osg::Group> root;
 };

@@ -72,8 +72,8 @@ add_compile_definitions(
 file(GLOB GUI_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.h")
 file(GLOB GUI_UI "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.ui")
 # C++ .h & .cpp
-file(GLOB SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
 file(GLOB RESOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/*.qrc)
 
 # 使用source_group组织头文件
@@ -161,16 +161,30 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 		)
 	endif()
 else()
+	# 多配置生成器（如 Visual Studio）
 	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 			# copy dlls to target folder, to avoid vs error: missing .dll files
 			COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${TARGET_NAME}> $<TARGET_FILE_DIR:${TARGET_NAME}>
-			# 根据构建配置复制 OSG 的 DLLs
-			$<$<CONFIG:Release>:${CMAKE_COMMAND} -E copy ${OSG_RELEASE_DLLS} $<TARGET_FILE_DIR:${TARGET_NAME}>>
-			$<$<CONFIG:Debug>:${CMAKE_COMMAND} -E copy ${OSG_DEBUG_DLLS} $<TARGET_FILE_DIR:${TARGET_NAME}>>
-
 			COMMAND_EXPAND_LISTS
 			COMMENT "Copying DLLs based on build configuration"
 	)
+	# 多配置生成器（如 Visual Studio）
+	# buggy when copying osg dlls: set local error
+#	foreach(dll ${OSG_RELEASE_DLLS})
+#		add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+#				COMMAND $<$<CONFIG:Release>:${CMAKE_COMMAND} -E copy ${dll} $<TARGET_FILE_DIR:${TARGET_NAME}>>
+#				COMMAND_EXPAND_LISTS
+#				COMMENT "Copying Release DLLs"
+#		)
+#	endforeach()
+#	foreach(dll ${OSG_DEBUG_DLLS})
+#		add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+#				COMMAND $<$<CONFIG:Debug>:${CMAKE_COMMAND} -E copy ${dll} $<TARGET_FILE_DIR:${TARGET_NAME}>>
+#				COMMAND_EXPAND_LISTS
+#				COMMENT "Copying Debug DLLs"
+#		)
+#	endforeach()
+
 endif()
 
 

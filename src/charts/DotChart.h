@@ -1,3 +1,5 @@
+#pragma once
+
 #include<osgViewer/Viewer>
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -27,16 +29,17 @@
 #include <osgText/Text>
 #include <osg/LineWidth>
 #include <string>
-#include "math.h"
 
-class PieChart {
+
+
+class DotChart {
 public:
-
-	PieChart() {
+	DotChart(){
 
 	}
-
-	osg::ref_ptr<osg::Geode> generatePieChart();
-
-
+public:
+	float generateRandom();
+	osg::ShapeDrawable* createShpe(osg::Vec3 location, float radius, osg::Vec4 color);
+	osg::ref_ptr<osg::Geode> generateDot();
 };
+

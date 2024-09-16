@@ -1,5 +1,3 @@
-#pragma once
-
 #include<osgViewer/Viewer>
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -30,14 +28,15 @@
 #include <osg/LineWidth>
 #include <string>
 
-class DotChart {
+class PolylineChart {
 public:
-	DotChart() {
+
+	PolylineChart() {
 
 	}
-public:
-	float generateRandom();
-	osg::ShapeDrawable* createShpe(osg::Vec3 location, float radius, osg::Vec4 color);
-	osg::ref_ptr<osg::Geode> generateDot();
-	
+
+	osg::ref_ptr<osg::Geode> generateLineChart();
+
+private:
+	osg::ref_ptr<osg::Group> root;
 };
