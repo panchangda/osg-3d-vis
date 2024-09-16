@@ -8,10 +8,13 @@
 osg::ref_ptr<osg::Node> osg_3d_vs::Particle::createExplode() {
         osg::ref_ptr<osg::Group> explode = new osg::Group();
         // for the earth scale
-        constexpr float scale = osg_3d_vis::drawEarth ? 10000000.0f : 1.0f;
+        constexpr float scale = osg_3d_vis::drawEarth ? 100000.0f : 1.0f;
         //风向
         osg::Vec3 wind(1.0f, 0.0f, 0.0f);
-        osg::Vec3 position(0.0f, 0.0f, -1.0f);
+        osg::Vec3 position (0.0f, 0.0f, -1.0f);
+        if(osg_3d_vis::drawEarth) {
+            position = osg_3d_vis::cameraPosition;
+        }
         //爆炸模拟，10.0f为缩放比，默认为1.0f,不缩放
         osg::ref_ptr<osgParticle::ExplosionEffect> explosion = new osgParticle::ExplosionEffect(position, scale);
         osg::ref_ptr<osgParticle::ExplosionDebrisEffect> explosionDebri =
@@ -38,11 +41,25 @@ osg::ref_ptr<osg::Node> osg_3d_vs::Particle::createWeather() {
 
         //设置雪花类
         osg::ref_ptr<osgParticle::PrecipitationEffect> precipitationEffect = new osgParticle::PrecipitationEffect;
+    //设置雪花浓度
+    precipitationEffect->snow(0.5);
+    // 设置雨
+    precipitationEffect->rain(0.5);
 
-        //设置雪花浓度
-        precipitationEffect->snow(0.5);
+    if(osg_3d_vis::drawEarth) {
+        // for the earth scale
+        constexpr float scale = osg_3d_vis::drawEarth ? 10000.0f : 1.0f;
+
+        precipitationEffect->setPosition(osg_3d_vis::cameraPosition);
+        precipitationEffect->setParticleSize(scale);
+        // precipitationEffect->setCellSize(osg::Vec3(scale,scale,scale));
+        precipitationEffect->setMaximumParticleDensity(scale);
+        precipitationEffect->snow(scale);
         // 设置雨
-        precipitationEffect->rain(0.5);
+        precipitationEffect->rain(scale);
+    }
+
+
 
         //设置雪花颜色
         precipitationEffect->setParticleColor(osg::Vec4(1, 1, 1, 1));

@@ -4,6 +4,7 @@
 
 namespace osg_3d_vis {
 	StreamLineCPU::StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range) {
+		return ;
 		this->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT", std::string(OSG_3D_VIS_DATA_PREFIX) + "V.DAT", range);
 		this->setRoot(root);
 		this->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX));

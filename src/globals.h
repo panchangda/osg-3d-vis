@@ -7,10 +7,12 @@
 
 // control earth showing & effects scales
 namespace osg_3d_vis{
+    // Earth
     constexpr bool drawEarth = true;
 
+
     // Particles:
-    constexpr bool drawWeather = false;
+    constexpr bool drawWeather = true;
     constexpr bool drawExplode = false;
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
@@ -22,6 +24,11 @@ namespace osg_3d_vis{
     // Frame Timer
     extern float frameTime;
     extern float frameFPS;
+
+    // Camera
+    constexpr bool setHomePos = true;
+    extern osg::Vec3d cameraPosition;
+    extern osg::Vec3d cameraCenter;
 }
 
 

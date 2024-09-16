@@ -4,7 +4,7 @@
 
 #include <ui_streamline.h>
 
-#include "VelocityFieldGPU.h"
+#include "StreamlineGPU.h"
 
 namespace Ui
 {
@@ -15,7 +15,7 @@ class StreamLineMainWindow : public QWidget {
 	Q_OBJECT
 
 private:
-	VelocityFieldGPU::StreamLine* sl;
+	VelocityFieldGPU::StreamLineGPU* sl;
 	Ui::StreamLineMainWindow ui;
 public:
 	StreamLineMainWindow(QWidget* parent = nullptr) : QWidget(parent)
@@ -24,7 +24,7 @@ public:
 		
 	}
 
-	void SetStreamLine(VelocityFieldGPU::StreamLine* _sl){
+	void SetStreamLine(VelocityFieldGPU::StreamLineGPU* _sl){
 		sl = _sl;
 
 		connect(ui.horizontalSlider_SpeedFactor,SIGNAL(valueChanged(int)), 

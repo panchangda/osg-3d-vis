@@ -13,6 +13,7 @@
 #include <osg/LineWidth>
 #include "../util.h"
 
+
 namespace VelocityFieldGPU {
 
 	//osg::createTexturedQuadGeometry();
@@ -109,7 +110,7 @@ namespace VelocityFieldGPU {
 	}
 
 
-	class StreamLine {
+	class StreamLineGPU {
 	public:
 		std::vector<float> x, y, u, v;
 		std::vector<osg::Vec2> position;
@@ -1442,8 +1443,8 @@ namespace VelocityFieldGPU {
 
 		class UpdatePositionPassDrawCallback : public osg::Camera::DrawCallback {
 		public:
-			StreamLine* sl;
-			UpdatePositionPassDrawCallback(StreamLine* _sl) {
+			StreamLineGPU* sl;
+			UpdatePositionPassDrawCallback(StreamLineGPU* _sl) {
 				sl = _sl;
 			}
 			virtual void operator()(osg::RenderInfo& renderInfo) const
@@ -1453,8 +1454,8 @@ namespace VelocityFieldGPU {
 		};
 		class UpdateblendPassFinalDrawCallback : public osg::Camera::DrawCallback {
 		public:
-			StreamLine* sl;
-			UpdateblendPassFinalDrawCallback(StreamLine* _sl) {
+			StreamLineGPU* sl;
+			UpdateblendPassFinalDrawCallback(StreamLineGPU* _sl) {
 				sl = _sl;
 			}
 			virtual void operator()(osg::RenderInfo& renderInfo) const
@@ -1475,8 +1476,8 @@ namespace VelocityFieldGPU {
 		class MVPRedrawCallback : public osg::Uniform::Callback{
 		public:
 			osg::Camera* camera;
-			StreamLine* sl;
-			MVPRedrawCallback(osg::Camera* _camera, StreamLine *_sl) :
+			StreamLineGPU* sl;
+			MVPRedrawCallback(osg::Camera* _camera, StreamLineGPU *_sl) :
 		camera(_camera), sl(_sl) {
 			}
 
@@ -1563,48 +1564,8 @@ namespace VelocityFieldGPU {
 	};
 
 
-inline StreamLine* Generate(
-	osg::Group* root, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange()) {
-		// 1. sample points
-		// 2. generate wind speed
-		// 3. Pos = points + wind speed
-		// 4. Randomize points to avoid degeneration
-		// 5. transform llh2xyz & coloring
-		// 6. update every frame
-		// camera->getGraphicsContext()->getState()->setUseModelViewAndProjectionUniforms(true);
-		srand(time(NULL));
-		osg::ref_ptr<osg::Geode> geode = new osg::Geode();
-		StreamLine* sl = new StreamLine;
-		sl->setGeode(geode);
-		sl->setRoot(root);
-		sl->setMainCamera(camera);
-		sl->setLlhRange(range);
-#if defined(_WIN32)
-		sl->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX));
-		sl->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT", std::string(OSG_3D_VIS_DATA_PREFIX)+"V.DAT", range);
-		//sl->initFromConfigFile("E:/osg-vis/config");
-#else
-                sl->setShaderPath("/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/shaders/");
-                sl->initFromDatFile("/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/data/U.DAT",
-                                    "/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/data/V.DAT", range);
-#endif
+	StreamLineGPU* Generate(osg::Group* root, osg::Camera* camera, osg_3d_vis::llhRange range);
 
-        sl->createCalculateSpeedPass();
-        sl->createUpdatePositionPass();
-        sl->createDrawLinesPass();
-		//sl->createDrawArrowsPass();
-		sl->createCopyCurrentParticleToPrevParticlePass();
-//      sl->createTestPass();
-		sl->createCopyNextParticleToCurrentParticlePass();
-		sl->createBlendPass();
-		sl->createCopyblendTexToLastFrameTexPass();
-		
-		sl->createRenderPass();
-
-		root->addChild(geode.get());
-
-		return sl;
-	}
 }
 
 #endif

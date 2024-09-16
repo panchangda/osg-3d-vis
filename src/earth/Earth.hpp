@@ -20,7 +20,7 @@
 // #define USE_HD_EARTH_IMAGE
 
 
-namespace osg_3d_vs {
+namespace osg_3d_vis {
 
 
     class Earth {
