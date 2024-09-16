@@ -13,5 +13,9 @@ lib/*
 !lib/OpenSceneGraph-3.6.5-VC2022-64-Release-2023-01/
 !lib/OpenSceneGraph-3.6.5-VC2022-64-Release-2023-01/**
 
+# visual studio
 .vs/*
-/CMakeLists.txt
+# clion
+.idea/*
+/cmake-build-debug/
+/cmake-build-release/
