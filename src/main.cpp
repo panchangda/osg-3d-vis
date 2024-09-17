@@ -19,6 +19,7 @@
 #include "charts/chart.h"
 #include "charts/ColumnChart.h"
 #include "charts/DotChart.h"
+#include "loader/OSGB.h"
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 
@@ -71,16 +72,15 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 		auto earth = new osg_3d_vis::Earth(root);
 	}
 
-
 	/*
 	 * Particle Effects:
 	 */
 	// create particles: explode, snow, rain...
-	auto particle = new osg_3d_vs::Particle(root);
+	auto particle = new osg_3d_vis::Particle(root);
 
 	// fog
 	if(osg_3d_vis::enableFog) {
-		auto fog = osg_3d_vs::Particle::createFog(osg_3d_vis::fogLinear);
+		auto fog = osg_3d_vis::Particle::createFog(osg_3d_vis::fogLinear);
 		root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
 	}
 
@@ -140,8 +140,8 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	 */
 
 	// Show OSGB Loader
-	//osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGB::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
-	//root->addChild(osgbNode);
+	// osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGBLoader::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
+	// root->addChild(osgbNode);
 
 	// Show Point Cloud Loader
 	//OSGPCDLoader* loader = new OSGPCDLoader();
@@ -185,7 +185,7 @@ void initViewer(osgViewer::Viewer &viewer) {
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
 
-	if(osg_3d_vis::setHomePos) {
+	if(osg_3d_vis::drawEarth && osg_3d_vis::setHomePos) {
 		osg::Vec3d HangZhouRadians (
 			osg::DegreesToRadians(30.0f),
 			osg::DegreesToRadians(120.0f+180.0f),
@@ -198,7 +198,7 @@ void initViewer(osgViewer::Viewer &viewer) {
 
 
 		osg::Vec3d homePos = HangZhouXYZ;
-		osg::Vec3d homeCenter(HangZhouXYZ.x()+10000.0f, HangZhouXYZ.y()+10000.0f, HangZhouXYZ.z()+10000.0f);  // 目标点
+		osg::Vec3d homeCenter(HangZhouXYZ.x()+100000.0f, HangZhouXYZ.y()+100000.0f, HangZhouXYZ.z()+100000.0f);  // 目标点
 		osg::Vec3d homeUp(0.0, 0.0, 1.0);     // 上方向
 
 		// 设置摄像机的“Home”位置
@@ -214,12 +214,9 @@ void initViewer(osgViewer::Viewer &viewer) {
 }
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root) {
 
-
-
 	viewer.setSceneData(root.get());
 
-
-	viewer.setLightingMode(osg::View::NO_LIGHT);
+	viewer.setLightingMode(osg_3d_vis::lightingMode);
 	viewer.realize();
 }
 

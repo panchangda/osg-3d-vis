@@ -9,10 +9,11 @@
 namespace osg_3d_vis{
     // Earth
     constexpr bool drawEarth = true;
-
+    constexpr float earthScale = 100000.0f;
 
     // Particles:
-    constexpr bool drawWeather = true;
+    constexpr bool drawCessna = false;
+    constexpr bool drawWeather = false;
     constexpr bool drawExplode = false;
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
@@ -26,9 +27,11 @@ namespace osg_3d_vis{
     extern float frameFPS;
 
     // Camera
-    constexpr bool setHomePos = true;
+    constexpr bool setHomePos = false;
     extern osg::Vec3d cameraPosition;
     extern osg::Vec3d cameraCenter;
+    constexpr osg::View::LightingMode lightingMode = osg::View::NO_LIGHT;
+
 }
 
 

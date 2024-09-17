@@ -3,17 +3,21 @@
 //
 
 #include "Particle.h"
+
+#include <osg/MatrixTransform>
+#include <osg/PositionAttitudeTransform>
+#include <osgDB/ReadFile>
+
 #include "../globals.h"
 
-osg::ref_ptr<osg::Node> osg_3d_vs::Particle::createExplode() {
+osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createExplode() {
         osg::ref_ptr<osg::Group> explode = new osg::Group();
-        // for the earth scale
-        constexpr float scale = osg_3d_vis::drawEarth ? 100000.0f : 1.0f;
-        //风向
+        float scale = 1.0f;
         osg::Vec3 wind(1.0f, 0.0f, 0.0f);
         osg::Vec3 position (0.0f, 0.0f, -1.0f);
         if(osg_3d_vis::drawEarth) {
             position = osg_3d_vis::cameraPosition;
+            scale =  earthScale;
         }
         //爆炸模拟，10.0f为缩放比，默认为1.0f,不缩放
         osg::ref_ptr<osgParticle::ExplosionEffect> explosion = new osgParticle::ExplosionEffect(position, scale);
@@ -37,40 +41,40 @@ osg::ref_ptr<osg::Node> osg_3d_vs::Particle::createExplode() {
         return explode.get();
 }
 
-osg::ref_ptr<osg::Node> osg_3d_vs::Particle::createWeather() {
+osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createWeather() {
 
         //设置雪花类
         osg::ref_ptr<osgParticle::PrecipitationEffect> precipitationEffect = new osgParticle::PrecipitationEffect;
     //设置雪花浓度
-    precipitationEffect->snow(0.5);
+    // precipitationEffect->snow(1.0f);
     // 设置雨
-    precipitationEffect->rain(0.5);
+    precipitationEffect->rain(1.0f);
 
+    precipitationEffect->setUseFarLineSegments(true);
+
+    //设置雪花颜色
+    precipitationEffect->setParticleColor(osg::Vec4(1, 1, 1, 1));
+
+    //设置风向
+    precipitationEffect->setWind(osg::Vec3(2, 0, 0));
+
+
+    osg::ref_ptr<osg::PositionAttitudeTransform> pat = new osg::PositionAttitudeTransform();
+    pat->addChild(precipitationEffect.get());
     if(osg_3d_vis::drawEarth) {
-        // for the earth scale
-        constexpr float scale = osg_3d_vis::drawEarth ? 10000.0f : 1.0f;
-
-        precipitationEffect->setPosition(osg_3d_vis::cameraPosition);
-        precipitationEffect->setParticleSize(scale);
-        // precipitationEffect->setCellSize(osg::Vec3(scale,scale,scale));
-        precipitationEffect->setMaximumParticleDensity(scale);
-        precipitationEffect->snow(scale);
-        // 设置雨
-        precipitationEffect->rain(scale);
+        pat->setPosition(cameraPosition);
+        pat->setScale(osg::Vec3d(earthScale,earthScale,earthScale));
+    }else {
+        float scale = 1.0f;
+        pat->setScale(osg::Vec3d(scale,scale,scale));
     }
 
 
-
-        //设置雪花颜色
-        precipitationEffect->setParticleColor(osg::Vec4(1, 1, 1, 1));
-
-        //设置风向
-        precipitationEffect->setWind(osg::Vec3(2, 0, 0));
-        return precipitationEffect.get();
+    return pat.get();
 
 }
 
-osg::ref_ptr<osg::Fog> osg_3d_vs::Particle::createFog(bool linear) {
+osg::ref_ptr<osg::Fog> osg_3d_vis::Particle::createFog(bool linear) {
     // 创建Fog对象
     osg::ref_ptr<osg::Fog> fog = new osg::Fog();
 
@@ -93,10 +97,39 @@ osg::ref_ptr<osg::Fog> osg_3d_vs::Particle::createFog(bool linear) {
     // 设置雾效近点浓度
     fog->setStart(5.0);
 
-    constexpr float fogEnd = osg_3d_vis::drawEarth ? 10000000.0f : 2000.0f;
+    float fogEnd = 200.0f;
+    if(drawEarth) fogEnd*= earthScale;
     // 设置雾效远点浓度
     fog->setEnd(fogEnd);
 
     return fog.get();
+
+}
+
+osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createCessna() {
+
+    osg::ref_ptr<osg::Node> cessnaFire =  osgDB::readNodeFile("cessnafire.osg");
+    cessnaFire->getOrCreateStateSet()->setMode(GL_LIGHT0, osg::StateAttribute::ON);
+    cessnaFire->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
+
+    // MatrixTransform->setMatrix: Matrix Multiply Order should be SRT, otherwise T will be scaled by S ????
+    osg::ref_ptr<osg::MatrixTransform> trans = new osg::MatrixTransform();
+    osg::ref_ptr<osg::PositionAttitudeTransform> pat = new osg::PositionAttitudeTransform();
+    pat->addChild(cessnaFire);
+        if (drawEarth) {
+            osg::Matrix translate = osg::Matrix::translate(osg_3d_vis::cameraPosition);
+            osg::Matrix scale = osg::Matrix::scale(osg::Vec3d(earthScale,earthScale,earthScale));
+            trans->setMatrix(  scale * translate );
+            trans->addChild(cessnaFire);
+
+            pat->setPosition(cameraPosition);
+            pat->setScale(osg::Vec3d(earthScale,earthScale,earthScale));
+            osg::MatrixList  mList = pat->getWorldMatrices();
+        }else {
+            trans->setMatrix(osg::Matrix::scale(osg::Vec3d(1.0f,1.0f,1.0f)));
+            trans->addChild(cessnaFire);
+        }
+
+    return trans.get();
 
 }

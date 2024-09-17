@@ -15,19 +15,20 @@
 #include "../globals.h"
 
 
-namespace osg_3d_vs{
+namespace osg_3d_vis{
 
     class Particle {
     public:
-        Particle(osg::ref_ptr<osg::Group> _root): root(_root) {
+        Particle(const osg::ref_ptr<osg::Group>& _root): root(_root) {
             if(osg_3d_vis::drawExplode) {
                 root->addChild(createExplode());
             }
             if(osg_3d_vis::drawWeather) {
                 root->addChild(createWeather());
             }
-
-
+            if(osg_3d_vis::drawCessna) {
+                root->addChild(createCessna());
+            }
             // root->addChild(createFog(false));
         }
 
@@ -37,6 +38,8 @@ namespace osg_3d_vs{
         static osg::ref_ptr<osg::Node> createWeather();
         // 创建云雾
         static osg::ref_ptr<osg::Fog> createFog(bool linear);
+        // 创建着火
+        static osg::ref_ptr<osg::Node> createCessna();
     private:
         osg::ref_ptr<osg::Group> root;
     };

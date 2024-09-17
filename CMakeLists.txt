@@ -148,7 +148,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 				# 根据构建配置复制 OSG DEBUG 的 DLLs
 				COMMAND ${CMAKE_COMMAND} -E copy ${OSG_DEBUG_DLLS} $<TARGET_FILE_DIR:${TARGET_NAME}>
 				COMMAND_EXPAND_LISTS
-				COMMENT "Copying DLLs based on build configuration"
+				COMMENT "Copying all osg debug dlls"
 		)
 	else()
 		add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
@@ -157,7 +157,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 				# 根据构建配置复制 OSG RELEASE 的 DLLs
 				COMMAND ${CMAKE_COMMAND} -E copy ${OSG_RELEASE_DLLS} $<TARGET_FILE_DIR:${TARGET_NAME}>
 				COMMAND_EXPAND_LISTS
-				COMMENT "Copying DLLs based on build configuration"
+				COMMENT "Copying all osg release DLLs"
 		)
 	endif()
 else()

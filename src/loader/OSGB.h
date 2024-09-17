@@ -16,7 +16,7 @@
 #include <format>
 
 using namespace std;
-namespace OSGB {
+namespace OSGBLoader {
 	static void findDir(const string& dir, vector<string>& subDirs)
 	{
 		subDirs.clear();
