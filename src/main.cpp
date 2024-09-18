@@ -20,9 +20,10 @@
 #include "charts/ColumnChart.h"
 #include "charts/DotChart.h"
 #include "loader/OSGB.h"
+#include "radar/Radar.h"
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
-
+#include "radar/radarui.h"
 
 namespace osg_3d_vis {
 	float frameTime;
@@ -72,34 +73,34 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 		auto earth = new osg_3d_vis::Earth(root);
 	}
 
-	/*
-	 * Particle Effects:
-	 */
-	// create particles: explode, snow, rain...
-	auto particle = new osg_3d_vis::Particle(root);
+	///*
+	// * Particle Effects:
+	// */
+	//// create particles: explode, snow, rain...
+	//auto particle = new osg_3d_vis::Particle(root);
 
-	// fog
-	if(osg_3d_vis::enableFog) {
-		auto fog = osg_3d_vis::Particle::createFog(osg_3d_vis::fogLinear);
-		root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
-	}
+	//// fog
+	//if(osg_3d_vis::enableFog) {
+	//	auto fog = osg_3d_vis::Particle::createFog(osg_3d_vis::fogLinear);
+	//	root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
+	//}
 
 
-	/*
-	 * Velocity Field Visualizations
-	 */
-	// Show Streamline: CPU (enable choosing one streamling)
-	auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-		viewer,
-		root,
-		viewer.getCamera(),
-		osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+	///*
+	// * Velocity Field Visualizations
+	// */
+	//// Show Streamline: CPU (enable choosing one streamling)
+	//auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+	//	viewer,
+	//	root,
+	//	viewer.getCamera(),
+	//	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 
-	// Show Streamline: GPU
-	auto slPtr = VelocityFieldGPU::Generate(
-		root,
-		viewer.getCamera(),
-		osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
+	//// Show Streamline: GPU
+	//auto slPtr = VelocityFieldGPU::Generate(
+	//	root,
+	//	viewer.getCamera(),
+	//	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
 
 
 	// Show LIC
@@ -123,16 +124,25 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//root->addChild(geode);
 
 
-	/*
-	 * Radar
-	 */
-	//Radar::initRadar(llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
-	//Radar::addRadar(llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
-	//Radar::addRadar(llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
-	//Radar::addRadar(llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
-	//Radar::ExportRadar();
-	//Radar::submitRadar(root);
+	///*
+	// * VoxelRadar
+	// */
+	//VoxelRadar::initRadar(osg_3d_vis::llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
+	//VoxelRadar::ExportRadar();
+	//VoxelRadar::submitRadar(root);
 
+
+	/*
+	 * Mesh radar
+	 */
+
+	RadarUi* rui = new RadarUi();
+	auto radar = new Radar::Radar(viewer, root);
+	rui->setRad(radar);
+	rui->show();
 
 
 	/*
@@ -152,15 +162,15 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//root->addChild(loader->geode);
 
 
-	/*
-	 * 3D Charts: charts are dynamically controlled by ui
-	 *
-	 */
-	if(osg_3d_vis::showCharts) {
-		auto chartWindow = new Chart(root, &viewer);
-		chartWindow->SetUIButtonConnections();
-		chartWindow->show();
-	}
+	///*
+	// * 3D Charts: charts are dynamically controlled by ui
+	// *
+	// */
+	//if(osg_3d_vis::showCharts) {
+	//	auto chartWindow = new Chart(root, &viewer);
+	//	chartWindow->SetUIButtonConnections();
+	//	chartWindow->show();
+	//}
 
 
 
