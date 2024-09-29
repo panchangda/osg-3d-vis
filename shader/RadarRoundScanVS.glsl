@@ -1,13 +1,11 @@
 #version 330
 
-layout(location = 0) in vec2 pos;
-//layout(location = 0) in vec3 pos;
-layout(location = 1) in vec2 nor;
+layout(location = 0) in vec4 pos;
+out vec3 nnn;
 
-//out vec3 pos3;
-
+uniform mat4 mvp;
 void main()                     
 {
-    gl_Position = vec4(pos.xy, nor);
-//	pos3 = pos;
+    gl_Position = mvp * pos;
+    nnn = pos.xyz;
 }

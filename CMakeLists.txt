@@ -16,7 +16,6 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
 # 查找PCL依赖
 set(PCL_PATH "E:/Libraries/PCL 1.14.1")
 find_package(PCL REQUIRED)
