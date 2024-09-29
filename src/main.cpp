@@ -19,29 +19,21 @@
 #include "charts/chart.h"
 #include "charts/ColumnChart.h"
 #include "charts/DotChart.h"
+#include "earth/Grass.h"
 #include "loader/OSGB.h"
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 
 
-namespace osg_3d_vis {
-	float frameTime;
-	float frameFPS;
-
-	osg::Vec3d cameraPosition = osg::Vec3d(0,0,0);
-	osg::Vec3d cameraCenter = osg::Vec3d(0,0,0);
-}
-
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
+void osgSetUp();
 void initViewer(osgViewer::Viewer &viewer);
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root);
 void draw( osgViewer::Viewer &viewer, const QApplication& QApp);
 
 int main(int argc, char *argv[])
 {
-	// osg粒子效果源文件写死了加载"Images/xxx.rgb"，通过指定路径使其能够找到图像
-	osgDB::Registry::instance()->getDataFilePathList().push_back(std::string(OSG_3D_VIS_DATA_PREFIX) + "OpenSceneGraph-Data");
-
+	osgSetUp();
 
 	// Qt
     QApplication QApp(argc, argv);
@@ -84,6 +76,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 		root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
 	}
 
+	/*
+	 * GPU Instances
+	 */
+	auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
 
 	/*
 	 * Velocity Field Visualizations
@@ -172,6 +168,8 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
  *	Camera must be set before streamlineCPU initialization, otherwise it will draw nothing
  *  Fuck!
  */
+
+
 void initViewer(osgViewer::Viewer &viewer) {
 	viewer.setUpViewInWindow(300, 300, 1920, 1080);
 
@@ -185,28 +183,14 @@ void initViewer(osgViewer::Viewer &viewer) {
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
 
-	if(osg_3d_vis::drawEarth && osg_3d_vis::setHomePos) {
-		osg::Vec3d HangZhouRadians (
-			osg::DegreesToRadians(30.0f),
-			osg::DegreesToRadians(120.0f+180.0f),
-			10000.0f);
-		osg::Vec3d HangZhouXYZ;
-
-		osg_3d_vis::llh2xyz_Ellipsoid(
-				HangZhouRadians.x(),HangZhouRadians.y(),HangZhouRadians.z(),
-				HangZhouXYZ.x(),HangZhouXYZ.y(),HangZhouXYZ.z());
-
-
-		osg::Vec3d homePos = HangZhouXYZ;
-		osg::Vec3d homeCenter(HangZhouXYZ.x()+100000.0f, HangZhouXYZ.y()+100000.0f, HangZhouXYZ.z()+100000.0f);  // 目标点
-		osg::Vec3d homeUp(0.0, 0.0, 1.0);     // 上方向
-
+	if(osg_3d_vis::drawEarth && osg_3d_vis::bSetCameraToCity) {
+		const osg_3d_vis::CameraViewParams& camParams = osg_3d_vis::cameraCityMap.at(osg_3d_vis::cameraTargetCity);
 		// 设置摄像机的“Home”位置
-		manipulator->setHomePosition(HangZhouXYZ, homeCenter, homeUp);
+		manipulator->setHomePosition(camParams.position, camParams.center, camParams.up);
 
-		// set cameraPosition
-		osg_3d_vis::cameraPosition = homePos;
-		osg_3d_vis::cameraCenter = homeCenter;
+		// set moving cameraPosition
+		osg_3d_vis::cameraPosition = camParams.position;
+		osg_3d_vis::cameraCenter = camParams.center;
 	}
 
 
@@ -250,4 +234,12 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 	}
 
 	/*a.exec();*/
+}
+
+void osgSetUp() {
+	//
+	// 设置提示信息详略等级
+	osg::setNotifyLevel(osg_3d_vis::osgNotifyLevel);
+	// osg粒子效果源文件写死了加载"Images/xxx.rgb"，通过指定路径使其能够找到图像
+	osgDB::Registry::instance()->getDataFilePathList().push_back(std::string(OSG_3D_VIS_DATA_PREFIX) + "OpenSceneGraph-Data");
 }
