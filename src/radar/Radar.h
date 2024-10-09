@@ -163,6 +163,7 @@ namespace VoxelRadar {
 	}
 };
 
+
 namespace Radar {
 	class Radar {
 	public:
@@ -176,6 +177,9 @@ namespace Radar {
 			mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(camera));
 		};
 
+		// 提前读入
+		std::vector<osg::Vec4> factors;
+
 		std::vector<osg_3d_vis::llhRange> ranges;
 		std::vector<osg::ref_ptr<osg::Geometry>> Geos;
 
@@ -185,6 +189,7 @@ namespace Radar {
 
 		void submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root);
 
+		void addFactor(osg::Vec4 fac);
 		void Addllh(osg_3d_vis::llhRange range)
 		{
 			ranges.push_back(range);
@@ -199,6 +204,8 @@ namespace Radar {
 		void updateA(double value);
 		void updateLineWidth(double value);
 		void updateDrawStyle(int index);
+		void updateEMI(int index);
+
 	};
 
 };

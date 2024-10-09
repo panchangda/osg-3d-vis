@@ -12,8 +12,6 @@
 // color and drawway
 
 static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,0.4));
-//// for overlap part
-
 static osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth(2);
 enum DrawWay
 {
@@ -21,6 +19,8 @@ enum DrawWay
 	line
 };
 static DrawWay usePattern = surface ;
+
+
 
 void Radar::Radar::updateR(double value) {
 	osg::Vec4 color;
@@ -52,21 +52,35 @@ void Radar::Radar::updateLineWidth(double value) {
 };
 void Radar::Radar::updateDrawStyle(int index) {
 	if (index == 0) {
-		osg::ref_ptr<osg::PolygonMode> polyMode = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
+		osg::ref_ptr<osg::PolygonMode> polyMode = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::FILL);
 		rt->getOrCreateStateSet()->setAttribute(polyMode);
 		rt->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::OFF);
 
 	}
-	else {
+	else if( index == 1){
 		osg::ref_ptr<osg::PolygonMode> polyMode = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
 		rt->getOrCreateStateSet()->setAttribute(polyMode);
 		rt->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::ON);
 	}
 }
 
+void Radar::Radar::updateEMI(int index)
+{
+	if( index == 0 )
+	{
+		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(true);
+	}else if( index == 1)
+	{
+		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(false);
+	}
+}
+
 Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 {
 	setCamera(viewer.getCamera());
+	addFactor({ 30,100,600000,10000000 });
+	addFactor({ 20,105,600000,10000000});
+	addFactor({ 35,120,600000,12000000 });
 
 	Addllh(osg_3d_vis::llhRange(25.l, 35., 105., 115., 1., 600000.));
 	Addllh(osg_3d_vis::llhRange(14., 19., 90., 100., 100000., 600000.));
@@ -75,7 +89,7 @@ Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 	Addllh(osg_3d_vis::llhRange(37., 39., 100., 102., 2500., 600000.));
 	Addllh(osg_3d_vis::llhRange(30., 39., 130., 140., 3000., 600000.));
 	Addllh(osg_3d_vis::llhRange(14., 20., 95., 100., 1., 600000.));
-	Addllh(osg_3d_vis::llhRange(18., 29., 115., 130., 100000., 600000.));
+
 	Addllh(osg_3d_vis::llhRange(10., 20., 110., 120., 200000., 600000.));
 	Addllh(osg_3d_vis::llhRange(5., 10., 110., 120., 300000., 600000.));
 	submit(viewer, root);
@@ -91,32 +105,51 @@ void Radar::Radar::submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> ro
 
 	osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
 	osg::ref_ptr<osg::Shader> FragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
-	VertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "RadarRoundScanVS.glsl");
-	FragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "RadarRoundScanPS.glsl");
+	VertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/RadarRoundScanVS.glsl");
+	FragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/RadarRoundScanPS.glsl");
 	osg::ref_ptr<osg::Program> Program = new osg::Program;
 	Program->addShader(VertexShader);
 	Program->addShader(FragmentShader);
 
+
+
+
+	osg::ref_ptr<osg::Uniform> factorArray = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC4, "factor4", factors.size());
+	for (int i = 0; i < factors.size(); ++i) {
+		factorArray->setElement(i, factors[i]);
+	}
+	osg::ref_ptr<osg::Uniform> isDisruptionUniform = new osg::Uniform("isDisruption", false);
+
 	osg::ref_ptr<osg::StateSet> StateSet = rt->getOrCreateStateSet();
+
 	StateSet->setAttributeAndModes(Program);
 	StateSet->addUniform(colorUniform);
 	StateSet->addUniform(mvpUniform);
+	StateSet->addUniform(isDisruptionUniform);
+
+	StateSet->addUniform(factorArray);
 	StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
 	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 	root->addChild(rt);
 }
 
+void Radar::Radar::addFactor(osg::Vec4 fac)
+{
+	double x, y, z;
+	osg_3d_vis::llh2xyz_Ellipsoid(fac.x(), fac.y(), fac.z(), x, y, z);
+	osg::Vec4 p(x, y, z, fac.w());
+	factors.push_back(p);
+}
 
 
 osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 {
 	const int levels = 10;
-	std::vector<osg::Vec2> heights{
-	{0,0.5},{0.5,0.4},{0.4,0.65},{0.65,0.55},{0.55,0.75},{0.75,0.65},{0.65,0.9},{0.9,0.75},{0.75,0.83},{0.83,0.79}
+	std::vector<osg::Vec2> heights{ {0,0.3},{0.3,0.2}, { 0.2,0.5 },{0.5,0.4},{0.4,0.65},{0.65,0.55},{0.55,0.75},{0.75,0.65},{0.65,0.9},{0.9,0.75},{0.75,0.83},{0.83,0.79}
 	};
 	std::vector<osg::Vec2> radius{
-		{0,1},{1,0.4},{0.4,0.98},{0.98,0.3	},{0.3,0.94},{0.94,0.2},{0.2,0.8},{0.8,0.1},{0.1,0.3},{0.3,0}
+		{0,1},{1,0.2}, { 0.2,0.9 },{0.9,0.4},{0.4,0.85},{0.85,0.3	},{0.3,0.8},{0.8,0.2},{0.2,0.7},{0.7,0.1},{0.1,0.3},{0.3,0}
 	};
 	std::vector<osg::Vec3> llhs;
 
@@ -163,7 +196,7 @@ osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 			osg::Vec4 p(x, y, z, 1.);
 			Vec4arrays->push_back(p);
 		}
-	}
+	} 
 
 	const int maxk = Vec4arrays->size() / 360;
 	const int cnt = 360;

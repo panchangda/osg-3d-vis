@@ -24,6 +24,7 @@
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 #include "radar/radarui.h"
+#include "pbr/pbr.hpp"
 
 namespace osg_3d_vis {
 	float frameTime;
@@ -117,10 +118,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 
 
-	/*
-	 * PBR
-	 */
-	//auto geode = createLightModel(camera);
+	///*
+	// * PBR
+	// */
+	//PBR* pbr = new PBR();
+	//auto geode = pbr->createLightModel(viewer.getCamera());
 	//root->addChild(geode);
 
 
@@ -188,9 +190,8 @@ void initViewer(osgViewer::Viewer &viewer) {
 	viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
 	osg::ref_ptr<osg::Camera> camera = viewer.getCamera();
 
-	camera->setViewMatrixAsLookAt(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(1.0, 0, 0.0));
-	camera->setProjectionMatrixAsPerspective(45.0, 1.78, 0.1, 100.0);
-
+	camera->setViewMatrixAsLookAt(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(0.0, 0.0, -1), osg::Vec3(0, 1, 0.0));
+	camera->setProjectionMatrixAsPerspective(60.0, 1.78, 0.1, 1000.0);
 
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
@@ -222,6 +223,7 @@ void initViewer(osgViewer::Viewer &viewer) {
 
 	viewer.setCameraManipulator(manipulator);
 }
+
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root) {
 
 	viewer.setSceneData(root.get());

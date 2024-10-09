@@ -37,6 +37,10 @@ public:
 	void updateDrawStyle(int index) {
 		rad->updateDrawStyle(index);
 	};
+	void updateEMI(int index)
+	{
+		rad->updateEMI(index);
+	};
 private:
     Ui::RadarUi *ui;
 	Radar::Radar* rad;
