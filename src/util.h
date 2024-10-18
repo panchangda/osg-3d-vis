@@ -20,7 +20,7 @@ struct llhRange{
 		maxHeight = 100000.0;
 	}
 	llhRange(double _minLatitude, double _maxLatitude,
-		double _minLongitute, double _maxLongitute, 
+		double _minLongitute, double _maxLongitute,
 		double _minHeight, double _maxHeight)
 	:minLatitude(osg::DegreesToRadians(_minLatitude)), maxLatitude(osg::DegreesToRadians(_maxLatitude)),
 		minLongtitude(osg::DegreesToRadians(_minLongitute+180)), maxLongtitude(osg::DegreesToRadians(_maxLongitute+180)),
@@ -57,8 +57,7 @@ inline void llh2xyz_Ellipsoid(llhRange llh,
 	pEllModel->convertLatLongHeightToXYZ(lat, lon, h, x, y, z);
 }
 
-inline void llh2xyz_Ellipsoid(double _lat, double _lon, double _h, double& x, double& y, double& z) {
-
+inline void llh2xyz_Ellipsoid(double _lat, double _lon, double _h, double &x, double &y, double &z) {
 	double lat = _lat;
 	double lon = _lon;
 	double h = _h;
@@ -66,6 +65,15 @@ inline void llh2xyz_Ellipsoid(double _lat, double _lon, double _h, double& x, do
 	pEllModel->convertLatLongHeightToXYZ(lat, lon, h, x, y, z);
 }
 
+inline osg::Vec3d llh2xyz_Ellipsoid(double _lat, double _lon, double _h) {
+	double lat = _lat;
+	double lon = _lon;
+	double h = _h;
+	auto pEllModel = new osg::EllipsoidModel();
+	osg::Vec3d xyz(0.0f, 0.0f, 0.0f);
+	pEllModel->convertLatLongHeightToXYZ(lat, lon, h, xyz.x(), xyz.y(), xyz.z());
+	return xyz;
+}
 struct ModelViewProjectionMatrixCallback : public osg::Uniform::Callback
 {
 	ModelViewProjectionMatrixCallback(osg::Camera* camera) :
@@ -82,6 +90,38 @@ struct ModelViewProjectionMatrixCallback : public osg::Uniform::Callback
 	osg::Camera* _camera;
 };
 
+struct ModelMatrixCallback : public osg::Uniform::Callback {
+	explicit ModelMatrixCallback(osg::Camera *camera) : _camera(camera) {}
+
+	virtual void operator()(osg::Uniform *uniform, osg::NodeVisitor *nv) {
+		osg::Matrixd modelMatrix = osg::computeLocalToWorld(nv->getNodePath());
+		uniform->set(modelMatrix);
+	}
+
+	osg::Camera *_camera;
+};
+
+struct ViewMatrixCallback : public osg::Uniform::Callback {
+	explicit ViewMatrixCallback(osg::Camera *camera) : _camera(camera) {}
+
+	virtual void operator()(osg::Uniform *uniform, osg::NodeVisitor *nv) {
+		osg::Matrixd viewMatrix = _camera->getViewMatrix();
+		uniform->set(viewMatrix);
+	}
+
+	osg::Camera *_camera;
+};
+
+struct ProjectionMatrixCallback : public osg::Uniform::Callback {
+	explicit ProjectionMatrixCallback(osg::Camera *camera) : _camera(camera) {}
+
+	virtual void operator()(osg::Uniform *uniform, osg::NodeVisitor *nv) {
+		osg::Matrixd projectionMatrix = _camera->getProjectionMatrix();
+		uniform->set(projectionMatrix);
+	}
+
+	osg::Camera *_camera;
+};
 struct CameraEyeCallback : public osg::Uniform::Callback
 {
 	CameraEyeCallback(osg::Camera* camera) :
@@ -95,6 +135,15 @@ struct CameraEyeCallback : public osg::Uniform::Callback
 		uniform->set(eye_vec);
 	}
 	osg::Camera* _camera;
+};
+
+struct TimerCallback : public osg::Uniform::Callback {
+	virtual void operator()(osg::Uniform *uniform, osg::NodeVisitor * /*nv*/) {
+		// 获取当前时间
+		double currentTime = osg::Timer::instance()->time_s();
+		// 更新着色器中的 time uniform
+		uniform->set(static_cast<float>(currentTime));
+	}
 };
 
 }

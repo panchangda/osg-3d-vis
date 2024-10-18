@@ -43,6 +43,12 @@ private:
     void createPolyline();
     void createCurve();
     void createPie();
+    void createParallel();
+    void createRadar();
+    void exit()
+    {
+        exit();
+    }
 };
 
 #endif // CHART_H

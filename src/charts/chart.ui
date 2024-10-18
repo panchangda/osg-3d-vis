@@ -109,25 +109,12 @@
     <rect>
      <x>40</x>
      <y>240</y>
-     <width>101</width>
+     <width>311</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
     <string>三维平行坐标图</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="ButtonMark">
-   <property name="geometry">
-    <rect>
-     <x>249</x>
-     <y>240</y>
-     <width>101</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>三维空间标注</string>
    </property>
   </widget>
   <widget class="QPushButton" name="ButtonExit">

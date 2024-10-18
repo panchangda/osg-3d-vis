@@ -87,7 +87,7 @@ add_executable(${TARGET_NAME}
     ${SOURCE_FILES} ${HEADER_FILES} 
     ${RESOURCE_FILE} 
     # ${GUI_HEADER} ${GUI_UI}
-)
+ "src/charts/RadarChart.h" "src/charts/RadarChart.cpp" "src/charts/ParallelChart.h" "src/charts/ParallelChart.cpp")
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

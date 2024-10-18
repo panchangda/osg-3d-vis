@@ -6,7 +6,8 @@
 #include "PolylineChart.h"
 #include "CurveChart.h"
 #include "PieChart.h"
-
+#include "ParallelChart.h"
+#include  "RadarChart.h"
 Chart::Chart(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Chart)
@@ -17,12 +18,16 @@ Chart::Chart(QWidget *parent) :
 void Chart::SetUIButtonConnections()
 {
 
+
    connect(ui->ButtonAxis, &QPushButton::clicked, this, &Chart::createAxis);
    connect(ui->ButtonColumn, &QPushButton::clicked, this, &Chart::createColumn);
    connect(ui->ButtonDot, &QPushButton::clicked, this, &Chart::createDot);
    connect(ui->ButtonPolyline, &QPushButton::clicked, this, &Chart::createPolyline);
    connect(ui->ButtonCurve, &QPushButton::clicked, this, &Chart::createCurve);
    connect(ui->ButtonPie, &QPushButton::clicked, this, &Chart::createPie);
+   connect(ui->ButtonRadar, &QPushButton::clicked, this, &Chart::createRadar);
+   connect(ui->ButtonParallel, &QPushButton::clicked, this, &Chart::createParallel);
+   connect(ui->ButtonExit, &QPushButton::clicked, this, &Chart::exit);
 }
 
 void Chart::createAxis()
@@ -114,6 +119,36 @@ void Chart::createPie()
     }
     PieChart* pie = new PieChart();
     osg::ref_ptr<osg::Geode> geo = pie->generatePieChart();
+    root->addChild(geo);
+    unsigned int idx = root->getChildIndex(geo);
+    index.push(idx);
+    viewer->setCameraManipulator(new osgGA::TrackballManipulator);
+}
+
+void Chart::createParallel()
+{
+    while (!index.empty()) {
+        unsigned int top = index.top();
+        root->removeChild(top);
+        index.pop();
+    }
+    auto parallel = new ParallelChart();
+    osg::ref_ptr<osg::Geode> geo = parallel->generateParallel();
+    root->addChild(geo);
+    unsigned int idx = root->getChildIndex(geo);
+    index.push(idx);
+    viewer->setCameraManipulator(new osgGA::TrackballManipulator);
+}
+
+void Chart::createRadar()
+{
+    while (!index.empty()) {
+        unsigned int top = index.top();
+        root->removeChild(top);
+        index.pop();
+    }
+    auto radar = new RadarChart();
+    osg::ref_ptr<osg::Geode> geo = radar->generateRadar();
     root->addChild(geo);
     unsigned int idx = root->getChildIndex(geo);
     index.push(idx);
