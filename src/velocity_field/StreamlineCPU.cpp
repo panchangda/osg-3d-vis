@@ -4,13 +4,27 @@
 
 namespace osg_3d_vis {
 	StreamLineCPU::StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range) {
-		return ;
-		this->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT", std::string(OSG_3D_VIS_DATA_PREFIX) + "V.DAT", range);
+		// return ;
+
+
+		if(dataDim == EDataDimension::D2) {
+			this->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT",
+				std::string(OSG_3D_VIS_DATA_PREFIX) + "V.DAT",
+				range);
+		}else if(dataDim == EDataDimension::D3) {
+			this->initFromDatFile3D(std::string(OSG_3D_VIS_DATA_PREFIX) + "U3D.DAT",
+				std::string(OSG_3D_VIS_DATA_PREFIX) + "V3D.DAT",
+				std::string(OSG_3D_VIS_DATA_PREFIX) + "W3D.DAT",
+				range,
+				osg::Vec3i(249, 205, 200));
+		}
+
 		this->setRoot(root);
-		this->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX));
+		this->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX) + "streamline-cpu/" );
 
 		this->initializeDifferentialMethod();
 		this->initializeSmoothAlgorithm();
+
 		this->initializeRandomSeedSelection();
 		this->initializeTexturesAndImages();
 		this->initializeLineColorOptions();
@@ -19,7 +33,6 @@ namespace osg_3d_vis {
 		this->regenerateRandomPointsAndSteamLines();
 		this->initializeLineGeometryRenderState();
 		this->initializeArrowGeometryRenderState();
-
 	
 		/* get main camera color & depth buffer */
 		mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
@@ -80,10 +93,10 @@ namespace osg_3d_vis {
 		dy = (maxY - minY) / (dimY - 1);
 
 		idx = 0;
-		pointDensity = 2.0f;
+		pointDensity = 5.0f;
 		h = 0.5f;
 		speedScaleFactor = 0.5f;
-		lineLength = 10;
+		minLineLength = 10;
 		pointsSum = int(dimX * dimY / pointDensity);
 		linesSum = pointsSum;
 		lines.resize(linesSum);
@@ -101,6 +114,100 @@ namespace osg_3d_vis {
 		linesDrawArray = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, pointsSum * 2);
 
 	
+		leftArrows.resize(linesSum);
+		rightArrows.resize(linesSum);
+		arrowGeometry = new osg::Geometry;
+		arrowGeometry->setDataVariance(osg::Object::DYNAMIC);
+		arrowPoints = new osg::Vec3Array;
+		arrowPoints->resize(linesSum * 4, osg::Vec3(0.0f,  0.0, 0.0));
+		arrowColors = new osg::Vec4Array();
+		arrowColors->resize(linesSum*4);
+		arrowColors->setDataVariance(osg::Object::DYNAMIC);
+		arrowsDrawArray = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, pointsSum * 4);
+
+		arrowUseLineColor = false;
+		showArrow = false;
+		arrowRGBA = osg::Vec4(0.0, 0.0, 0.0, 1.0);
+	}
+
+	void loadDataFromFile(const std::string& filePath, std::vector<float>& data) {
+		std::ifstream fs(filePath, std::ios::binary);
+		if (!fs.is_open()) {
+			std::cerr << "Cannot open file from path: " << filePath << std::endl;
+			return;
+		}
+
+		// 跳过第一个占位float
+		float temp;
+		fs.read(reinterpret_cast<char*>(&temp), sizeof(float));
+
+		// 直接读取整个数据块
+		fs.read(reinterpret_cast<char*>(data.data()), sizeof(float) * data.size());
+		fs.close();
+	}
+
+	void StreamLineCPU::initFromDatFile3D(std::string uFilePath, std::string vFilePath, std::string wFilePath,
+		osg_3d_vis::llhRange range, osg::Vec3i dataDim)
+	{
+
+		// dimX = 249;
+		// dimY = 205;
+		// dimZ = 200;
+
+		dimY = dataDim.y();
+		dimX = dataDim.x();
+		dimZ = dataDim.z();
+
+		int DataPointSum = dimX*dimY*dimZ;
+
+		u.resize(DataPointSum);
+		v.resize(DataPointSum);
+		w.resize(DataPointSum);
+
+		// 读取每个数据文件
+		loadDataFromFile(uFilePath, u);
+		loadDataFromFile(vFilePath, v);
+		loadDataFromFile(wFilePath, w);
+
+
+		minY = 99.0f;
+		maxY = 150.f;
+
+		minX = -10.0f;
+		maxX = 52.0f;
+
+		minZ = 0.0f;
+		maxZ = 500000.0f;
+
+
+		dx = (maxX - minX) / (dimX - 1);
+		dy = (maxY - minY) / (dimY - 1);
+		dz = (maxZ - minZ) / (dimZ - 1);
+
+		idx = 0;
+		pointDensity = 500.0f;
+		h = 0.5f;
+		speedScaleFactor = 0.5f;
+		minLineLength = 10;
+		pointsSum = int(dimX * dimY * dimZ / pointDensity);
+		linesSum = pointsSum;
+		lines.resize(linesSum);
+		colors.resize(linesSum);
+		speeds.resize(linesSum);
+
+		geometry = new osg::Geometry;
+		geometry->setDataVariance(osg::Object::DYNAMIC);
+
+
+		linePoints = new osg::Vec3Array;
+		lineColors = new osg::Vec4Array;
+		// 2: start point + end point
+		// 3: ???
+		linePoints->resize(linesSum * 2 * 3, osg::Vec3(0.0, 0.0, 0.0));
+		lineColors->resize(linesSum * 2 * 3, osg::Vec4());
+		linesDrawArray = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, pointsSum * 2);
+
+
 		leftArrows.resize(linesSum);
 		rightArrows.resize(linesSum);
 		arrowGeometry = new osg::Geometry;
@@ -246,41 +353,77 @@ namespace osg_3d_vis {
 		for (int i = 0; i < pointsSum; i++) {
 			float randX = distrib(gen);
 			float randY = distrib(gen);
+			float randZ = distrib(gen);
 			switch (randomSeedSelectionAlgorithm) {
 				case PSEUDO_RANDOM: {
 					randX = minX + (maxX - minX) * randX;
 					randY = minY + (maxY - minY) * randY;
+					randZ = minZ + (maxZ - minZ) * randZ;
 					break;
 				}
 				case DENSITY_BASED: {
 					float randTmp = distrib(gen) * (samplerLength - 1);
-					float xStart = densityWeightedTile[(int)randTmp * 3];
-					float yStart = densityWeightedTile[(int)randTmp * 3 + 1];
-					randX = xStart + randX * tileDivideXInterval;
-					randY = yStart + randY * tileDivideYInterval;
-					randX = minX + (maxX - minX) * randX;
-					randY = minY + (maxY - minY) * randY;
+					if(dataDim == EDataDimension::D2) {
+						float xStart = densityWeightedTile[(int)randTmp * 3];
+						float yStart = densityWeightedTile[(int)randTmp * 3 + 1];
+						randX = xStart + randX * tileDivideXInterval;
+						randY = yStart + randY * tileDivideYInterval;
+						randX = minX + (maxX - minX) * randX;
+						randY = minY + (maxY - minY) * randY;
+					}
+					else if(dataDim == EDataDimension::D3) {
+						float xStart = densityWeightedTile[(int)randTmp * 3];
+						float yStart = densityWeightedTile[(int)randTmp * 3 + 1];
+						float zStart = densityWeightedTile[(int)randTmp * 3 + 2];
+						randX = xStart + randX * tileDivideXInterval;
+						randY = yStart + randY * tileDivideYInterval;
+						randZ = zStart + randZ * tileDivideZInterval;
+						randX = minX + (maxX - minX) * randX;
+						randY = minY + (maxY - minY) * randY;
+						randZ = minZ + (maxZ - minZ) * randZ;
+					}
+
 					break;
 				}
 				case INFORMATION_ENTROPY_BASED: {
 					float randTmp = distrib(gen) * samplerLength;
-					float xStart = infoEntropyWeightedTile[(int)randTmp * 3];
-					float yStart = infoEntropyWeightedTile[(int)randTmp * 3 + 1];
-					randX = xStart + randX * tileDivideXInterval;
-					randY = yStart + randY * tileDivideYInterval;
-					randX = minX + (maxX - minX) * randX;
-					randY = minY + (maxY - minY) * randY;
+					if(dataDim == EDataDimension::D2) {
+						float xStart = infoEntropyWeightedTile[(int)randTmp * 3];
+						float yStart = infoEntropyWeightedTile[(int)randTmp * 3 + 1];
+						randX = xStart + randX * tileDivideXInterval;
+						randY = yStart + randY * tileDivideYInterval;
+						randX = minX + (maxX - minX) * randX;
+						randY = minY + (maxY - minY) * randY;
+					}
+					else if(dataDim == EDataDimension::D3) {
+						float xStart = infoEntropyWeightedTile[(int)randTmp * 3];
+						float yStart = infoEntropyWeightedTile[(int)randTmp * 3 + 1];
+						float zStart = infoEntropyWeightedTile[(int)randTmp * 3 + 2];
+						randX = xStart + randX * tileDivideXInterval;
+						randY = yStart + randY * tileDivideYInterval;
+						randZ = zStart + randZ * tileDivideZInterval;
+						randX = minX + (maxX - minX) * randX;
+						randY = minY + (maxY - minY) * randY;
+						randZ = minZ + (maxZ - minZ) * randZ;
+					}
 					break;
 				}
 				default: {
 					randX = minX + (maxX - minX) * randX;
 					randY = minY + (maxY - minY) * randY;
+					randZ = minZ + (maxZ - minZ) * randZ;
 					break;
 				}
 			}
 
 			//std::cout << randX << ", " << randY << std::endl;
-			makeStreamLine(i, randX, randY, geometry, linePoints, lineColors);
+
+			if(dataDim==EDataDimension::D2) {
+				makeStreamLine(i, randX, randY, 0.0, geometry, linePoints, lineColors);
+			}else if(dataDim==EDataDimension::D3){
+				makeStreamLine(i, randX, randY, randZ, geometry, linePoints, lineColors);
+			}
+
 		}
 
 
@@ -326,6 +469,47 @@ namespace osg_3d_vis {
 		return osg::Vec2(p.x(), p.y());
 	}
 
+	// Actually is CubicSpline
+	osg::Vec3 StreamLineCPU::constructCircularArc3D(float t, osg::Vec3 prevPosition, osg::Vec3 currentPosition, osg::Vec3 nextPosition) {
+		osg::Vec3 p0 = prevPosition;
+		osg::Vec3 p1 = currentPosition;
+		osg::Vec3 p2 = nextPosition;
+
+		// 控制点可以根据需要进行调整
+		osg::Vec3 control1 = p0 + (p1 - p0) * 0.5;
+		osg::Vec3 control2 = p1 + (p2 - p1) * 0.5;
+
+		// 插值公式
+		float u = 1.0f - t;
+		osg::Vec3 point =
+			p0 * u * u * u  +
+			control1 * 3 * u * u * t +
+			control2 * 3 * u * t * t +
+			p2 * t * t * t;
+
+		return point;
+
+		return point;
+
+	}
+
+	osg::Vec3 StreamLineCPU::constructBezierCurve3D(float t, osg::Vec3 prevPosition, osg::Vec3 currentPosition, osg::Vec3 nextPosition) {
+		float u = 1.0f - t;
+		float tt = t * t;
+		float uu = u * u;
+		float ut = u * t;
+
+		osg::Vec3 p0 = prevPosition;
+		osg::Vec3 p1 = currentPosition;
+		osg::Vec3 p2 = nextPosition;
+		osg::Vec3 p;
+		p[0] = uu * p0.x() + 2 * ut * p1.x() + tt * p2.x();
+		p[1] = uu * p0.y() + 2 * ut * p1.y() + tt * p2.y();
+		p[2] = uu * p0.z() + 2 * ut * p1.z() + tt * p2.z();
+
+		return {p.x(), p.y(), p.z()};
+	}
+
 	osg::Vec3 StreamLineCPU::calculateSpeed(osg::Vec3 y_n) {
 		osg::Vec3 speed = osg::Vec3();
 		switch (differentialMethod) {
@@ -337,8 +521,11 @@ namespace osg_3d_vis {
 
 		case RUNGE_KUTTA: {
 			osg::Vec3 f_n = linearInterpolation(y_n);
+
 			osg::Vec3 midpoint = y_n + f_n * 0.5 * h * speedScaleFactor;
+
 			speed = linearInterpolation(midpoint) * h * speedScaleFactor;
+
 			break;
 		}
 		default:
@@ -346,12 +533,15 @@ namespace osg_3d_vis {
 
 		}
 		return speed;
-
 	}
 
+	// write line point, speed point, arrow point, line color
 	void StreamLineCPU::processPosAndSpeed(int index, osg::Vec3 nextPos, osg::Vec3 speed) {
 		double x, y, z;
-		llh2xyz_Ellipsoid(osg::DegreesToRadians(nextPos.x()), osg::DegreesToRadians(nextPos.y() + 180.0), 1000, x, y, z);
+		llh2xyz_Ellipsoid(osg::DegreesToRadians(nextPos.x()),
+			osg::DegreesToRadians(nextPos.y() + 180.0),
+			1000.0f + nextPos.z(),
+			x, y, z);
 		lines[index].push_back(osg::Vec3(x, y, z));
 		/* transform  [lon&lat] --> [0, 1] */
 		//lines[index].push_back(osg::Vec3(
@@ -369,9 +559,13 @@ namespace osg_3d_vis {
 		osg::Vec2 rArrowDir = Rotate(-dir, -osg::PI / 6.0) * 0.1f;
 		osg::Vec2 lArrow = osg::Vec2(nextPos.x() + lArrowDir.x(), nextPos.y() + lArrowDir.y());
 		osg::Vec2 rArrow = osg::Vec2(nextPos.x() + rArrowDir.x(), nextPos.y() + rArrowDir.y());
-		llh2xyz_Ellipsoid(osg::DegreesToRadians(lArrow.x()), osg::DegreesToRadians(lArrow.y() + 180.0), 1000, x, y, z);
+		llh2xyz_Ellipsoid(osg::DegreesToRadians(lArrow.x()),
+			osg::DegreesToRadians(lArrow.y() + 180.0),
+			1000.0f + nextPos.z(), x, y, z);
 		leftArrows[index].push_back(osg::Vec3(x, y, z));
-		llh2xyz_Ellipsoid(osg::DegreesToRadians(rArrow.x()), osg::DegreesToRadians(rArrow.y() + 180.0), 1000, x, y, z);
+		llh2xyz_Ellipsoid(osg::DegreesToRadians(rArrow.x()),
+			osg::DegreesToRadians(rArrow.y() + 180.0),
+			1000.0f + nextPos.z(), x, y, z);
 		rightArrows[index].push_back(osg::Vec3(x, y, z));
 	}
 
@@ -384,10 +578,17 @@ namespace osg_3d_vis {
 		}
 	}
 
-	void StreamLineCPU::makeStreamLine(int index, float x0, float y0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors) {
+
+	/*
+	 * while(len < minLineLength || random decay not kill)
+	 * 1. calculate speed
+	 * 2. generate nextPos, line, arrow
+	 * 3. apply smooth algorithm
+	 */
+	void StreamLineCPU::makeStreamLine(int index, float x0, float y0, float z0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors) {
 		// Runge-Kutta Second-order methods with two stages 
 		// aka midpoint method
-		osg::Vec3 y_n = osg::Vec3(x0, y0, 0);
+		osg::Vec3 y_n = osg::Vec3(x0, y0, z0);
 		osg::Vec3 speed;
 		int tmpLength = 0;
 		//for (int i = 0; i < lineLength; i++) {
@@ -437,11 +638,15 @@ namespace osg_3d_vis {
 						smoothedPoint = nextPos;
 					}
 					else {
-						smoothedPoint = osg::Vec3(constructCircularArc(samplePoint,
-							osg::Vec2(prevPos.x(), prevPos.y()), 
-							osg::Vec2(currPos.x(), currPos.y()), 
+						if(dataDim == EDataDimension::D2) {
+							smoothedPoint = osg::Vec3(constructCircularArc(samplePoint,
+							osg::Vec2(prevPos.x(), prevPos.y()),
+							osg::Vec2(currPos.x(), currPos.y()),
 							osg::Vec2(nextPos.x(), nextPos.y())
 							),	0.0);
+						}else if(dataDim == EDataDimension::D3) {
+							smoothedPoint = constructCircularArc3D(samplePoint, prevPos, currPos, nextPos);
+						}
 					}
 
 					processPosAndSpeed(index, smoothedPoint, speed);
@@ -468,11 +673,15 @@ namespace osg_3d_vis {
 						smoothedPoint = nextPos;
 					}
 					else {
-						smoothedPoint = osg::Vec3(constructBezierCurve(samplePoint,
+						if(dataDim == EDataDimension::D2) {
+							smoothedPoint = osg::Vec3(constructBezierCurve(samplePoint,
 							osg::Vec2(prevPos.x(), prevPos.y()),
 							osg::Vec2(currPos.x(), currPos.y()),
 							osg::Vec2(nextPos.x(), nextPos.y())
-						), 0.0);
+							),	0.0);
+						}else if(dataDim == EDataDimension::D3) {
+							smoothedPoint = constructBezierCurve3D(samplePoint, prevPos, currPos, nextPos);
+						}
 					}
 
 					processPosAndSpeed(index, smoothedPoint, speed);
@@ -482,13 +691,17 @@ namespace osg_3d_vis {
 
 			y_n = nextPos;
 
-			/* minimum line length */
+			/* ensure minimum line length */
 			tmpLength++;
-			if (tmpLength < lineLength) continue;
+			if (tmpLength < minLineLength)
+				continue;
+			else
+			{
+				/* enable random decay to stop line make randomly*/
+				float randSeed = rand() / (float)RAND_MAX;
+				if (randSeed < dropBase + dropBump * speed.x() + dropBase * speed.y()) return;
+			}
 
-			/* random decay */
-			float randSeed = rand() / (float)RAND_MAX;
-			if (randSeed < dropBase + dropBump * speed.x() + dropBase * speed.y()) return;
 
 		}
 
@@ -641,58 +854,186 @@ namespace osg_3d_vis {
 	}
 
 	osg::Vec3 StreamLineCPU::linearInterpolation(osg::Vec3 lonLatLev) {
-		float x = lonLatLev.x();
-		float y = lonLatLev.y();
 
-		//float x = minX + rand() / (float)RAND_MAX * (maxX - minX);
-		//float y = minY + rand() / (float)RAND_MAX * (maxY - minY);
+		if(dataDim == EDataDimension::D2)
+		{
+			float x = lonLatLev.x();
+			float y = lonLatLev.y();
 
-
-		float i = (x - minX) / dx;
-		float j = (y - minY) / dy;
-		i = osg::clampBetween(i, 0.0f, dimX - 2);
-		j = osg::clampBetween(j, 0.0f, dimY - 2);
-		float intPart;
-		float fractionI = modf(i, &intPart);
-		float fractionJ = modf(j, &intPart);
-		int intI = int(i);
-		int intJ = int(j);
+			//float x = minX + rand() / (float)RAND_MAX * (maxX - minX);
+			//float y = minY + rand() / (float)RAND_MAX * (maxY - minY);
 
 
-		int lb = intI * dimY + intJ;
-		int rb = (intI + 1) * dimY + intJ;
-		int lt = intI * dimY + intJ + 1;
-		int rt = (intI + 1) * dimY + intJ + 1;
+			float i = (x - minX) / dx;
+			float j = (y - minY) / dy;
+			i = osg::clampBetween(i, 0.0f, dimX - 2);
+			j = osg::clampBetween(j, 0.0f, dimY - 2);
+			float intPart;
+			float fractionI = modf(i, &intPart);
+			float fractionJ = modf(j, &intPart);
+			int intI = int(i);
+			int intJ = int(j);
 
 
-		float s, t;
-		if (this->u[lb] == 9999 ||
-			this->u[rb] == 9999 ||
-			this->u[lt] == 9999 ||
-			this->u[rt] == 9999)
-			s = 0;
-		else {
-			s = this->u[lb] * (1 - fractionI) * (1 - fractionJ) +
-				this->u[rb] * fractionI * (1 - fractionJ) +
-				this->u[lt] * (1 - fractionI) * fractionJ +
-				this->u[rt] * fractionI * fractionJ;
+			int lb = intI * dimY + intJ;
+			int rb = (intI + 1) * dimY + intJ;
+			int lt = intI * dimY + intJ + 1;
+			int rt = (intI + 1) * dimY + intJ + 1;
+
+
+			float s, t;
+			if (this->u[lb] == 9999 ||
+				this->u[rb] == 9999 ||
+				this->u[lt] == 9999 ||
+				this->u[rt] == 9999)
+				s = 0;
+			else {
+				s = this->u[lb] * (1 - fractionI) * (1 - fractionJ) +
+					this->u[rb] * fractionI * (1 - fractionJ) +
+					this->u[lt] * (1 - fractionI) * fractionJ +
+					this->u[rt] * fractionI * fractionJ;
+			}
+			if (this->v[lb] == 9999 ||
+				this->v[rb] == 9999 ||
+				this->v[lt] == 9999 ||
+				this->v[rt] == 9999)
+				t = 0;
+			else {
+				t = this->v[lb] * (1 - fractionI) * (1 - fractionJ) +
+					this->v[rb] * fractionI * (1 - fractionJ) +
+					this->v[lt] * (1 - fractionI) * fractionJ +
+					this->v[rt] * fractionI * fractionJ;
+			}
+
+			return osg::Vec3(s, t, 0.0);
 		}
-		if (this->v[lb] == 9999 ||
-			this->v[rb] == 9999 ||
-			this->v[lt] == 9999 ||
-			this->v[rt] == 9999)
-			t = 0;
-		else {
-			t = this->v[lb] * (1 - fractionI) * (1 - fractionJ) +
-				this->v[rb] * fractionI * (1 - fractionJ) +
-				this->v[lt] * (1 - fractionI) * fractionJ +
-				this->v[rt] * fractionI * fractionJ;
-		}
+		else if(dataDim == EDataDimension::D3)
+		{
+			float x = lonLatLev.x();
+			float y = lonLatLev.y();
+			float z = lonLatLev.z();
 
-		return osg::Vec3(s, t, 0.0);
+			//float x = minX + rand() / (float)RAND_MAX * (maxX - minX);
+			//float y = minY + rand() / (float)RAND_MAX * (maxY - minY);
+
+			// reverse lon lat lev to data dimension index
+			float i = (x - minX) / dx;
+			float j = (y - minY) / dy;
+			float k = (z - minZ) / dz;
+
+			i = osg::clampBetween(i, 0.0f, dimX - 2);
+			j = osg::clampBetween(j, 0.0f, dimY - 2);
+			k = osg::clampBetween(k, 0.0f, dimZ - 2);
+			float intPart;
+			float fractionI = modf(i, &intPart);
+			float fractionJ = modf(j, &intPart);
+			float fractionK = modf(k, &intPart);
+			int intI = int(i);
+			int intJ = int(j);
+			int intK = int(k);
+
+
+			// int zOffset = dimX*dimY*intK;
+			// // zOffset = dimX*dimY;
+			// int lb = intI * dimY + intJ + zOffset;
+			// int rb = (intI + 1) * dimY + intJ + zOffset;
+			// int lt = intI * dimY + intJ + 1 + zOffset;
+			// int rt = (intI + 1) * dimY + intJ + 1 + zOffset;
+			//
+			//
+			// float s, t, p;
+			// if (this->u[lb] == 9999 ||
+			// 	this->u[rb] == 9999 ||
+			// 	this->u[lt] == 9999 ||
+			// 	this->u[rt] == 9999)
+			// 	s = 0;
+			// else {
+			// 	s = this->u[lb] * (1 - fractionI) * (1 - fractionJ) +
+			// 		this->u[rb] * fractionI * (1 - fractionJ) +
+			// 		this->u[lt] * (1 - fractionI) * fractionJ +
+			// 		this->u[rt] * fractionI * fractionJ;
+			// }
+			// if (this->v[lb] == 9999 ||
+			// 	this->v[rb] == 9999 ||
+			// 	this->v[lt] == 9999 ||
+			// 	this->v[rt] == 9999)
+			// 	t = 0;
+			// else {
+			// 	t = this->v[lb] * (1 - fractionI) * (1 - fractionJ) +
+			// 		this->v[rb] * fractionI * (1 - fractionJ) +
+			// 		this->v[lt] * (1 - fractionI) * fractionJ +
+			// 		this->v[rt] * fractionI * fractionJ;
+			// }
+			//
+			// p = k * 1.0f;
+			//
+			// return osg::Vec3(s, t, p);
+
+
+			int c000 = intK * dimX * dimY + intI * dimY + intJ;
+			int c001 = (intK + 1) * dimX * dimY + intI * dimY + intJ;
+			int c010 = intK * dimX * dimY + intI * dimY + (intJ + 1);
+			int c011 = (intK + 1) * dimX * dimY + intI * dimY + (intJ + 1);
+			int c100 = intK * dimX * dimY + (intI + 1) * dimY + intJ;
+			int c101 = (intK + 1) * dimX * dimY + (intI + 1) * dimY + intJ;
+			int c110 = intK * dimX * dimY + (intI + 1) * dimY + (intJ + 1);
+			int c111 = (intK + 1) * dimX * dimY + (intI + 1) * dimY + (intJ + 1);
+
+			float s, t, wVal;
+			// Interpolation for u component
+			if (this->u[c000] == 9999 || this->u[c001] == 9999 ||
+			    this->u[c010] == 9999 || this->u[c011] == 9999 ||
+			    this->u[c100] == 9999 || this->u[c101] == 9999 ||
+			    this->u[c110] == 9999 || this->u[c111] == 9999) {
+				s = 0;
+			} else {
+				s = this->u[c000] * (1 - fractionI) * (1 - fractionJ) * (1 - fractionK) +
+				    this->u[c100] * fractionI * (1 - fractionJ) * (1 - fractionK) +
+				    this->u[c010] * (1 - fractionI) * fractionJ * (1 - fractionK) +
+				    this->u[c001] * (1 - fractionI) * (1 - fractionJ) * fractionK +
+				    this->u[c101] * fractionI * (1 - fractionJ) * fractionK +
+				    this->u[c011] * (1 - fractionI) * fractionJ * fractionK +
+				    this->u[c110] * fractionI * fractionJ * (1 - fractionK) +
+				    this->u[c111] * fractionI * fractionJ * fractionK;
+			}
+
+			// Interpolation for v component
+			if (this->v[c000] == 9999 || this->v[c001] == 9999 ||
+			    this->v[c010] == 9999 || this->v[c011] == 9999 ||
+			    this->v[c100] == 9999 || this->v[c101] == 9999 ||
+			    this->v[c110] == 9999 || this->v[c111] == 9999) {
+				t = 0;
+			} else {
+				t = this->v[c000] * (1 - fractionI) * (1 - fractionJ) * (1 - fractionK) +
+				    this->v[c100] * fractionI * (1 - fractionJ) * (1 - fractionK) +
+				    this->v[c010] * (1 - fractionI) * fractionJ * (1 - fractionK) +
+				    this->v[c001] * (1 - fractionI) * (1 - fractionJ) * fractionK +
+				    this->v[c101] * fractionI * (1 - fractionJ) * fractionK +
+				    this->v[c011] * (1 - fractionI) * fractionJ * fractionK +
+				    this->v[c110] * fractionI * fractionJ * (1 - fractionK) +
+				    this->v[c111] * fractionI * fractionJ * fractionK;
+			}
+
+			// Interpolation for w component
+			if (this->w[c000] == 9999 || this->w[c001] == 9999 ||
+			    this->w[c010] == 9999 || this->w[c011] == 9999 ||
+			    this->w[c100] == 9999 || this->w[c101] == 9999 ||
+			    this->w[c110] == 9999 || this->w[c111] == 9999) {
+				wVal = 0;
+			} else {
+				wVal = this->w[c000] * (1 - fractionI) * (1 - fractionJ) * (1 - fractionK) +
+				       this->w[c100] * fractionI * (1 - fractionJ) * (1 - fractionK) +
+				       this->w[c010] * (1 - fractionI) * fractionJ * (1 - fractionK) +
+				       this->w[c001] * (1 - fractionI) * (1 - fractionJ) * fractionK +
+				       this->w[c101] * fractionI * (1 - fractionJ) * fractionK +
+				       this->w[c011] * (1 - fractionI) * fractionJ * fractionK +
+				       this->w[c110] * fractionI * fractionJ * (1 - fractionK) +
+				       this->w[c111] * fractionI * fractionJ * fractionK;
+			}
+
+			return osg::Vec3(s, t, wVal*100.0f);
+		}
 	}
-
-
 
 
 	osg::ref_ptr<osg::Camera> StreamLineCPU::createSegmentDrawPass(osg::ref_ptr<osg::Camera> mainCamera) {
@@ -704,7 +1045,6 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Shader> fragmentShader = new osg::Shader(osg::Shader::FRAGMENT); // Define your fragment shader source
 		vertexShader->loadShaderSourceFromFile(shaderPath + "segmentDraw.vs");
 		fragmentShader->loadShaderSourceFromFile(shaderPath + "segmentDraw.fs");
-
 
 		// Create a shader program and attach the shaders
 		osg::ref_ptr<osg::Program> program = new osg::Program;
@@ -846,7 +1186,6 @@ namespace osg_3d_vis {
 		vertexShader->loadShaderSourceFromFile(shaderPath + "fullscreenQuad.vs");
 		fragmentShader->loadShaderSourceFromFile(shaderPath + "screenDraw.fs");
 
-
 		// Create a shader program and attach the shaders
 		osg::ref_ptr<osg::Program> program = new osg::Program;
 		program->addBindAttribLocation("Vertex", 0);
@@ -901,6 +1240,7 @@ namespace osg_3d_vis {
 		return screenDrawCamera;
 	}
 
+	// Copy next trail -> curr trail
 	osg::ref_ptr<osg::Camera> StreamLineCPU::createCopyPass() {
 		osg::ref_ptr<osg::Camera> copyCamera = new osg::Camera;
 		osg::ref_ptr<osg::Geometry> copyPassGeometry = createScreenQuad();
@@ -942,163 +1282,12 @@ namespace osg_3d_vis {
 
 
 
-	void StreamLineCPU::initializeTileWeightTexture() {
-
-		samplerLength = 8192;
-		tileDivideXSum = tileDivideYSum = 50;
-		tileDivideXInterval = 1.0f / tileDivideXSum;
-		tileDivideYInterval = 1.0f / tileDivideYSum;
-		longitudeNum = 205;
-		latitudeNum = 249;
-
-		// calculate weightSum
-		//float weightSum = tileDivideXSum* tileDivideYSum * 5.0f;
-		double densityWeightSum = 0.0f;
-		double infoEntropyWeightSum = 0.0f;
-		std::vector<float> areaDensity;
-		std::vector<float> areaInformationEntropy;
-		areaDensity.resize(tileDivideXSum * tileDivideYSum);
-		areaInformationEntropy.resize(tileDivideXSum * tileDivideYSum);
-
-		for (int i = 0; i < tileDivideXSum; i++) {
-			for (int j = 0; j < tileDivideYSum; j++) {
-				float density = calculateAreaDensity(i, j);
-				areaDensity[i * tileDivideYSum + j] = density;
-				densityWeightSum += density;
-
-				float infoEntropy = calculateAreaInformationEntropy(i, j);
-				areaInformationEntropy[i * tileDivideYSum + j] = infoEntropy;
-				infoEntropyWeightSum += infoEntropy;
-
-			}
-		}
-
-
-		// transform xyWeight to 1DTexture
-		float interval = samplerLength / densityWeightSum;
-		float tmpPos = 0.0f;
-		//float* densityWeightedTile = new float[sizeof(float) * 3 * samplerLength];
-		densityWeightedTile.resize(3 * samplerLength);
-		for (int i = 0; i < tileDivideXSum; i++) {
-			for (int j = 0; j < tileDivideYSum; j++) {
-				//float tileWeight = j < tileDivideYSum/2.0f ? 2.0f : 8.0f;
-				float tileWeight = areaDensity[i * tileDivideYSum + j];
-				float currentTileLength = tileWeight * interval;
-				int start = int(tmpPos);
-				int end = int(tmpPos + currentTileLength);
-				for (int k = start; k < end && k < samplerLength; k++) {
-					densityWeightedTile[k * 3 + 0] = float(i) / tileDivideXSum;
-					densityWeightedTile[k * 3 + 1] = float(j) / tileDivideYSum;
-					densityWeightedTile[k * 3 + 2] = 0.0f;
-				}
-				tmpPos += currentTileLength;
-			}
-		}
-		//weightedTileImage = new osg::Image();
-		//weightedTileImage->setImage(samplerLength, 1, 1, GL_RGB, GL_RGB, GL_FLOAT, (unsigned char*)densityWeightedTile, osg::Image::USE_NEW_DELETE);
-		////osgDB::writeImageFile(*weightedTileImage, "weightedTileImage.png");
-		//densityWeightedTileTex1D = new osg::Texture2D(weightedTileImage);
-		//densityWeightedTileTex1D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
-		//densityWeightedTileTex1D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
-
-
-
-
-		// initialize info Entropy Tex 1D
-		interval = samplerLength / infoEntropyWeightSum;
-		tmpPos = 0.0f;
-		//float* infoEntropyWeightedTile = new float[sizeof(float) * 3 * samplerLength];
-		infoEntropyWeightedTile.resize( 3 * samplerLength);
-		for (int i = 0; i < tileDivideXSum; i++) {
-			for (int j = 0; j < tileDivideYSum; j++) {
-				//float tileWeight = j < tileDivideYSum/2.0f ? 2.0f : 8.0f;
-				float tileWeight = areaInformationEntropy[i * tileDivideYSum + j];
-				float currentTileLength = tileWeight * interval;
-				int start = int(tmpPos);
-				int end = int(tmpPos + currentTileLength);
-				for (int k = start; k < end && k < samplerLength; k++) {
-					infoEntropyWeightedTile[k * 3 + 0] = float(i) / tileDivideXSum;
-					infoEntropyWeightedTile[k * 3 + 1] = float(j) / tileDivideYSum;
-					infoEntropyWeightedTile[k * 3 + 2] = 0.0f;
-				}
-				tmpPos += currentTileLength;
-			}
-		}
-		//osg::ref_ptr<osg::Image> infoEntropyWeightedTileImage = new osg::Image();
-		//infoEntropyWeightedTileImage->setImage(samplerLength, 1, 1, GL_RGB, GL_RGB, GL_FLOAT, (unsigned char*)infoEntropyWeightedTile, osg::Image::USE_NEW_DELETE);
-		//osgDB::writeImageFile(*weightedTileImage, "weightedTileImage.png");
-		//informEntropyWeightedTileTex1D = new osg::Texture2D(infoEntropyWeightedTileImage);
-		//informEntropyWeightedTileTex1D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
-		//informEntropyWeightedTileTex1D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
-
-
-
-	}
-
-	/* 
-	* 
-	Information Entropy is Calculated by Single Vector's Dir Diff Between Area Vsectors' Sum(or Avg) Dir 
-	Area Information Entropy is the Sum of the Information Entropy
-	*
-	*/
-
-	float StreamLineCPU::calculateAreaInformationEntropy(int x, int y) {
-		int lonStart = int(float(x) / tileDivideXSum * longitudeNum);
-		int latStart = int(float(y) / tileDivideYSum * latitudeNum);
-		int lonEnd = lonStart + int(tileDivideXInterval * longitudeNum);
-		int latEnd = latStart + int(tileDivideYInterval * latitudeNum);
-		int nSum = (lonEnd - lonStart + 1) * (latEnd - latStart + 1);
-		float areaDensitySum = 0.0f;
-		osg::Vec2 areaUVToward = osg::Vec2();
-		for (int i = lonStart; i <= lonEnd; i++) {
-			for (int j = latStart; j <= latEnd; j++) {
-				float uVal = std::abs(u[i * latitudeNum + j]);
-				float vVal = std::abs(v[i * latitudeNum + j]);
-				if (uVal != 9999 && vVal != 9999) {
-					//areaDensitySum += uVal + vVal;
-					areaUVToward += osg::Vec2(uVal, vVal);
-				}
-			}
-		}
-
-		float areaDensityAvg = areaDensitySum / (float)nSum;
-		areaUVToward.normalize();
-		float areaInformationEntropy = 0.0f;
-		for (int i = lonStart; i <= lonEnd; i++) {
-			for (int j = latStart; j <= latEnd; j++) {
-				float uVal = std::abs(u[i * latitudeNum + j]);
-				float vVal = std::abs(v[i * latitudeNum + j]);
-				if (uVal != 9999 && vVal != 9999) {
-					osg::Vec2 dir(uVal, vVal);
-					dir.normalize();
-					areaInformationEntropy += osg::square(1.0 - dir * areaUVToward);
-					//areaInformationEntropy += osg::square((uVal + vVal - areaDensityAvg));
-				}
-			}
-		}
-		return areaInformationEntropy;
-	}
-	float StreamLineCPU::calculateAreaDensity(int x, int y) {
-		int lonStart = int(float(x) / tileDivideXSum * longitudeNum);
-		int latStart = int(float(y) / tileDivideYSum * latitudeNum);
-		int lonEnd = lonStart + int(tileDivideXInterval * longitudeNum);
-		int latEnd = latStart + int(tileDivideYInterval * latitudeNum);
-		float areaDensity = 0.0f;
-		for (int i = lonStart; i <= lonEnd; i++) {
-			for (int j = latStart; j <= latEnd; j++) {
-				float uVal = std::abs(u[i * latitudeNum + j]);
-				float vVal = std::abs(v[i * latitudeNum + j]);
-				if (uVal != 9999 && vVal != 9999) {
-						areaDensity += osg::square(uVal + vVal);
-				}
-			}
-		}
-		return areaDensity;
-	}
 
 
 	void StreamLineCPU::updateLineStyle(int value) {
 		lineStyle = value;
 		updateNodeGeometryCallbackPtr->updateLineStyle(lineStyle);
 	}
+
+
 }

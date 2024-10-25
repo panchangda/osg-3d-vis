@@ -11,7 +11,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-
 # <dep: Qt>
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -35,7 +34,6 @@ CACHE PATH "Root of OpenSceneGraph library (Debug)")
 # 自动链接所有 .lib 静态库
 file(GLOB OSG_RELEASE_LIBS "${OSG_RELEASE}/lib/*.lib")
 file(GLOB OSG_DEBUG_LIBS "${OSG_DEBUG}/lib/*.lib")
-
 
 # 设置包含目录
 if(NOT CMAKE_CONFIGURATION_TYPES)
@@ -87,7 +85,7 @@ add_executable(${TARGET_NAME}
     ${SOURCE_FILES} ${HEADER_FILES} 
     ${RESOURCE_FILE} 
     # ${GUI_HEADER} ${GUI_UI}
- "src/charts/RadarChart.h" "src/charts/RadarChart.cpp" "src/charts/ParallelChart.h" "src/charts/ParallelChart.cpp")
+)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

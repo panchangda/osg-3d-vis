@@ -77,17 +77,27 @@ namespace osg_3d_vis {
 		StreamLineCPU() {};
 		StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range);
 
-		float dimX, dimY;
+		enum class EDataDimension {
+			D2,
+			D3
+		};
+		// true: 2d, false: 3d
+		EDataDimension dataDim = EDataDimension::D3;
+
+		// data dimensions
+		float dimX, dimY, dimZ;
 		float h;
-		float dx, dy, dr;
-		float minX, minY, maxX, maxY;
+		float dx, dy, dz;
+		// x: lat, y: lon, z:lev
+		float minX, minY,  minZ, maxX, maxY, maxZ;
 		float speedScaleFactor;
 		float pointDensity;
 		int idx;
-		int lineLength;
+		int minLineLength;
 		int pointsSum;
 		int linesSum;
-		std::vector<float> u, v;
+		// for separately data read, vector size = dimX*dimY*dimZ
+		std::vector<float> u, v, w;
 		std::vector< std::vector<osg::Vec3> > lines;
 		std::vector< std::vector<osg::Vec4> > colors;
 		std::vector< std::vector<osg::Vec3> > speeds;
@@ -107,10 +117,13 @@ namespace osg_3d_vis {
 		std::map<int, bool> selected;
 
 		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range);
+		void initFromDatFile3D(std::string str1, std::string str2, std::string str3,
+		osg_3d_vis::llhRange range, osg::Vec3i dataDim);
+
 		void initializeTexturesAndImages();
 		void initializeLineGeometryRenderState();
 		void initializeArrowGeometryRenderState();
-		void makeStreamLine(int index, float x0, float y0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors);
+		void makeStreamLine(int index, float x0, float y0, float z0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors);
 		void processPosAndSpeed(int index, osg::Vec3 nextPosition, osg::Vec3 speed);
 		osg::Vec3 calculateSpeed(osg::Vec3 y_n);
 		void regenerateRandomPointsAndSteamLines();
@@ -143,7 +156,6 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Camera> createCopyPass();
 
 		void updateTrailDrawPassTextures();
-
 
 
 		int rttTextureSize;
@@ -297,9 +309,9 @@ namespace osg_3d_vis {
 
 		/* random seed selection */
 		int samplerLength;
-		int tileDivideXSum, tileDivideYSum;
-		float tileDivideXInterval, tileDivideYInterval;
-		int longitudeNum, latitudeNum;
+		int tileDivideXSum, tileDivideYSum, tileDivideZSum;
+		float tileDivideXInterval, tileDivideYInterval, tileDivideZInterval;
+		int longitudeNum, latitudeNum, leverageNum;
 		std::vector<float> densityWeightedTile;
 		std::vector<float> infoEntropyWeightedTile;
 		int randomSeedSelectionAlgorithm;
@@ -308,10 +320,18 @@ namespace osg_3d_vis {
 		static constexpr int INFORMATION_ENTROPY_BASED = 2;
 		void initializeRandomSeedSelection() {
 			randomSeedSelectionAlgorithm = PSEUDO_RANDOM;
+
+			if(dataDim == EDataDimension::D2) {
+				initializeTileWeightTexture();
+			}else {
+				initializeTileWeightTexture3D();
+			}
+
 		}
 		void updateRandomSeedSelection(int value) {
 			randomSeedSelectionAlgorithm = value;
-			this->regenerateRandomPointsAndSteamLines();
+
+			regenerateRandomPointsAndSteamLines();
 		}
 
 		/* smooth algorithm */
@@ -321,16 +341,30 @@ namespace osg_3d_vis {
 		static constexpr int STRAIGHT_LINE = 0;
 		static constexpr int CIRCULAR_ARC = 1;
 		static constexpr int BEZIER_CURVE = 2;
+
+		// 2ds:
 		void initializeTileWeightTexture();
 		float calculateAreaInformationEntropy(int x, int y);
 		float calculateAreaDensity(int x, int y);
-		osg::Vec2 StreamLineCPU::constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
-		osg::Vec2 StreamLineCPU::constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
+
+		// 3ds:
+		void initializeTileWeightTexture3D();
+		float calculateAreaInformationEntropy3D(int x, int y, int z);
+		float calculateAreaDensity3D(int x, int y, int z);
+
+
+		osg::Vec2 constructCircularArc(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
+		osg::Vec2 constructBezierCurve(float t, osg::Vec2 prevPosition, osg::Vec2 currentPosition, osg::Vec2 nextPosition);
+		osg::Vec3 constructCircularArc3D(float t, osg::Vec3 prevPosition, osg::Vec3 currentPosition, osg::Vec3 nextPosition);
+		osg::Vec3 constructBezierCurve3D(float t, osg::Vec3 prevPosition, osg::Vec3 currentPosition, osg::Vec3 nextPosition);
+
+
 		void initializeSmoothAlgorithm() {
 			smoothAlgorithm = STRAIGHT_LINE;
 			lineSegmentSubdivision = 5;
 			lineSegmentSubStep = 1.0f / lineSegmentSubdivision;
-			initializeTileWeightTexture();
+
+
 		}
 		void updateSmoothAlgorithm(int value) {
 			if (smoothAlgorithm == STRAIGHT_LINE 
@@ -521,7 +555,8 @@ namespace osg_3d_vis {
 			if (!sl->isCameraSteady(viewMatrix)) {
 				osg::ref_ptr<osg::Image> subImage = sl->nextTrailColorTexture->getImage();
 				osg::ref_ptr<osg::Image> tmpImage = new osg::Image;
-				subImage->copySubImage(0, 0, 0, tmpImage);
+				// what's this used for?
+				// subImage->copySubImage(0, 0, 0, tmpImage);
 				subImage->dirty();
 
 				sl->updateMainCameraView(viewMatrix);

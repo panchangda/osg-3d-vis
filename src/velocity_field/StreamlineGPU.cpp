@@ -7,7 +7,7 @@
 using namespace VelocityFieldGPU;
 
 StreamLineGPU * VelocityFieldGPU::Generate(osg::Group *root, osg::Camera *camera, osg_3d_vis::llhRange range) {
-    return nullptr;
+    // return nullptr;
     // 1. sample points
     // 2. generate wind speed
     // 3. Pos = points + wind speed
