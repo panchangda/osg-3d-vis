@@ -17,7 +17,7 @@ namespace osg_3d_vis{
     constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
 
     // Earth
-    constexpr bool drawEarth = false;
+    constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
 
     // Particles:
@@ -29,7 +29,7 @@ namespace osg_3d_vis{
 
 
     // 3D Charts:
-    constexpr bool showCharts = true;
+    constexpr bool showCharts = false;
 
     // Frame Timer
     extern float frameTime;
@@ -49,7 +49,7 @@ namespace osg_3d_vis{
     };
 
 
-    constexpr bool bSetCameraToCity = true;
+    constexpr bool bSetCameraToCity = false;
     constexpr ECity cameraTargetCity = ECity::HangZhou;
     extern osg::Vec3d cameraPosition;
     extern osg::Vec3d cameraCenter;
