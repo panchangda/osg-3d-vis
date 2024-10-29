@@ -204,7 +204,9 @@ namespace Radar {
 		void updateA(double value);
 		void updateLineWidth(double value);
 		void updateDrawStyle(int index);
-		void updateEMI(int index);
+		void updateEMI(int index, bool flg);
+
+		void updateEMICoef();
 
 	};
 
