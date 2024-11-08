@@ -54,7 +54,7 @@ else()
 	message(STATUS "Using OSG Include Directory")
 endif()
 
-# add definitions:
+# macro definitions for paths:
 add_compile_definitions(
 	OSG_3D_VIS_SHADER_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/shader/"
 )
@@ -83,8 +83,9 @@ set(TARGET_NAME ${PROJECT_NAME})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 add_executable(${TARGET_NAME} 
     ${SOURCE_FILES} ${HEADER_FILES} 
-    ${RESOURCE_FILE} 
-    # ${GUI_HEADER} ${GUI_UI}
+    ${RESOURCE_FILE}
+		src/earth/Tree.cpp
+		# ${GUI_HEADER} ${GUI_UI}
 )
 
 target_include_directories(${TARGET_NAME}

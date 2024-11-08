@@ -1,5 +1,24 @@
 #include "StreamlineCPU.h"
+
+#include <osg/BlendFunc>
+
 #include "streamline_cpu.h"
+
+
+class DepthCopyCallback : public osg::Camera::DrawCallback {
+public:
+	DepthCopyCallback(osg::Texture2D* depthTexture) : _depthTexture(depthTexture) {}
+
+	virtual void operator()(osg::RenderInfo& renderInfo) const override {
+		// 使用 glCopyTexSubImage2D 复制深度缓冲到深度纹理
+		glBindTexture(GL_TEXTURE_2D, _depthTexture->getTextureObject(renderInfo.getState()->getContextID())->id());
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, _depthTexture->getTextureWidth(), _depthTexture->getTextureHeight());
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+private:
+	osg::ref_ptr<osg::Texture2D> _depthTexture;
+};
 
 
 namespace osg_3d_vis {
@@ -27,6 +46,7 @@ namespace osg_3d_vis {
 
 		this->initializeRandomSeedSelection();
 		this->initializeTexturesAndImages();
+		this->cb_resizeTexture(mainCamera);
 		this->initializeLineColorOptions();
 		this->initializeSelectionRGBA();
 
@@ -36,16 +56,19 @@ namespace osg_3d_vis {
 	
 		/* get main camera color & depth buffer */
 		mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
-		mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
+		// mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
+		// temp way to read back depth buffer
+		mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
 
 		/* multi-pass creation */
-		osg::ref_ptr<osg::Camera> slaveCamera = this->createSegmentDrawPass(mainCamera);
-		slaveCamera->setGraphicsContext(mainCamera->getGraphicsContext());
-		viewer.addSlave(slaveCamera, false);
-		//root->addChild(sl->createSegmentDrawPass(camera));
-		root->addChild(this->createTrailDrawPass());
-		root->addChild(this->createCopyPass());
-		this->createScreenDrawPass();
+		// use slave camera for segmentdraw to ensure following main camera
+		// osg::ref_ptr<osg::Camera> slaveCamera = this->createSegmentDrawPass(mainCamera);
+		// slaveCamera->setGraphicsContext(mainCamera->getGraphicsContext());
+		// viewer.addSlave(slaveCamera, false);
+		root->addChild(this->createSegmentDrawPass(mainCamera));
+		// root->addChild(this->createTrailDrawPass());
+		// root->addChild(this->createCopyPass());
+		// this->createScreenDrawPass();
 
 		/* add pickHandler to viewer */
 		viewer.addEventHandler(new PickHandler(this));
@@ -192,8 +215,15 @@ namespace osg_3d_vis {
 		pointsSum = int(dimX * dimY * dimZ / pointDensity);
 		linesSum = pointsSum;
 		lines.resize(linesSum);
+		// for(auto &line : lines) {
+		// 	line.resize(minLineLength);
+		// }
 		colors.resize(linesSum);
+		// for(auto &lineColor : colors) {
+		// 	lineColor.resize(minLineLength);
+		// }
 		speeds.resize(linesSum);
+
 
 		geometry = new osg::Geometry;
 		geometry->setDataVariance(osg::Object::DYNAMIC);
@@ -277,39 +307,40 @@ namespace osg_3d_vis {
 		screenDepthTexture = new osg::Texture2D;
 		screenDepthTexture->setSourceFormat(GL_DEPTH_COMPONENT);
 		screenDepthTexture->setSourceType(GL_FLOAT);
-		screenDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT32);
+		screenDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT);
 		screenDepthTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
 		screenDepthTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-		screenDepthTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-		screenDepthTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+
 
 		segmentDepthTexture = new osg::Texture2D;
 		segmentDepthTexture->setSourceFormat(GL_DEPTH_COMPONENT);
 		segmentDepthTexture->setSourceType(GL_FLOAT);
-		segmentDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT32);
+		segmentDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT);
 		segmentDepthTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
 		segmentDepthTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-		segmentDepthTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-		segmentDepthTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+
 
 		currTrailDepthTexture = new osg::Texture2D;
 		currTrailDepthTexture->setSourceFormat(GL_DEPTH_COMPONENT);
 		currTrailDepthTexture->setSourceType(GL_FLOAT);
-		currTrailDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT32);
+		currTrailDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT);
 		currTrailDepthTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
 		currTrailDepthTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-		currTrailDepthTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-		currTrailDepthTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+
 
 		nextTrailDepthTexture = new osg::Texture2D;
 		nextTrailDepthTexture->setSourceFormat(GL_DEPTH_COMPONENT);
 		nextTrailDepthTexture->setSourceType(GL_FLOAT);
-		nextTrailDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT32);
+		nextTrailDepthTexture->setInternalFormat(GL_DEPTH_COMPONENT);
 		nextTrailDepthTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
 		nextTrailDepthTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-		nextTrailDepthTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-		nextTrailDepthTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 
+
+	}
+
+	void StreamLineCPU::cb_resizeTexture(osg::Camera* mainCamera) {
+		screenDepthTexture->setTextureWidth(mainCamera->getViewport()->width());
+		screenDepthTexture->setTextureHeight(mainCamera->getViewport()->height());
 	}
 
 	void StreamLineCPU::initializeLineGeometryRenderState() {
@@ -717,10 +748,10 @@ namespace osg_3d_vis {
 
 				continue;
 			}
-			int size = lines[i].size();
-			int idx = time_t % size == 0 ? 1 : time_t % size;
-			if (idx >= size || idx < 1) {
-				std::cout << idx << " " << size << std::endl;
+			int lineLength = lines[i].size();
+			int idx = time_t % lineLength + 1;
+			if (idx >= lineLength || idx < 1) {
+				// std::cout << idx << " " << lineLength << std::endl;
 				idx = 1;
 			}
 			(*linePoints)[i * 2].set(lines[i][idx - 1]);
@@ -1059,6 +1090,7 @@ namespace osg_3d_vis {
 		mvpUniform->setUpdateCallback(new MVPRedrawCallback(mainCamera, this));
 		stateset->addUniform(mvpUniform);
 
+
 		osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
 		tmpGeode->addDrawable(this->geometry);
 		updateNodeGeometryCallbackPtr = new updateNodeGeometryCallback(this);
@@ -1070,11 +1102,11 @@ namespace osg_3d_vis {
 
 		segmentDrawCamera->addChild(tmpGeode);
 
-		segmentDrawCamera->setClearColor(osg::Vec4());
-		segmentDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//segmentDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-		segmentDrawCamera->setRenderOrder(osg::Camera::PRE_RENDER, 0);
+		// segmentDrawCamera->setClearColor(osg::Vec4());
+		// segmentDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		segmentDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		segmentDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+		segmentDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 0);
 		segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		segmentDrawCamera->attach(osg::Camera::COLOR_BUFFER, segmentColorTexture);
 		segmentDrawCamera->attach(osg::Camera::DEPTH_BUFFER, segmentDepthTexture);
@@ -1083,8 +1115,10 @@ namespace osg_3d_vis {
 	class updateTrailDrawPassCallback : public osg::Camera::DrawCallback {
 	public:
 		StreamLineCPU* sl;
-		updateTrailDrawPassCallback(StreamLineCPU* _sl) {
+		osg::Camera* camera;
+		updateTrailDrawPassCallback(StreamLineCPU* _sl, osg::Camera* _camera) {
 			sl = _sl;
+			camera = _camera;
 		}
 		virtual void operator()(osg::RenderInfo& renderInfo) const
 		{
@@ -1107,7 +1141,7 @@ namespace osg_3d_vis {
 			//sl->currTrailColorTexture->dirtyTextureObject();
 
 			
-			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (sl->trailDrawCamera->getChild(0));
+			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (camera->getChild(0));
 			osg::ref_ptr<osg::StateSet> stateset = tmpGeo->getDrawable(0)->getOrCreateStateSet();
 			stateset->getUniform("first")->set(bool(false));
 
@@ -1150,25 +1184,27 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
 		stateset->addUniform(firstUniform);
 
-		osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.95f);
+		osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.9999f);
 		stateset->addUniform(fadeOpacityUniform);
 
+		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 		osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
 		tmpGeode->addDrawable(trailDrawPassGometry);
 		trailDrawCamera->addChild(tmpGeode);
 
 
-		trailDrawCamera->setClearColor(osg::Vec4());
-		trailDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// trailDrawCamera->setClearColor(osg::Vec4());
+		// trailDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		trailDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-		trailDrawCamera->setRenderOrder(osg::Camera::PRE_RENDER, 1);
+		trailDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 1);
 		trailDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 		trailDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		trailDrawCamera->attach(osg::Camera::COLOR_BUFFER, nextTrailColorTexture);
 		trailDrawCamera->attach(osg::Camera::DEPTH_BUFFER, nextTrailDepthTexture);
 
-		trailDrawCamera->setPostDrawCallback(new updateTrailDrawPassCallback(this));
+		trailDrawCamera->setPostDrawCallback(new updateTrailDrawPassCallback(this, trailDrawCamera));
 
 		return trailDrawCamera;
 	}
@@ -1203,19 +1239,35 @@ namespace osg_3d_vis {
 		stateset->setTextureAttributeAndModes(1, screenDepthTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(uniformScreenDepth);
 
-		osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("segmentColorTexture", 2);
-		stateset->setTextureAttributeAndModes(2, currTrailColorTexture.get(), osg::StateAttribute::ON);
+		osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 2);
+		stateset->setTextureAttributeAndModes(2, nextTrailColorTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(uniformSegmentColor);
 
-		osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("segmentDepthTexture", 3);
-		stateset->setTextureAttributeAndModes(3, currTrailDepthTexture.get(), osg::StateAttribute::ON);
+		osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 3);
+		stateset->setTextureAttributeAndModes(3, nextTrailDepthTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(uniformSegmentDepth);
 
 
+		// osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 2);
+		// stateset->setTextureAttributeAndModes(2, segmentColorTexture.get(), osg::StateAttribute::ON);
+		// stateset->addUniform(uniformSegmentColor);
+		//
+		// osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 3);
+		// stateset->setTextureAttributeAndModes(3, segmentDepthTexture.get(), osg::StateAttribute::ON);
+		// stateset->addUniform(uniformSegmentDepth);
+
+
 		// Blend Rendering Related ʹ����ɫ��ALPHAͨ������͸��������Ⱦ
-		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
-		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-		//stateset->setRenderBinDetails(11, "RenderBin");
+		// stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+		// stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+		// stateset->setRenderBinDetails(11, "RenderBin");
+
+		// stateset->setMode(GL_DEPTH_WRITEMASK, GL_FALSE);
+		//
+		// osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
+		// blendFunc->setFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON);
+
 
 		renderPassGeometry->setStateSet(stateset);
 
@@ -1225,17 +1277,23 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Transform> tmpNode = new osg::Transform;
 		tmpNode->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		tmpNode->addChild(tmpGeode);
+		screenDrawCamera->addChild(tmpNode);
 
-		root->addChild(tmpNode);
+		// render to screen frame buffer
+		screenDrawCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER);
+		screenDrawCamera->setReferenceFrame( osg::Camera::ABSOLUTE_RF );
+		screenDrawCamera->setRenderOrder( osg::Camera::POST_RENDER , 3);
 
 		//screenDrawCamera->addChild(tmpGeode);
 
-		//screenDrawCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
-		//screenDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// screenDrawCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		// screenDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//screenDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		//screenDrawCamera->setRenderOrder(osg::Camera::PRE_RENDER, 2);
 
 		//screenDrawCamera->setViewport(0, 0, 1024, 768);
+
+		root->addChild(screenDrawCamera);
 
 		return screenDrawCamera;
 	}
@@ -1264,18 +1322,25 @@ namespace osg_3d_vis {
 		stateset->setTextureAttributeAndModes(1, nextTrailDepthTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(nextTrailDepthTextureUniform);
 
+		osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
+		stateset->addUniform(firstUniform);
+
 		osg::ref_ptr<osg::Geode> tmpGeo = new osg::Geode;
 		tmpGeo->addDrawable(copyPassGeometry.get());
 		copyCamera->addChild(tmpGeo);
 
-		copyCamera->setRenderOrder(osg::Camera::PRE_RENDER, 2);
-		copyCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
-		copyCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		copyCamera->setRenderOrder(osg::Camera::POST_RENDER, 4);
+		// copyCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		// copyCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		copyCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		copyCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 		copyCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		copyCamera->attach(osg::Camera::COLOR_BUFFER, currTrailColorTexture);
 		copyCamera->attach(osg::Camera::DEPTH_BUFFER, currTrailDepthTexture);
+
+		// reset first uniform
+		copyCamera->setPostDrawCallback(new updateTrailDrawPassCallback(this, copyCamera));
+
 		return copyCamera;
 	}
 

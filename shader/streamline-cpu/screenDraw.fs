@@ -5,29 +5,34 @@ out vec4 FragColor;
 
 uniform sampler2D screenColorTexture;
 uniform sampler2D screenDepthTexture;
-uniform sampler2D segmentColorTexture;
-uniform sampler2D segmentDepthTexture;
+uniform sampler2D streamlineColorTexture;
+uniform sampler2D streamlineDepthTexture;
 
 void main(){
 	vec4 screenColor =  texture(screenColorTexture, v_textureCoordinates);
-    vec4 segmentColor =  texture(segmentColorTexture, v_textureCoordinates);
+    vec4 streamlineColor =  texture(streamlineColorTexture, v_textureCoordinates);
     float screenDepth = texture(screenDepthTexture, v_textureCoordinates).r;
-    float segmentDepth = texture(segmentDepthTexture, v_textureCoordinates).r;
+    float streamlineDepth = texture(streamlineDepthTexture, v_textureCoordinates).r;
 
 
-    if(segmentDepth < 1.0)
-	    FragColor = segmentColor;
+    if(streamlineDepth < screenDepth){
+        FragColor = streamlineColor;
+//         FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    }
     else
         FragColor = screenColor;
 
 
-    FragColor = segmentColor;
+    FragColor = streamlineColor;
+    // FragColor = vec4(streamlineColor.a, 0.0, 0.0, 1.0);
+    // FragColor = screenColor;
+    // FragColor = vec4(streamlineDepth, 0.0, 0.0, 1.0);
+
+    // FragColor = streamlineColor;
     // FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     // FragColor = segmentColor;
     // FragColor = vec4(segmentDepth);
     // FragColor = segmentColor;
     // FragColor = vec4(segmentDepth, 0.0, 0.0, 1.0);
     // FragColor = screenColor;
-
-
 }

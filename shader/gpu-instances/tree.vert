@@ -23,8 +23,8 @@ out vec2 texCoord;
 void main(){
     texCoord = TexCoord;
 
-//    // 为每个实例设置不同的位移
-//    vec3 instance_pos = Position + instancePos[gl_InstanceID];
+    //    // 为每个实例设置不同的位移
+    //    vec3 instance_pos = Position + instancePos[gl_InstanceID];
     int x = gl_InstanceID / instanceX;
     int y = gl_InstanceID % instanceX;
     vec3 instanceOffset = vec3(0.2 * x, -1.0, 0.2 * y);

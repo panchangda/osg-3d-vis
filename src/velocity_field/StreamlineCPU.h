@@ -121,6 +121,7 @@ namespace osg_3d_vis {
 		osg_3d_vis::llhRange range, osg::Vec3i dataDim);
 
 		void initializeTexturesAndImages();
+		void cb_resizeTexture(osg::Camera* mainCamera);
 		void initializeLineGeometryRenderState();
 		void initializeArrowGeometryRenderState();
 		void makeStreamLine(int index, float x0, float y0, float z0, osg::ref_ptr<osg::Geometry> geometry, osg::ref_ptr<osg::Vec3Array> linePoints, osg::ref_ptr<osg::Vec4Array> lineColors);
@@ -498,37 +499,44 @@ namespace osg_3d_vis {
 	public:
 
 		StreamLineCPU* sl;
-		long long int time_t;
+		long long int frameCounter;
+		// animation_t will increment per animationUpdateInterval
 		long long int animation_t;
-		int updateFrameInterval;
+		int animationUpdateInterval;
 		int lineStyle;
 		static constexpr int SOLID = 0;
 		static constexpr int DOTTED = 1;
 
 		updateNodeGeometryCallback(StreamLineCPU* _sl) : sl(_sl) {
-			time_t = 0;
+			frameCounter = 0;
 			animation_t = 0;
-			updateFrameInterval = 3;
+			animationUpdateInterval = 3;
 			lineStyle = SOLID;
 		}
 
 		virtual void operator ()(osg::Node* node, osg::NodeVisitor* nv) {
-			time_t++;
-			if (time_t % updateFrameInterval == 0) animation_t++;
-			/* line style setup*/
-			if (lineStyle == DOTTED) {
-				/* jump points */
-				for (int i = 2; i < 10; i++) {
-					if (time_t % updateFrameInterval * i == 0) animation_t++;
+			frameCounter++;
+			if (frameCounter % animationUpdateInterval == 0) {
+				animation_t++;
+				if(lineStyle == DOTTED) {
+					animation_t++;
 				}
 			}
+
+			// /* line style setup*/
+			// if (lineStyle == DOTTED) {
+			// 	/* jump points */
+			// 	for (int i = 2; i < 10; i++) {
+			// 		if (frameCounter % animationUpdateInterval * i == 0) animation_t++;
+			// 	}
+			// }
 
 			//std::cout << animation_t << std::endl;
 			sl->updateGeometry(animation_t);
 			traverse(node, nv);
 		}
 		void updateUpdateFrameInterval(int value) {
-			updateFrameInterval = value;
+			animationUpdateInterval = value;
 		}
 		void updateLineStyle(int value) {
 			lineStyle = value;

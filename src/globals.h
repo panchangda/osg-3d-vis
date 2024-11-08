@@ -13,11 +13,11 @@
 // control earth showing & effects scales
 namespace osg_3d_vis{
 
-    // setups
+    // debug setups
     constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
 
     // Earth
-    constexpr bool drawEarth = true;
+    constexpr bool drawEarth = false;
     constexpr float earthScale = 100000.0f;
 
     // Particles:

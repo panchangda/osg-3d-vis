@@ -20,12 +20,14 @@
 #include "charts/ColumnChart.h"
 #include "charts/DotChart.h"
 #include "earth/Grass.h"
+#include "earth/Tree.h"
 #include "loader/OSGB.h"
 #include "radar/Radar.h"
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
+#include "velocity_field/rttcamera.h"
 
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
 void osgSetUp();
@@ -69,8 +71,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	///*
 	// * Particle Effects:
 	// */
-	//// create particles: explode, snow, rain...
-	//auto particle = new osg_3d_vis::Particle(root);
+	// create particles: explode, snow, rain...
+	/*
+	auto particle = new osg_3d_vis::Particle(root);
+	*/
 
 	//// fog
 	//if(osg_3d_vis::enableFog) {
@@ -83,15 +87,18 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 	//auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
 
+	auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
 	///*
 	// * Velocity Field Visualizations
 	// */
 	// Show Streamline: CPU (enable choosing one streamling)
+	/*
 	auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
 		viewer,
 		root,
 		viewer.getCamera(),
 		osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+		*/
 
 	//// Show Streamline: GPU
 	// auto slPtr = VelocityFieldGPU::Generate(
@@ -170,6 +177,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	}
 
 
+
+	// For RTT Test
+	// osg_3d_vis::rttcamera* testRTTCamera = new osg_3d_vis::rttcamera(viewer);
+	// root->addChild(testRTTCamera->cameraNode);
+	// root->addChild(testRTTCamera->fullscreenQuadGeode);
 
 
 	return root.get();
