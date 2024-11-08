@@ -10,7 +10,8 @@
 
 // ui part
 // color and drawway
-
+static float coefVal = 0;
+static osg::ref_ptr<osg::Uniform> coef = new osg::Uniform("coef", float(0));
 static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,0.4));
 static osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth(2);
 enum DrawWay
@@ -64,15 +65,31 @@ void Radar::Radar::updateDrawStyle(int index) {
 	}
 }
 
-void Radar::Radar::updateEMI(int index)
+void Radar::Radar::updateEMI(int index, bool flg)
 {
 	if( index == 0 )
 	{
+
 		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(true);
 	}else if( index == 1)
 	{
 		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(false);
 	}
+}
+
+void Radar::Radar::updateEMICoef()
+{
+	bool is;
+	rt->getOrCreateStateSet()->getUniform("isDisruption")->get(is);
+	if ( is ) {
+		if (coefVal < 1) coefVal += 0.05;
+		rt->getOrCreateStateSet()->getUniform("coef")->set(coefVal);
+	}else
+	{
+		if (coefVal >0) coefVal -= 0.05;
+		rt->getOrCreateStateSet()->getUniform("coef")->set(coefVal);
+	}
+
 }
 
 Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
@@ -126,7 +143,7 @@ void Radar::Radar::submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> ro
 	StateSet->addUniform(colorUniform);
 	StateSet->addUniform(mvpUniform);
 	StateSet->addUniform(isDisruptionUniform);
-
+	StateSet->addUniform(coef);
 	StateSet->addUniform(factorArray);
 	StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
 	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);

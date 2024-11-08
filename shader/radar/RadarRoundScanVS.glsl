@@ -5,8 +5,11 @@ layout(location = 0) in vec4 pos;
 uniform mat4 mvp;
 
 uniform vec4 factor4[3];  
+const float power = 1500000000000.f;
+
 
 const float globalRadius = 6356752.3142;
+uniform float coef;
 uniform bool isDisruption;
 
 void main()                     
@@ -20,7 +23,7 @@ void main()
 
 
         // 避免除零的情况，同时也优化了除法顺序  
-        if( len < factor4[i].w ) bias += 1500000000000.0 * normalize(diff) / (len + 1.0);
+        if( len < factor4[i].w ) bias += coef *power * normalize(diff) / (len + 1.0);
     }
     vec3 newPos = pos.xyz + bias;
 

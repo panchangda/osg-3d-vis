@@ -39,9 +39,11 @@ public:
 	};
 	void updateEMI(int index)
 	{
-		rad->updateEMI(index);
+		indexUpdated = !index;
+		rad->updateEMI(index, indexUpdated);
 	};
 private:
+	bool indexUpdated = false;
     Ui::RadarUi *ui;
 	Radar::Radar* rad;
 };

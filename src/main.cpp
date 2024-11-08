@@ -34,6 +34,7 @@ void osgSetUp();
 void initViewer(osgViewer::Viewer &viewer);
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root);
 void draw( osgViewer::Viewer &viewer, const QApplication& QApp);
+Radar::Radar* meshRadar = nullptr;
 
 int main(int argc, char *argv[])
 {
@@ -144,10 +145,17 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// * Mesh radar
 	// */
 
+<<<<<<< HEAD
+	RadarUi* rui = new RadarUi();
+	meshRadar = new Radar::Radar(viewer, root);
+	rui->setRad(meshRadar);
+	rui->show();
+=======
 	// RadarUi* rui = new RadarUi();
 	// auto radar = new Radar::Radar(viewer, root);
 	// rui->setRad(radar);
 	// rui->show();
+>>>>>>> 25496ac98afa64c53413af7ea0cb0f42bb2047b3
 
 
 	/*
@@ -243,7 +251,7 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 		prevTime = currentTime;
 		viewer.frame();
 
-
+		meshRadar->updateEMICoef();
 
 		/*if (flag == 0) {
 				Axis* axis = new Axis();
