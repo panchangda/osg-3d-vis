@@ -88,20 +88,20 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 	//auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
 
-	/*
-	auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
-	*/
+	
+	//auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
+	
 	///*
 	// * Velocity Field Visualizations
 	// */
 	// Show Streamline: CPU (enable choosing one streamling)
-	/*
-	auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-		viewer,
-		root,
-		viewer.getCamera(),
-		osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
-		*/
+	//
+	//auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+	//	viewer,
+	//	root,
+	//	viewer.getCamera(),
+	//	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+	//	
 
 	//// Show Streamline: GPU
 	// auto slPtr = VelocityFieldGPU::Generate(
@@ -143,9 +143,9 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//VoxelRadar::submitRadar(root);
 
 
-	///*
-	// * Mesh radar
-	// */
+	/////*
+	//// * Mesh radar
+	//// */
 
 
 	RadarUi* rui = new RadarUi();
@@ -247,8 +247,6 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 
 		prevTime = currentTime;
 		viewer.frame();
-
-		meshRadar->updateEMICoef();
 
 		/*if (flag == 0) {
 				Axis* axis = new Axis();

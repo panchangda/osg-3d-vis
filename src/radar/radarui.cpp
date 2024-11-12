@@ -19,6 +19,5 @@ void RadarUi::setConnect() {
 	connect(ui->ColorA, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateA);
 	connect(ui->lineWidth, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateLineWidth);
 	connect(ui->DisplayList, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RadarUi::updateDrawStyle);
-	connect(ui->comboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RadarUi::updateEMI);
 }
 

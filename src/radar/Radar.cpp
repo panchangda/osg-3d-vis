@@ -4,15 +4,16 @@
 #include <osg/BlendFunc>
 #include <osg/BlendEquation>
 #include <osg/BlendColor>
+#include <osg/Camera>
+#include <osgViewer/Viewer>
 
 #include "cmath"
 #include "../loader/OSGPCDLoader.h"
 
 // ui part
 // color and drawway
-static float coefVal = 0;
-static osg::ref_ptr<osg::Uniform> coef = new osg::Uniform("coef", float(0));
-static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,0.4));
+
+static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,1));
 static osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth(2);
 enum DrawWay
 {
@@ -21,31 +22,31 @@ enum DrawWay
 };
 static DrawWay usePattern = surface ;
 
-
+static osg::ref_ptr<osg::Uniform> EmicolorUniform = new osg::Uniform("mainColor", osg::Vec4f(127/255	, 1, 112/255, 0.2));
 
 void Radar::Radar::updateR(double value) {
 	osg::Vec4 color;
 	colorUniform->get(color);
 	color.r() = value;
-	rt->getOrCreateStateSet()->getUniform("mainColor")->set(color);
+	RadarRT->getOrCreateStateSet()->getUniform("mainColor")->set(color);
 };
 void Radar::Radar::updateG(double value) {
 	osg::Vec4 color;
 	colorUniform->get(color);
 	color.g() = value;
-	rt->getOrCreateStateSet()->getUniform("mainColor")->set(color);
+	RadarRT->getOrCreateStateSet()->getUniform("mainColor")->set(color);
 };
 void Radar::Radar::updateB(double value) {
 	osg::Vec4 color;
 	colorUniform->get(color);
 	color.b() = value;
-	rt->getOrCreateStateSet()->getUniform("mainColor")->set(color);
+	RadarRT->getOrCreateStateSet()->getUniform("mainColor")->set(color);
 };
 void Radar::Radar::updateA(double value) {
 	osg::Vec4 color;
 	colorUniform->get(color);
 	color.a() = value;
-	rt->getOrCreateStateSet()->getUniform("mainColor")->set(color);
+	RadarRT->getOrCreateStateSet()->getUniform("mainColor")->set(color);
 
 };
 void Radar::Radar::updateLineWidth(double value) {
@@ -54,50 +55,22 @@ void Radar::Radar::updateLineWidth(double value) {
 void Radar::Radar::updateDrawStyle(int index) {
 	if (index == 0) {
 		osg::ref_ptr<osg::PolygonMode> polyMode = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::FILL);
-		rt->getOrCreateStateSet()->setAttribute(polyMode);
-		rt->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::OFF);
+		RadarRT->getOrCreateStateSet()->setAttribute(polyMode);
+		RadarRT->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::OFF);
 
 	}
 	else if( index == 1){
 		osg::ref_ptr<osg::PolygonMode> polyMode = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
-		rt->getOrCreateStateSet()->setAttribute(polyMode);
-		rt->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::ON);
+		RadarRT->getOrCreateStateSet()->setAttribute(polyMode);
+		RadarRT->getOrCreateStateSet()->setAttributeAndModes(lineWidth, osg::StateAttribute::ON);
 	}
 }
 
-void Radar::Radar::updateEMI(int index, bool flg)
-{
-	if( index == 0 )
-	{
-
-		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(true);
-	}else if( index == 1)
-	{
-		rt->getOrCreateStateSet()->getUniform("isDisruption")->set(false);
-	}
-}
-
-void Radar::Radar::updateEMICoef()
-{
-	bool is;
-	rt->getOrCreateStateSet()->getUniform("isDisruption")->get(is);
-	if ( is ) {
-		if (coefVal < 1) coefVal += 0.05;
-		rt->getOrCreateStateSet()->getUniform("coef")->set(coefVal);
-	}else
-	{
-		if (coefVal >0) coefVal -= 0.05;
-		rt->getOrCreateStateSet()->getUniform("coef")->set(coefVal);
-	}
-
-}
 
 Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 {
 	setCamera(viewer.getCamera());
-	addFactor({ 30,100,600000,10000000 });
-	addFactor({ 20,105,600000,10000000});
-	addFactor({ 35,120,600000,12000000 });
+
 
 	Addllh(osg_3d_vis::llhRange(25.l, 35., 105., 115., 1., 600000.));
 	Addllh(osg_3d_vis::llhRange(14., 19., 90., 100., 100000., 600000.));
@@ -109,15 +82,79 @@ Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 
 	Addllh(osg_3d_vis::llhRange(10., 20., 110., 120., 200000., 600000.));
 	Addllh(osg_3d_vis::llhRange(5., 10., 110., 120., 300000., 600000.));
-	submit(viewer, root);
+	
+	GenerateRadarMesh();
+
+	addEmi({ 30,110,700000,5 });
+	GenetateMeiMesh();
+	osg::Viewport* viewport = viewer.getCamera()->getViewport();
+	if (viewport)
+	{
+		forTexture = new osg::Camera;
+		root->addChild(forTexture.get());
+		// 获取分辨率
+		int width = viewport->width();
+		int height = viewport->height();
+		color = new osg::Texture2D;
+		color->setTextureSize(width, height);
+		color->setSourceFormat(GL_RGBA);
+		color->setInternalFormat(GL_RGBA32F_ARB);
+		color->setSourceType(GL_FLOAT);
+		color->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
+		color->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
+
+		depth = new osg::Texture2D;
+		depth->setTextureSize(width, height);
+		depth->setSourceFormat(GL_DEPTH_COMPONENT);
+		depth->setInternalFormat(GL_DEPTH_COMPONENT24);
+		depth->setSourceType(GL_FLOAT);
+		depth->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
+		depth->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
+
+		forTexture->setRenderOrder(osg::Camera::PRE_RENDER, 0);
+		forTexture->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+		forTexture->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		forTexture->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+		forTexture->attach(osg::Camera::COLOR_BUFFER, color);
+		forTexture->attach(osg::Camera::DEPTH_BUFFER, depth);
+		forTexture->addChild(RadarRT);
+		forTexture->addChild(Emirt);
+		forTexture->setViewport(0, 0, width, height);
+
+		osg::ref_ptr<osg::Geometry> quad = createCustomQuad();
+		osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+		geode->addDrawable(quad);
+
+		root->addChild(geode);
+		osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
+		osg::ref_ptr<osg::Shader> FragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
+		VertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/MergeVS.glsl");
+		FragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/MergePS.glsl");
+		osg::ref_ptr<osg::Program> Program = new osg::Program;
+		Program->addShader(VertexShader);
+		Program->addShader(FragmentShader);
+
+		// 获取或创建 StateSet
+		osg::ref_ptr<osg::StateSet> stateSet = geode->getOrCreateStateSet();
+		stateSet->setAttributeAndModes(Program);
+		stateSet->setTextureAttributeAndModes(0, color.get(), osg::StateAttribute::ON);
+		stateSet->setTextureAttributeAndModes(1, depth.get(), osg::StateAttribute::ON);
+
+	}
+	else
+	{
+		exit(1);
+	}
+	
 }
 
-void Radar::Radar::submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
+void Radar::Radar::GenerateRadarMesh()
 {
 
-	rt = new osg::Geode;
-	for (int i = 0; i < ranges.size(); ++i) {
-		rt->addDrawable(Geos[i]);
+	RadarRT = new osg::Geode;
+	for (int i = 0; i < Geos.size(); ++i) {
+		RadarRT->addDrawable(Geos[i]);
 	}
 
 	osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
@@ -127,36 +164,39 @@ void Radar::Radar::submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> ro
 	osg::ref_ptr<osg::Program> Program = new osg::Program;
 	Program->addShader(VertexShader);
 	Program->addShader(FragmentShader);
-
-
-
-
-	osg::ref_ptr<osg::Uniform> factorArray = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC4, "factor4", factors.size());
-	for (int i = 0; i < factors.size(); ++i) {
-		factorArray->setElement(i, factors[i]);
-	}
-	osg::ref_ptr<osg::Uniform> isDisruptionUniform = new osg::Uniform("isDisruption", false);
-
-	osg::ref_ptr<osg::StateSet> StateSet = rt->getOrCreateStateSet();
+	osg::ref_ptr<osg::StateSet> StateSet = RadarRT->getOrCreateStateSet();
 
 	StateSet->setAttributeAndModes(Program);
 	StateSet->addUniform(colorUniform);
 	StateSet->addUniform(mvpUniform);
-	StateSet->addUniform(isDisruptionUniform);
-	StateSet->addUniform(coef);
-	StateSet->addUniform(factorArray);
-	StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+
+	StateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
 	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
-	root->addChild(rt);
 }
 
-void Radar::Radar::addFactor(osg::Vec4 fac)
+void Radar::Radar::GenetateMeiMesh()
 {
-	double x, y, z;
-	osg_3d_vis::llh2xyz_Ellipsoid(fac.x(), fac.y(), fac.z(), x, y, z);
-	osg::Vec4 p(x, y, z, fac.w());
-	factors.push_back(p);
+	Emirt = new osg::Geode;
+	for (int i = 0; i < EmiGeos.size(); ++i) {
+		Emirt->addDrawable(EmiGeos[i]);
+	}
+
+	osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
+	osg::ref_ptr<osg::Shader> FragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
+	VertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/EmiVS.glsl");
+	FragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "radar/EmiPS.glsl");
+	osg::ref_ptr<osg::Program> Program = new osg::Program;
+	Program->addShader(VertexShader);
+	Program->addShader(FragmentShader);
+	osg::ref_ptr<osg::StateSet> StateSet = RadarRT->getOrCreateStateSet();
+
+	StateSet->setAttributeAndModes(Program);
+	StateSet->addUniform(EmicolorUniform);
+	StateSet->addUniform(mvpUniform);
+
+	StateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
+	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 }
 
 
@@ -254,3 +294,42 @@ osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 	ret->addPrimitiveSet(indices);
 	return ret;
 }
+
+osg::ref_ptr<osg::Geometry> Radar::Radar::GenerateEmi(osg::Vec4 fac)
+{
+	const int Subdivision = 64;
+
+	std::vector<osg::Vec3> llhranges;
+
+	llhranges.push_back({ fac.x(),fac.y(),fac.z() });
+	for(int i=0; i<Subdivision; ++i)
+	{
+		float beta = 2 * osg::PI * i / Subdivision;
+		llhranges.push_back({ fac.x() + fac.z()*sin(beta),fac.y() + fac.z()*cos(beta),fac.z() });
+	}
+	osg::ref_ptr<osg::Vec3Array> Vec3arrays = new osg::Vec3Array;
+	osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+
+	for(auto vec : llhranges)
+	{
+		auto k = vec.y(), j = vec.x(), he = vec.z();
+		double x, y, z;
+		osg_3d_vis::llh2xyz_Ellipsoid(k, j, he, x, y, z);
+		osg::Vec3 p(x, y, z);
+		Vec3arrays->push_back(p);
+	}
+
+	for(int i=1; i<=Subdivision; ++i)
+	{
+		indices->push_back(0);
+		indices->push_back(i);
+		indices->push_back( (i+1)%Subdivision);
+	}
+
+	osg::ref_ptr<osg::Geometry> ret = new osg::Geometry;
+	ret->setVertexAttribArray(0, Vec3arrays, osg::Array::BIND_PER_VERTEX);
+	ret->addPrimitiveSet(indices);
+	return ret;
+}
+
+

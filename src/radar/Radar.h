@@ -176,26 +176,73 @@ namespace Radar {
 			mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
 			mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(camera));
 		};
+		osg::ref_ptr<osg::Texture2D> color;
+		osg::ref_ptr<osg::Texture2D> depth;
+		osg::ref_ptr<osg::Camera> forTexture;
 
-		// 提前读入
-		std::vector<osg::Vec4> factors;
 
 		std::vector<osg_3d_vis::llhRange> ranges;
 		std::vector<osg::ref_ptr<osg::Geometry>> Geos;
+		//for actualy radar draw 
+		osg::ref_ptr<osg::Geode> RadarRT;
 
-		//for actualy draw 
-		osg::ref_ptr<osg::Geode> rt;
+		std::vector<osg::Vec4> EmiFactors;
+		std::vector<osg::ref_ptr<osg::Geometry>> EmiGeos;
+		// for EMI draw
+		osg::ref_ptr<osg::Geode> Emirt;
+
+		osg::ref_ptr<osg::Geometry> createCustomQuad() {
+			osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+
+			// 创建顶点数组
+			osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+			vertices->push_back(osg::Vec3(-1.0f, -1.0f, 0.0f));  // 左下角
+			vertices->push_back(osg::Vec3(1.0f, -1.0f, 0.0f));   // 右下角
+			vertices->push_back(osg::Vec3(1.0f, 1.0f, 0.0f));    // 右上角
+			vertices->push_back(osg::Vec3(-1.0f, 1.0f, 0.0f));   // 左上角
+
+			geom->setVertexAttribArray(0, vertices, osg::Array::BIND_PER_VERTEX);
+
+			// 创建 UV 坐标数组
+			osg::ref_ptr<osg::Vec2Array> uvs = new osg::Vec2Array;
+			uvs->push_back(osg::Vec2(0.0f, 0.0f));  // 左下角
+			uvs->push_back(osg::Vec2(1.0f, 0.0f));  // 右下角
+			uvs->push_back(osg::Vec2(1.0f, 1.0f));  // 右上角
+			uvs->push_back(osg::Vec2(0.0f, 1.0f));  // 左上角
+
+			geom->setVertexAttribArray(1, uvs, osg::Array::BIND_PER_VERTEX);
 
 
-		void submit(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root);
 
-		void addFactor(osg::Vec4 fac);
+			// 创建顶点索引数组
+			osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_QUADS);
+			indices->push_back(0);
+			indices->push_back(1);
+			indices->push_back(2);
+			indices->push_back(3);
+
+			geom->addPrimitiveSet(indices);
+
+			return geom;
+		}
+
+		void GenerateRadarMesh();
+
+		void GenetateMeiMesh();
+
 		void Addllh(osg_3d_vis::llhRange range)
 		{
 			ranges.push_back(range);
 			Geos.push_back(Generate(ranges.back()));
 		}
+		void addEmi(osg::Vec4 fac)
+		{
+			EmiFactors.push_back(fac);
+			EmiGeos.push_back(GenerateEmi(fac));
+		}
 		osg::ref_ptr<osg::Geometry>  Generate(osg_3d_vis::llhRange range);
+
+		osg::ref_ptr<osg::Geometry>  GenerateEmi(osg::Vec4 fac);
 
 		//for ui part 
 		void updateR(double value);

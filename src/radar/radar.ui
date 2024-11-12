@@ -23,79 +23,6 @@
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <widget class="QLabel" name="label">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>DisplayMode</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLabel" name="label_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Color:G</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QDoubleSpinBox" name="ColorR">
-      <property name="maximum">
-       <double>1.000000000000000</double>
-      </property>
-      <property name="singleStep">
-       <double>0.100000000000000</double>
-      </property>
-      <property name="value">
-       <double>1.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="6">
-     <widget class="QLabel" name="label_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Line_Width</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="4">
-     <widget class="QDoubleSpinBox" name="ColorB">
-      <property name="maximum">
-       <double>1.000000000000000</double>
-      </property>
-      <property name="singleStep">
-       <double>0.010000000000000</double>
-      </property>
-      <property name="value">
-       <double>0.600000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="HasMSI">
-      <property name="text">
-       <string>HasEMI</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="2">
-     <widget class="QLabel" name="label_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Color:R</string>
-      </property>
-     </widget>
-    </item>
     <item row="2" column="3">
      <widget class="QDoubleSpinBox" name="ColorG">
       <property name="maximum">
@@ -119,16 +46,82 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="6">
-     <widget class="QDoubleSpinBox" name="lineWidth">
-      <property name="minimum">
+    <item row="1" column="0">
+     <widget class="QLabel" name="label">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>DisplayMode</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLabel" name="label_3">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>Color:G</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="5">
+     <widget class="QLabel" name="label_5">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>Color:A</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QDoubleSpinBox" name="ColorR">
+      <property name="maximum">
        <double>1.000000000000000</double>
       </property>
-      <property name="maximum">
-       <double>5.000000000000000</double>
+      <property name="singleStep">
+       <double>0.100000000000000</double>
       </property>
       <property name="value">
-       <double>2.000000000000000</double>
+       <double>1.000000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="4">
+     <widget class="QDoubleSpinBox" name="ColorB">
+      <property name="maximum">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.010000000000000</double>
+      </property>
+      <property name="value">
+       <double>0.600000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QDoubleSpinBox" name="ColorA">
+      <property name="maximum">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.010000000000000</double>
+      </property>
+      <property name="value">
+       <double>0.400000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="6">
+     <widget class="QLabel" name="label_6">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>Line_Width</string>
       </property>
      </widget>
     </item>
@@ -146,44 +139,27 @@
       </item>
      </widget>
     </item>
-    <item row="2" column="5">
-     <widget class="QDoubleSpinBox" name="ColorA">
-      <property name="maximum">
+    <item row="2" column="6">
+     <widget class="QDoubleSpinBox" name="lineWidth">
+      <property name="minimum">
        <double>1.000000000000000</double>
       </property>
-      <property name="singleStep">
-       <double>0.010000000000000</double>
+      <property name="maximum">
+       <double>5.000000000000000</double>
       </property>
       <property name="value">
-       <double>0.400000000000000</double>
+       <double>2.000000000000000</double>
       </property>
      </widget>
     </item>
-    <item row="1" column="5">
-     <widget class="QLabel" name="label_5">
+    <item row="1" column="2">
+     <widget class="QLabel" name="label_2">
       <property name="enabled">
        <bool>false</bool>
       </property>
       <property name="text">
-       <string>Color:A</string>
+       <string>Color:R</string>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="2" colspan="5">
-     <widget class="QComboBox" name="comboBox">
-      <property name="currentText">
-       <string>no</string>
-      </property>
-      <item>
-       <property name="text">
-        <string>yes</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>no</string>
-       </property>
-      </item>
      </widget>
     </item>
    </layout>
