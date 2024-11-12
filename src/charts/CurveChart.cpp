@@ -1,5 +1,7 @@
 #include "CurveChart.h"
 
+#include <osg/LineWidth>
+
 osg::ref_ptr<osg::Geode> CurveChart::generateCurveChart()
 {
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;

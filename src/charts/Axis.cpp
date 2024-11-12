@@ -1,6 +1,10 @@
 
 #include "Axis.h"
 
+#include <osg/LineWidth>
+#include <osg/ShapeDrawable>
+#include <osgText/Text>
+
 using namespace std;
 osg::ref_ptr<osg::Geode> Axis::DrawAxis(float ori_x, float ori_y, float ori_z, float a_x, float a_y, float a_z, float font_size)
 {
@@ -8,10 +12,10 @@ osg::ref_ptr<osg::Geode> Axis::DrawAxis(float ori_x, float ori_y, float ori_z, f
     osg::ref_ptr<osg::ShapeDrawable> pShapeDrawable = new osg::ShapeDrawable(pSphereShape.get());
     pShapeDrawable->setColor(osg::Vec4(0.62, 0.62, 0.62, 0.1f));
 
-    //´´½¨±£´æ¼¸ºÎÐÅÏ¢µÄ¶ÔÏó
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¼¸ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ä¶ï¿½ï¿½ï¿½
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry();
 
-    //´´½¨ËÄ¸ö¶¥µã
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½
     osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array();
     v->push_back(osg::Vec3(ori_x, ori_y, ori_z));
     v->push_back(osg::Vec3(ori_x + a_x, ori_y, ori_z));
@@ -22,7 +26,7 @@ osg::ref_ptr<osg::Geode> Axis::DrawAxis(float ori_x, float ori_y, float ori_z, f
 
     v->push_back(osg::Vec3(ori_x, ori_y, ori_z + a_z));
 
-    //·ÅÍø¸ñÏß
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for (int i = 1; i <= 10; i++) {
         v->push_back(osg::Vec3(2*i, 0, 0));
         v->push_back(osg::Vec3(2 * i, 21, 0));

@@ -1,11 +1,14 @@
 #include "PolylineChart.h"
 
+#include <osg/LineWidth>
+#include <osg/ShapeDrawable>
+
 osg::ref_ptr<osg::Geode> PolylineChart::generateLineChart()
 {
     float prex, prey, prez;
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     for (int j = 0; j < 5; j++) {
-        //Éú³ÉÒ»¸öËæ»úµÄÑÕÉ«
+        //ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
         float r = rand() % 100 / 100.f;
         float g = rand() % 100 / 100.f;
         float b = rand() % 100 / 100.f;
@@ -16,12 +19,12 @@ osg::ref_ptr<osg::Geode> PolylineChart::generateLineChart()
             float y = j * 4;
             float z = rand() % 20 / 1.f;
 
-            //¾«Ï¸¶È
+            //ï¿½ï¿½Ï¸ï¿½ï¿½
             osg::TessellationHints* hints1 = new osg::TessellationHints();
-            //ÉèÖÃ¾«Ï¸¶È
+            //ï¿½ï¿½ï¿½Ã¾ï¿½Ï¸ï¿½ï¿½
             hints1->setDetailRatio(1.1f);
 
-            //´´½¨ÇòÌå
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             osg::Sphere* sphere = new osg::Sphere(osg::Vec3(x, y, z), 0.3f);
             osg::ShapeDrawable* draw1 = new osg::ShapeDrawable(sphere, hints1);
             draw1->setColor(color);
@@ -29,7 +32,7 @@ osg::ref_ptr<osg::Geode> PolylineChart::generateLineChart()
 
            
 
-            //»­Ïß
+            //ï¿½ï¿½ï¿½ï¿½
             if (i > 0) {
                 osg::ref_ptr<osg::Geometry> geom = new osg::Geometry();
                 osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array();

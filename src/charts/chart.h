@@ -3,16 +3,8 @@
 
 #include <QWidget>
 #include <osgViewer/Viewer>
-#include <osg/Texture3D>
-#include <osg/Texture2D>
-#include <osg/Point>
-#include <osg/Geode>
-#include <osg/Geometry>
-#include <osg/StateSet>
 #include <osgDB/ReadFile>
-#include <osgGA/TrackballManipulator>
-#include <osg/ShapeDrawable>
-#include <osgUtil/Tessellator>
+
 #include<stack>
 using namespace std;
 

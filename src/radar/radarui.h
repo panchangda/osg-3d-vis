@@ -5,7 +5,7 @@
 
 #include "Radar.h"
 
-#include "ui_radar.h"
+#include "./ui_radar.h"
 
 class RadarUi : public QWidget
 {

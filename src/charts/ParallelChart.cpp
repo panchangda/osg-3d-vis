@@ -1,4 +1,5 @@
 ﻿#include "ParallelChart.h"
+#include <osg/LineWidth>
 
 osg::ref_ptr<osg::Geode> ParallelChart::generateParallel()
 {

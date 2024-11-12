@@ -88,7 +88,9 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 	//auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
 
+	/*
 	auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
+	*/
 	///*
 	// * Velocity Field Visualizations
 	// */
@@ -145,17 +147,12 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// * Mesh radar
 	// */
 
-<<<<<<< HEAD
+
 	RadarUi* rui = new RadarUi();
 	meshRadar = new Radar::Radar(viewer, root);
 	rui->setRad(meshRadar);
 	rui->show();
-=======
-	// RadarUi* rui = new RadarUi();
-	// auto radar = new Radar::Radar(viewer, root);
-	// rui->setRad(radar);
-	// rui->show();
->>>>>>> 25496ac98afa64c53413af7ea0cb0f42bb2047b3
+
 
 
 	/*

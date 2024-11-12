@@ -1,5 +1,13 @@
 ﻿#include "RadarChart.h"
 
+#include <osg/Geometry>
+#include <osg/LineWidth>
+#include <osg/ShapeDrawable>
+
+namespace osg {
+    class ShapeDrawable;
+}
+
 osg::ref_ptr<osg::Geode> RadarChart::generateRadar()
 {
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
