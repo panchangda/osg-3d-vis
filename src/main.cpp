@@ -143,9 +143,9 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//VoxelRadar::submitRadar(root);
 
 
-	/////*
-	//// * Mesh radar
-	//// */
+	///*
+	// * Mesh radar
+	// */
 
 
 	RadarUi* rui = new RadarUi();

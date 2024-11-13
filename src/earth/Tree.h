@@ -104,7 +104,6 @@ public:
         osg::ref_ptr<osg::Geode> quads;
         const int instanceCount = 100;
         std::vector<osg::Vec3> instancePos;
-
     };
 
 

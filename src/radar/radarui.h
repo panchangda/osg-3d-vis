@@ -3,15 +3,19 @@
 
 #include <QWidget>
 
-#include "Radar.h"
+#include "./Radar.h"
 
 #include "./ui_radar.h"
+
 
 class RadarUi : public QWidget
 {
     Q_OBJECT
 
 public:
+	Ui::RadarUi* ui;
+	Radar::Radar* rad;
+
     RadarUi(QWidget *parent = nullptr);
     ~RadarUi();
 	void setConnect();
@@ -37,14 +41,27 @@ public:
 	void updateDrawStyle(int index) {
 		rad->updateDrawStyle(index);
 	};
-	void updateEMI(int index)
+
+	void updateEMIR(double value)
 	{
-		indexUpdated = !index;
-		rad->updateEMI(index, indexUpdated);
-	};
-private:
-	bool indexUpdated = false;
-    Ui::RadarUi *ui;
-	Radar::Radar* rad;
+		rad->updateEMIR(value);
+	}
+	void updateEMIG(double value)
+	{
+		rad->updateEMIG(value);
+	}
+	void updateEMIB(double value)
+	{
+		rad->updateEMIB(value);
+	}
+	void updateEMIPHI(double value)
+	{
+		rad->updateEMIPHI(value);
+	}
+	void updateEMITHETA(double value)
+	{
+		rad->updateEMITHETA(value);
+	}
+
 };
 #endif // RADARUI_H

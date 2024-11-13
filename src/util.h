@@ -74,6 +74,19 @@ inline osg::Vec3d llh2xyz_Ellipsoid(double _lat, double _lon, double _h) {
 	pEllModel->convertLatLongHeightToXYZ(lat, lon, h, xyz.x(), xyz.y(), xyz.z());
 	return xyz;
 }
+
+class TimeUniformCallback : public osg::Uniform::Callback {
+public:
+	virtual void operator()(osg::Uniform* uniform, osg::NodeVisitor* nv) {
+		// 逐帧更新的逻辑，例如，更新时间值
+		static float time = 0.0f;
+		time += 0.01f; // 每帧增加 0.01，调整以适应应用需求
+
+		// 将更新后的值设置到 uniform
+		uniform->set(time);
+	}
+};
+
 struct ModelViewProjectionMatrixCallback : public osg::Uniform::Callback
 {
 	ModelViewProjectionMatrixCallback(osg::Camera* camera) :
