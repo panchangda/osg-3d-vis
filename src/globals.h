@@ -17,7 +17,7 @@ namespace osg_3d_vis{
     constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
 
     // Earth
-    constexpr bool drawEarth = false;
+    constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
 
     // Particles:
