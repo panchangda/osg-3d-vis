@@ -19,6 +19,10 @@ void RadarUi::setConnect() {
 	connect(ui->ColorA, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateA);
 	connect(ui->lineWidth, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateLineWidth);
 	connect(ui->DisplayList, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RadarUi::updateDrawStyle);
-	connect(ui->comboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RadarUi::updateEMI);
+	connect(ui->EMIR, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateEMIR);
+	connect(ui->EMIG, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateEMIG);
+	connect(ui->EMIB, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateEMIB);
+	connect(ui->EMIPHI, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateEMIPHI);
+	connect(ui->EMITHETA, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &RadarUi::updateEMITHETA);
 }
 
