@@ -309,6 +309,10 @@ namespace osg_3d_vis{
 		streamlineText->setCharacterSize(30.0f);
 
 		textGeode->addDrawable(streamlineText);
+
+		perStreamlineTextGeode = new osg::Geode;
+
+		hudCamera->addChild(perStreamlineTextGeode);
 		hudCamera->addChild(textGeode);
 
 		hudCamera->setRenderOrder(osg::Camera::POST_RENDER, 999);

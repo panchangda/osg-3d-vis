@@ -86,7 +86,7 @@ namespace osg_3d_vis {
 		};
 		// true: 2d, false: 3d
 		EDataDimension dataDim = EDataDimension::D3;
-		osg::ref_ptr<osgText::Text> streamlineText;
+
 		// data dimensions
 		float dimX, dimY, dimZ;
 		float h;
@@ -125,6 +125,28 @@ namespace osg_3d_vis {
 		float selectedNDCXMin, selectedNDCXMax, selectedNDCYMin, selectedNDCYMax;
 		std::string LineCountText = "selected: 0, ";
 		std::string LineAvgSpeedText = "average speed: 0.0";
+
+		osg::ref_ptr<osgText::Text> streamlineText;
+		osg::ref_ptr<osg::Geode> perStreamlineTextGeode;
+		std::map<int, osg::ref_ptr<osgText::Text>> LineToText;
+		std::vector<osg::ref_ptr<osgText::Text>> texts;
+		void addSelectedStreamline(int lineIndex) {
+			if(selected[lineIndex] == false) {
+				selected[lineIndex] = true;
+				selectedLineCount++;
+				osg::ref_ptr<osgText::Text> newText = new osgText::Text();
+				newText->setFont("fonts/arial.ttf");
+				newText->setText("");
+				newText->setPosition(osg::Vec3(1.0f, 1.0f, 0));  // 屏幕中心
+				newText->setColor(osg::Vec4(1.0f, 1.0f, 0.0f, 1.0f));  // 黄色
+				newText->setCharacterSize(10.0f);
+
+				perStreamlineTextGeode->addDrawable(newText);
+				texts.push_back(newText);
+				LineToText[lineIndex] = newText;
+			}
+
+		}
 		void updateSelectedInfo(float sxMin, float sxMax, float syMin, float syMax) {
 			// update units
 			LineCountText = std::string("selected: ") + std::to_string(selectedLineCount) + std::string(",");
@@ -144,6 +166,8 @@ namespace osg_3d_vis {
 				PosY = (selectedNDCYMin*0.5f+0.5f)*1080;
 			}
 			// streamlineText->setPosition(osg::Vec3(PosX, PosY, 0.0f));
+
+
 		}
 		void clearSelected() {
 			selectedLineCount = 0;
@@ -151,10 +175,14 @@ namespace osg_3d_vis {
 			LineAvgSpeedText = "average speed: 0.0";
 			// clear selected map
 			selected.clear();
+			LineToText.clear();
 			// update text
 			streamlineText->setPosition(osg::Vec3(1.0f, 1.0f, 0.0f));
 			streamlineText->setText(LineCountText + LineAvgSpeedText);
 			streamlineText->setColor(osg::Vec4(0.5f, 0.5f, 0.5f, 0.3f));
+
+			// clear per stream line texts
+			perStreamlineTextGeode->removeChildren(0, perStreamlineTextGeode->getNumChildren());
 		}
 
 		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range);
@@ -541,8 +569,7 @@ namespace osg_3d_vis {
 				|| XYInsideRange(projLinePoints2.x(), projLinePoints2.y(), xMin, xMax, yMin, yMax)) {
 				std::cout << "line " << i <<  " is intersected" << std::endl;
 				if(sl->selected[i] == false) {
-					sl->selected[i] = true;
-					sl->selectedLineCount++;
+					sl->addSelectedStreamline(i);
 				}
 
 			}

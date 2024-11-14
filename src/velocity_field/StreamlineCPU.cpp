@@ -753,9 +753,28 @@ namespace osg_3d_vis {
                 c0 = c1 = lineRGBA;
             }
 
+            // process per selected streamline appearance & info display
             if (selected[i] == true && selectedLineCount > 0) {
                 c0 = c1 = selectionRGBA;
-                selectedAvgSpeed += speeds[i][idx-1] / (float) selectedLineCount;
+                osg::Vec3 currSpeed = speeds[i][idx-1];
+                // x y using lat&lon, z using height
+                // scale xy to match z
+                currSpeed.x()*=1000.0f;
+                currSpeed.y()*=1000.0f;
+                selectedAvgSpeed += currSpeed / (float) selectedLineCount;
+
+
+                osg::ref_ptr LineText = LineToText[i];
+                char buffer[50];
+                std::snprintf(buffer,sizeof(buffer), "(%.1f,%.1f,%.1f)",currSpeed.x(),currSpeed.y(),currSpeed.z());
+
+                LineText->setText(buffer);
+
+                osg::Vec4 NDCCoord = osg::Vec4((*linePoints)[i * 2], 1.0) * mainCameraViewProjMatrix;
+                NDCCoord/=NDCCoord.w();
+                double screenPosX = (NDCCoord.x()*0.5f + 0.5f) * ViewerMainCamera->getViewport()->width() - 200.0f;
+                double screenPosY = (NDCCoord.y()*0.5f + 0.5f) * ViewerMainCamera->getViewport()->height() - 200.0f;
+                LineText->setPosition(osg::Vec3( screenPosX, screenPosY, 0));
             }
 
             (*lineColors)[i * 2].set(c0[0], c0[1], c0[2], c0[3]);
@@ -785,11 +804,13 @@ namespace osg_3d_vis {
         }
 
         if(selectedLineCount > 0) {
-            LineAvgSpeedText ="average speed:("
-            + std::to_string(selectedAvgSpeed.x())
-            + "," + std::to_string(selectedAvgSpeed.y())
-            + "," + std::to_string(selectedAvgSpeed.z())
-            + ")";
+
+            char buffer[50];
+            std::snprintf(buffer,sizeof(buffer),
+                "average speed:(%.1f,%.1f,%.1f)",
+                selectedAvgSpeed.x(),selectedAvgSpeed.y(),selectedAvgSpeed.z());
+
+            LineAvgSpeedText = buffer;
             streamlineText->setText(LineCountText + LineAvgSpeedText);
         }
         if (showArrow) {
