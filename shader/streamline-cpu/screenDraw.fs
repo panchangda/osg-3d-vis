@@ -19,14 +19,16 @@ void main(){
         FragColor = streamlineColor;
 //         FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
-    else
-        FragColor = screenColor;
+    else{
+        discard;
+    }
+        // FragColor = screenColor;
 
 
-    FragColor = streamlineColor;
+    // FragColor = streamlineColor;
     // FragColor = vec4(streamlineColor.a, 0.0, 0.0, 1.0);
     // FragColor = screenColor;
-    // FragColor = vec4(streamlineDepth, 0.0, 0.0, 1.0);
+    // FragColor = vec4(streamlineDepth, streamlineDepth, streamlineDepth, 1.0);
 
     // FragColor = streamlineColor;
     // FragColor = vec4(1.0, 0.0, 0.0, 1.0);

@@ -22,17 +22,19 @@ void main(){
     vec4 segmentColor =  texture(segmentColorTexture, v_textureCoordinates);
     float segmentDepth = texture(segmentDepthTexture, v_textureCoordinates).r;
 
-    vec4 decayedTrail = trailColor;
-    FragColor = vec4(segmentColor.rgb + decayedTrail.rgb, decayedTrail.a);
+    vec4 decayedTrailColor = trailColor * fadeOpacity;
+    FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, decayedTrailColor.a);
 
-    FragColor = vec4(decayedTrail.rgb, 1.0);
+//     FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, decayedTrailColor.a);
 
-    if(first){
-        gl_FragDepthEXT = segmentDepth;
-    }else
-    {
-        gl_FragDepthEXT = min(trailDepth, segmentDepth);
-    }
+//     if(first){
+//         gl_FragDepthEXT = segmentDepth;
+//     }else
+//     {
+//         gl_FragDepthEXT = min(trailDepth, segmentDepth);
+//     }
+
+    gl_FragDepthEXT = min(trailDepth, segmentDepth);
 
 //     if(gl_FragDepthEXT == trailDepth && FragColor.a <= 0.05){
 //         gl_FragDepthEXT = 1.0;

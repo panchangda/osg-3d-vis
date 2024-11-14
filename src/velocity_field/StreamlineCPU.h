@@ -14,7 +14,10 @@
 #include <osgDB/WriteFile>
 #include <random>
 
+#include <osgText/Text>
+
 #include "../util.h"
+
 
 namespace osg_3d_vis {
 	class updateNodeGeometryCallback;
@@ -83,7 +86,7 @@ namespace osg_3d_vis {
 		};
 		// true: 2d, false: 3d
 		EDataDimension dataDim = EDataDimension::D3;
-
+		osg::ref_ptr<osgText::Text> streamlineText;
 		// data dimensions
 		float dimX, dimY, dimZ;
 		float h;
@@ -113,8 +116,46 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Vec3Array> arrowPoints;
 		osg::ref_ptr<osg::Vec4Array> arrowColors;
 		osg::ref_ptr<osg::DrawArrays> arrowsDrawArray;
-		
+
 		std::map<int, bool> selected;
+		int selectedLineCount = 0;
+		osg::Vec3 selectedAvgSpeed;
+		float selectedLineMaxSpeed;
+		float selectedLineMinSpeed;
+		float selectedNDCXMin, selectedNDCXMax, selectedNDCYMin, selectedNDCYMax;
+		std::string LineCountText = "selected: 0, ";
+		std::string LineAvgSpeedText = "average speed: 0.0";
+		void updateSelectedInfo(float sxMin, float sxMax, float syMin, float syMax) {
+			// update units
+			LineCountText = std::string("selected: ") + std::to_string(selectedLineCount) + std::string(",");
+
+
+			// show text
+			streamlineText->setColor(osg::Vec4(1.0f, 1.0f, 0.0f, 1.0f));  // 黄色
+			// move to click xmin ymin position
+			selectedNDCXMin = sxMin, selectedNDCXMax = sxMax;
+			selectedNDCYMin = syMin, selectedNDCYMax = syMax;
+			int PosX, PosY;
+			if(ViewerMainCamera.valid()) {
+				PosX = (selectedNDCXMin*0.5f+0.5f) * ViewerMainCamera->getViewport()->width();
+				PosY = (selectedNDCYMin*0.5f+0.5f) * ViewerMainCamera->getViewport()->height();
+			}else {
+				PosX = (selectedNDCXMin*0.5f+0.5f)*1920;
+				PosY = (selectedNDCYMin*0.5f+0.5f)*1080;
+			}
+			// streamlineText->setPosition(osg::Vec3(PosX, PosY, 0.0f));
+		}
+		void clearSelected() {
+			selectedLineCount = 0;
+			LineCountText = "selected: 0, ";
+			LineAvgSpeedText = "average speed: 0.0";
+			// clear selected map
+			selected.clear();
+			// update text
+			streamlineText->setPosition(osg::Vec3(1.0f, 1.0f, 0.0f));
+			streamlineText->setText(LineCountText + LineAvgSpeedText);
+			streamlineText->setColor(osg::Vec4(0.5f, 0.5f, 0.5f, 0.3f));
+		}
 
 		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range);
 		void initFromDatFile3D(std::string str1, std::string str2, std::string str3,
@@ -155,8 +196,9 @@ namespace osg_3d_vis {
 		osg::ref_ptr<osg::Camera> createTrailDrawPass();
 		osg::ref_ptr<osg::Camera> createScreenDrawPass();
 		osg::ref_ptr<osg::Camera> createCopyPass();
+		osg::ref_ptr<osg::Camera> createTextPass();
 
-		void updateTrailDrawPassTextures();
+		osg::ref_ptr<osg::Camera> ViewerMainCamera;
 
 
 		int rttTextureSize;
@@ -164,6 +206,7 @@ namespace osg_3d_vis {
 		std::string shaderPath;
 
 		osg::Matrixd mainCameraViewMatrix;
+		osg::Matrixd mainCameraViewProjMatrix;
 
 		/* simple get & set value funcs */ 
 		bool isCameraSteady(osg::Matrixd _m) {
@@ -177,6 +220,9 @@ namespace osg_3d_vis {
 		}
 		void setShaderPath(std::string _shaderPath) {
 			shaderPath = _shaderPath;
+		}
+		void updateMainCameraViewProjMatrix(osg::Matrixd _m) {
+			mainCameraViewProjMatrix = _m;
 		}
 
 
@@ -286,7 +332,7 @@ namespace osg_3d_vis {
 		/* arrows */
 		bool showArrow;
 		bool arrowUseLineColor;
-		osg::Vec4 arrowRGBA;
+		osg::Vec4 arrowRGBA = osg::Vec4(1.0, 1.0, 1.0 ,1.0);
 
 		void updateArrowVisibility(int value) {
 			this->showArrow = value;
@@ -398,7 +444,8 @@ namespace osg_3d_vis {
 
 	};
 
-	// line selection 
+	// line selection
+
 	class PickHandler : public osgGA::GUIEventHandler {
 	public:
 		StreamLineCPU* sl;
@@ -419,34 +466,33 @@ namespace osg_3d_vis {
 
 	};
 
-	inline bool PickHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
-	{
-		switch (ea.getEventType())
-		{
-		case(osgGA::GUIEventAdapter::PUSH):
-		{
-			osgViewer::View* view = dynamic_cast<osgViewer::Viewer*>(&aa);
-			if (view) pick(view, ea);
-			return false;
-		}
-		case(osgGA::GUIEventAdapter::KEYDOWN):
-		{
-			if (ea.getKey() == 'c')
-			{
-				//osgViewer::View* view = dynamic_cast<osgViewer::Viewer*>(&aa);
-				//osg::ref_ptr<osgGA::GUIEventAdapter> event = new osgGA::GUIEventAdapter(ea);
-				//event->setX((ea.getXmin() + ea.getXmax()) * 0.5);
-				//event->setY((ea.getYmin() + ea.getYmax()) * 0.5);
-				//if (view) pick(view, *event);
-				sl->selected.clear();
+	inline bool PickHandler::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa) {
+		switch (ea.getEventType()) {
+			case(osgGA::GUIEventAdapter::PUSH): {
+				osgViewer::View *view = dynamic_cast<osgViewer::Viewer *>(&aa);
+				if (view) pick(view, ea);
+				return false;
 			}
-			return false;
-		}
-		default:
-			return false;
+			case(osgGA::GUIEventAdapter::KEYDOWN): {
+				if (ea.getKey() == 'c') {
+					//osgViewer::View* view = dynamic_cast<osgViewer::Viewer*>(&aa);
+					//osg::ref_ptr<osgGA::GUIEventAdapter> event = new osgGA::GUIEventAdapter(ea);
+					//event->setX((ea.getXmin() + ea.getXmax()) * 0.5);
+					//event->setY((ea.getYmin() + ea.getYmax()) * 0.5);
+					//if (view) pick(view, *event);
+
+					sl->clearSelected();
+				}
+				return false;
+			}
+			default:
+				return false;
 		}
 	}
 
+	inline bool XYInsideRange(float x, float y, float xmin, float xmax, float ymin, float ymax) {
+		return x>= xmin && x<=xmax && y >= ymin && y<=ymax;
+	}
 	inline void PickHandler::pick(osgViewer::View* view, const osgGA::GUIEventAdapter& ea)
 	{
 		osgUtil::LineSegmentIntersector::Intersections intersections;
@@ -455,13 +501,61 @@ namespace osg_3d_vis {
 		double my = ea.getYnormalized();
 		osg::ref_ptr<osgUtil::PolytopeIntersector> picker =
 			new osgUtil::PolytopeIntersector(osgUtil::Intersector::PROJECTION, mx - 0.02, my - 0.02, mx + 0.02, my + 0.02);
-		picker->setDimensionMask(osgUtil::PolytopeIntersector::DimZero | osgUtil::PolytopeIntersector::DimOne);
+		picker->setDimensionMask(osgUtil::PolytopeIntersector::POINT_PRIMITIVES | osgUtil::PolytopeIntersector::LINE_PRIMITIVES);
 		osgUtil::IntersectionVisitor iv(picker);
 		sl->segmentDrawCamera->accept(iv);
 
 		//BoundingBoxDisableNodeVisitor boundingBoxDisableVisitor = BoundingBoxDisableNodeVisitor();
 		//m_ptrSceneNode->accept(boundingBoxDisableVisitor);
 
+
+		float xMin = mx-0.02;
+		float xMax = mx+0.02;
+		float yMin = my-0.02;
+		float yMax = my+0.02;
+
+		float sxMin = 1.0f;
+		float sxMax = -1.0f;
+		float syMin = 1.0f;
+		float syMax = -1.0f;
+		// traverse all lines in linePoints
+		for(int i=0;i<sl->linesSum;i++)
+		{
+			osg::Vec3 linePoint1,linePoint2;
+			linePoint1 = (*sl->linePoints)[i*2];
+			linePoint2 = (*sl->linePoints)[i*2+1];
+			osg::Vec4 projLinePoints1,projLinePoints2;
+			projLinePoints1 = osg::Vec4(linePoint1, 1.0) * sl->mainCameraViewProjMatrix;
+			projLinePoints1/=projLinePoints1.w();
+
+			projLinePoints2 = osg::Vec4(linePoint2, 1.0) * sl->mainCameraViewProjMatrix;
+			projLinePoints2/=projLinePoints2.w();
+
+			if(projLinePoints1.x() == 0.0 && projLinePoints1.y() == 0.0 && projLinePoints1.z() == 0.0) {
+				continue;
+			}
+			if(projLinePoints2.x() == 0.0 && projLinePoints2.y() == 0.0 && projLinePoints2.z() == 0.0) {
+				continue;
+			}
+			if(XYInsideRange(projLinePoints1.x(), projLinePoints1.y(), xMin, xMax, yMin, yMax)
+				|| XYInsideRange(projLinePoints2.x(), projLinePoints2.y(), xMin, xMax, yMin, yMax)) {
+				std::cout << "line " << i <<  " is intersected" << std::endl;
+				if(sl->selected[i] == false) {
+					sl->selected[i] = true;
+					sl->selectedLineCount++;
+				}
+
+			}
+			sxMin = std::min( sxMin, std::min(projLinePoints1.x(), projLinePoints2.x()));
+			sxMax = std::max( sxMax, std::max(projLinePoints1.x(), projLinePoints2.x()));
+			syMin = std::min(syMin, std::min(projLinePoints1.y(), projLinePoints2.y()));
+			syMax = std::max(syMax, std::max(projLinePoints1.y(), projLinePoints2.y()));
+		}
+
+		sl->updateSelectedInfo(sxMin, sxMax, syMin, syMax);
+		// std::cout << "all line points range are within: \n" <<
+		// 		"x:[ " << sxMin << ", " << sxMax << "]\n" <<
+		// 		"y:[ " << syMin << ", " << syMax << "]" << std::endl;
 
 		if (picker->containsIntersections())
 		{
@@ -557,7 +651,7 @@ namespace osg_3d_vis {
 			osg::Matrixd modelMatrix = osg::computeLocalToWorld(nv->getNodePath());
 			osg::Matrixd modelViewProjectionMatrix = modelMatrix * viewMatrix * camera->getProjectionMatrix();
 			uniform->set(modelViewProjectionMatrix);
-
+			sl->updateMainCameraViewProjMatrix(modelViewProjectionMatrix);
 
 			// dynamic redraw for non pixel texturing
 			if (!sl->isCameraSteady(viewMatrix)) {
