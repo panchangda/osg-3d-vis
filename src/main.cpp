@@ -19,6 +19,7 @@
 #include "charts/chart.h"
 #include "charts/ColumnChart.h"
 #include "charts/DotChart.h"
+#include "earth/Cloud.h"
 #include "earth/Grass.h"
 #include "earth/Tree.h"
 #include "loader/OSGB.h"
@@ -77,20 +78,35 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	auto particle = new osg_3d_vis::Particle(root);
 	*/
 
-	//// fog
-	//if(osg_3d_vis::enableFog) {
-	//	auto fog = osg_3d_vis::Particle::createFog(osg_3d_vis::fogLinear);
-	//	root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
-	//}
+	// fog
+	if(osg_3d_vis::enableFog) {
+		auto fog = osg_3d_vis::Particle::createFog(osg_3d_vis::fogLinear);
+		root->getOrCreateStateSet()->setAttributeAndModes(fog, osg::StateAttribute::ON);
+	}
 
 	///*
 	// * GPU Instances
 	// */
-	//auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
+	if( osg_3d_vis::drawGrass)
+	{
+		auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
+	}
 
-	
-	//auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
-	
+	if( osg_3d_vis::drawTree)
+	{
+		auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
+	}
+
+	/*
+	 *Cloud
+	 */
+
+	if( osg_3d_vis::showCloud)
+	{
+		auto cloud = new Cloud(root);
+	}
+
+
 	///*
 	// * Velocity Field Visualizations
 	// */
@@ -148,10 +164,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 
 
-	RadarUi* rui = new RadarUi();
-	meshRadar = new Radar::Radar(viewer, root);
-	rui->setRad(meshRadar);
-	rui->show();
+	//RadarUi* rui = new RadarUi();
+	//meshRadar = new Radar::Radar(viewer, root);
+	//rui->setRad(meshRadar);
+	//rui->show();
 
 
 

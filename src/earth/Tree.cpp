@@ -60,11 +60,12 @@ namespace osg_3d_vis {
         vertexShader->loadShaderSourceFromFile(vs);
         fragmentShader->loadShaderSourceFromFile(fs);
 
+        shaderProgram->addShader(vertexShader.get());
+        shaderProgram->addShader(fragmentShader.get());
+
         shaderProgram->addBindAttribLocation("Position", 0);
         shaderProgram->addBindAttribLocation("TexCoord", 1);
 
-        shaderProgram->addShader(vertexShader.get());
-        shaderProgram->addShader(fragmentShader.get());
 
         Geos->getOrCreateStateSet()->setAttributeAndModes(shaderProgram, osg::StateAttribute::ON);
 
