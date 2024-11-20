@@ -5,7 +5,6 @@
 #ifndef PBR_HPP
 #define PBR_HPP
 
-#include <numbers>
 #include <osgViewer/Viewer>
 #include <osg/Point>
 #include <osg/Geode>
@@ -15,7 +14,6 @@
 #include <osgGA/TrackballManipulator>
 #include <osg/ShapeDrawable>
 #include <osgUtil/Tessellator>
-#include <pcl/pcl_macros.h>
 
 class PBR {
 public:

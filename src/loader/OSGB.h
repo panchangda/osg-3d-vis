@@ -1,7 +1,8 @@
 ﻿#include <iostream>
 #include <string>
 #include <filesystem>
-
+#include <iomanip>  // 用于 std::setw 和 std::setfill
+#include <sstream>  // 用于 std::ostringstream
 #include <osgViewer/Viewer>
 
 #include <osgDB/ReadFile>
@@ -13,22 +14,41 @@
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 
-#include <format>
 
 using namespace std;
 namespace OSGBLoader {
-	static void findDir(const string& dir, vector<string>& subDirs)
-	{
-		subDirs.clear();
+static void findDir(const string& dir, vector<string>& subDirs)
+{
+	const string dir1 = "Tile_+000+";
+	const string dir2 = "Tile_+000-";
+	const string dir3 = "Tile_+001+";
+	const string dir4 = "Tile_+001-";
 
-		for (auto& i : filesystem::directory_iterator(dir)) {
-			if (i.path().string() == "." || i.path().string() == "..")
-				continue;
-			if (i.is_directory()) {
-				subDirs.push_back(i.path().string());
-			}
-		}
+	for (int i = 0; i <= 34; ++i) {
+		// 使用 std::ostringstream 格式化数字
+		std::ostringstream oss{};
+		oss << std::setw(3) << std::setfill('0') << i; // 设置宽度为 3，填充字符为 '0'
+		subDirs.push_back(dir1+oss.str()); // 将生成的字符串存储到向量中
 	}
+	for (int i = 1; i <= 21; ++i) {
+		// 使用 std::ostringstream 格式化数字
+		std::ostringstream oss{};
+		oss << std::setw(3) << std::setfill('0') << i; // 设置宽度为 3，填充字符为 '0'
+		subDirs.push_back(dir2 + oss.str()); // 将生成的字符串存储到向量中
+	}
+	for (int i = 0; i <= 34; ++i) {
+		// 使用 std::ostringstream 格式化数字
+		std::ostringstream oss{};
+		oss << std::setw(3) << std::setfill('0') << i; // 设置宽度为 3，填充字符为 '0'
+		subDirs.push_back(dir3 + oss.str()); // 将生成的字符串存储到向量中
+	}
+	for (int i = 1; i <= 9; ++i) {
+		// 使用 std::ostringstream 格式化数字
+		std::ostringstream oss{};
+		oss << std::setw(3) << std::setfill('0') << i; // 设置宽度为 3，填充字符为 '0'
+		subDirs.push_back(dir4 + oss.str()); // 将生成的字符串存储到向量中
+	}
+}
 
 	static std::string DirOrPathGetName(std::string filePath)
 	{

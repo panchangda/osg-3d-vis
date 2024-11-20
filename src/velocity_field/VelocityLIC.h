@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <osg/ShapeDrawable>
 #include <osg/Texture3D>
-#include "Util.h"
+#include "../util.h"
 
 using namespace std;
 
@@ -199,7 +199,7 @@ namespace VelocityLIC {
 
 	vector <osg::Vec2> vecdata;
 
-	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), float alphaCoef = 1.0f)
+    osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange(), float alphaCoef = 1.0f)
 	{
 		// 生成顶点
 		vector<osg::Vec2> vertices;
@@ -373,7 +373,7 @@ namespace VelocityLIC {
 		
 		// 绑定 mvp
 		osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
-		mvpUniform->setUpdateCallback(new ModelViewProjectionMatrixCallback(camera));
+        mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(camera));
 		stateset2->addUniform(mvpUniform);
 
 		stateset2->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);//管理深度测试
@@ -386,7 +386,7 @@ namespace VelocityLIC {
 		return geode2.get();
 	}
 
-	void Generate3D(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), int height = 1)
+    void Generate3D(osg::Group* grp, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange(), int height = 1)
 	{
 		// 读取参数
 		getParas();
@@ -426,7 +426,7 @@ namespace VelocityLIC {
 					}
 				}
 			}
-			llhRange newRange = range;
+            osg_3d_vis::llhRange newRange = range;
 			newRange.minHeight = float(i) / height * (range.maxHeight - range.minHeight) + range.minHeight;
 			grp->addChild(Generate(grp, camera, newRange, 1.0f / height));
 		}

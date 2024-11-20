@@ -7,9 +7,8 @@
 #include <osg/Texture2D>
 #include <osgViewer/Viewer>
 #include <osg/Group>
-
-
-#include "../Util.h"
+#include <memory>
+#include "../util.h"
 #include "APMRadarRender.h"
 #include <iostream>
 #include <osgDB/WriteFile>
@@ -153,7 +152,6 @@ namespace Radar {
 	class Radar {
 	public:
 		Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root);
-		RadarRender* _radarrender;
 		osg::Uniform* mvpUniform;
 		osg::ref_ptr<osg::Camera> camera;
 		void setCamera(osg::Camera* cam) {
@@ -161,9 +159,7 @@ namespace Radar {
 			mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
 			mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(camera));
 		};
-		osg::ref_ptr<osg::Texture2D> color;
-		osg::ref_ptr<osg::Texture2D> depth;
-		osg::ref_ptr<osg::Camera> forTexture;
+
 
 
 		std::vector<osg_3d_vis::llhRange> ranges;
@@ -188,7 +184,7 @@ namespace Radar {
 		void addEmi(osg::Vec4 fac)
 		{
 			EmiFactors.push_back(fac);
-			osg_3d_vis::llhRange range{ fac.x(), fac.x() + fac.w(), fac.y(),fac.y() + fac.w(), fac.z(),fac.z() };
+            osg_3d_vis::llhRange range( fac.x(), fac.x() + fac.w(), fac.y(),fac.y() + fac.w(), fac.z(),fac.z() );
 			EmiGeos.push_back(GenerateEmi(range));
 		}
 		osg::ref_ptr<osg::Geometry>  Generate(osg_3d_vis::llhRange range);

@@ -1,6 +1,10 @@
 #pragma once
 #include <osgViewer/Viewer>
 
+const std::string OSG_3D_VIS_SHADER_PREFIX="/data/osg-3d-vis/shader/";
+const std::string  OSG_3D_VIS_DATA_PREFIX="/data/osg-3d-vis/data/";
+const std::string OSG_3D_VIS_CONFIG_PREFIX="/data/osg-3d-vis/config/";
+
 namespace osg_3d_vis {
 
 
@@ -80,7 +84,7 @@ public:
 	virtual void operator()(osg::Uniform* uniform, osg::NodeVisitor* nv) {
 		// 逐帧更新的逻辑，例如，更新时间值
 		static float time = 0.0f;
-		time += 0.01f; // 每帧增加 0.01，调整以适应应用需求
+        time += 0.001f; // 每帧增加 0.01，调整以适应应用需求
 
 		// 将更新后的值设置到 uniform
 		uniform->set(time);

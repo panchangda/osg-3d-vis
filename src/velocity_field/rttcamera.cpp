@@ -3,7 +3,7 @@
 //
 
 #include "rttcamera.h"
-
+#include "../util.h"
 #include <osg/Texture2D>
 #include <osg/Depth>
 

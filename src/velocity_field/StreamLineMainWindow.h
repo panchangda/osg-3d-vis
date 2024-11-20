@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 
-#include <ui_streamline.h>
+#include "ui_streamline.h"
 
 #include "StreamlineGPU.h"
 

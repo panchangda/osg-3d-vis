@@ -7,15 +7,9 @@
 
 static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,0.4));
 static osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth(2);
-static osg::ref_ptr<osg::Uniform> moveSpeed = new osg::Uniform("phiThetaSpeed", osg::Vec2f(0.1, 0.05));
+static osg::ref_ptr<osg::Uniform> moveSpeed = new osg::Uniform("phiThetaSpeed", osg::Vec2f(0.0, 0.0));
 static osg::ref_ptr<osg::Uniform> moveTime = new osg::Uniform("t",0.0f);
 static osg::ref_ptr<osg::Uniform> EmicolorUniform = new osg::Uniform("mainColor", osg::Vec4f(127 / 255, 1, 112 / 255, 0.2));
-enum DrawWay
-{
-	surface,
-	line
-};
-static DrawWay usePattern = surface ;
 
 void Radar::Radar::updateR(double value) {
 	osg::Vec4 color;
@@ -113,13 +107,16 @@ Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 	Addllh(osg_3d_vis::llhRange(5., 10., 110., 120., 300000., 600000.));
 	
 	GenerateRadarMesh();
+    root->addChild(RadarRT);
 
-	addEmi({ 30,110,700000,5 });
+//    auto geode = new osg::Geode;
+//    geode->addChild(RadarRT);
+    addEmi({ 30,110,700000,5 });
+    moveTime->setUpdateCallback( new osg_3d_vis::TimeUniformCallback() );
 	GenerateMeiMesh();
-	moveTime->setUpdateCallback( new osg_3d_vis::TimeUniformCallback() );
-	root->addChild(RadarRT);
-	root->addChild(Emirt);
-	
+    root->addChild(Emirt);
+//    geode->addChild(Emirt);
+//    root->addChild(geode);
 }
 
 void Radar::Radar::GenerateRadarMesh()
@@ -143,15 +140,15 @@ void Radar::Radar::GenerateRadarMesh()
 	StateSet->addUniform(colorUniform);
 	StateSet->addUniform(mvpUniform);
 
-	StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//    StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+//	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 }
 
 void Radar::Radar::GenerateMeiMesh()
 {
 	Emirt = new osg::Geode;
-	for (int i = 0; i < EmiGeos.size(); ++i) {
+    for (int i = 0; i < EmiGeos.size(); ++i) {
 		Emirt->addDrawable(EmiGeos[i]);
 	}
 
@@ -168,10 +165,10 @@ void Radar::Radar::GenerateMeiMesh()
 	StateSet->addUniform(EmicolorUniform);
 	StateSet->addUniform(mvpUniform);
 	StateSet->addUniform(moveSpeed);
-	StateSet->addUniform(moveTime);
-	StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    StateSet->addUniform(moveTime);
+    StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
 	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-	StateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    StateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 }
 
 
@@ -237,28 +234,28 @@ osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 		int init = cntk * cnt;
 		for (int i = init; i < init + cnt - 1; ++i)
 		{
-			// µÚÒ»¸öÈý½ÇÐÎ (i, i+1, i+n)
+			// ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (i, i+1, i+n)
 			indices->push_back(i);
 			indices->push_back(i + 1);
 			indices->push_back(i + cnt);
 
-			// µÚ¶þ¸öÈý½ÇÐÎ (i+1, i+1+n, i+n)
+			// ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (i+1, i+1+n, i+n)
 			indices->push_back(i + 1);
 			indices->push_back(i + 1 + cnt);
 			indices->push_back(i + cnt);
 		}
-		// ´¦Àí×îºóÒ»¸öËÄ±ßÐÎ£¨ÐèÒª·â±ÕÔ²»·£©
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½Î£ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½
 		int last = init + cnt - 1;  
 		int first = init;           
 		int upper_last = last + cnt; 
 		int upper_first = first + cnt; 
 
-		// µÚÒ»¸öÈý½ÇÐÎ (last, first, upper_last)
+		// ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (last, first, upper_last)
 		indices->push_back(last);
 		indices->push_back(first);
 		indices->push_back(upper_last);
 
-		// µÚ¶þ¸öÈý½ÇÐÎ (first, upper_first, upper_last)
+		// ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (first, upper_first, upper_last)
 		indices->push_back(first);
 		indices->push_back(upper_first);
 		indices->push_back(upper_last);
@@ -272,43 +269,43 @@ osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 
 osg::ref_ptr<osg::Geometry> Radar::Radar::GenerateEmi(osg_3d_vis::llhRange range)
 {
-	const int Subdivision = 64;
+    const int Subdivision = 64;
 
-	std::vector<osg::Vec3> llhranges;
-	float x = range.minLatitude, y = range.minLongtitude, z = range.maxHeight;
-	float x1 = range.maxLatitude - x, y1 = range.maxLongtitude - y;
-	llhranges.push_back(osg::Vec3{ x,y,z });
-	for(int i=0; i<Subdivision; ++i)
-	{
-		float beta = 2 * osg::PI * i / Subdivision;
-		llhranges.push_back({  x+ x1*sin(beta), y+ y1*cos(beta),z });
-	}
-	osg::ref_ptr<osg::Vec3Array> Vec3arrays = new osg::Vec3Array;
-	osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+    std::vector<osg::Vec3> llhranges;
+    float x = range.minLatitude, y = range.minLongtitude, z = range.maxHeight;
+    float x1 = range.maxLatitude - x, y1 = range.maxLongtitude - y;
+    llhranges.push_back(osg::Vec3{ x,y,z });
+    for(int i=0; i<Subdivision; ++i)
+    {
+        float beta = 2 * osg::PI * i / Subdivision;
+        llhranges.push_back({  x+ x1*sin(beta), y+ y1*cos(beta),z });
+    }
+    osg::ref_ptr<osg::Vec3Array> Vec3arrays = new osg::Vec3Array;
+    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
 
-	for(auto vec : llhranges)
-	{
-		auto k = vec.y(), j = vec.x(), he = vec.z();
-		double x, y, z;
-		osg_3d_vis::llh2xyz_Ellipsoid(j, k, he, x, y, z);
-		osg::Vec3 p(x, y, z);
-		Vec3arrays->push_back(p);
-	}
+    for(auto vec : llhranges)
+    {
+        auto k = vec.y(), j = vec.x(), he = vec.z();
+        double x, y, z;
+        osg_3d_vis::llh2xyz_Ellipsoid(j, k, he, x, y, z);
+        osg::Vec3 p(x, y, z);
+        Vec3arrays->push_back(p);
+    }
 
-	for(int i=1; i<Subdivision; ++i)
-	{
-		indices->push_back(0);
-		indices->push_back(i);
-		indices->push_back( i+1 );
-	}
-	indices->push_back(0);
-	indices->push_back(Subdivision);
-	indices->push_back(1);
+    for(int i=1; i<Subdivision; ++i)
+    {
+        indices->push_back(0);
+        indices->push_back(i);
+        indices->push_back( i + 1 );
+    }
+    indices->push_back(0);
+    indices->push_back(Subdivision);
+    indices->push_back(1);
 
-	osg::ref_ptr<osg::Geometry> ret = new osg::Geometry;
-	ret->setVertexAttribArray(0, Vec3arrays, osg::Array::BIND_PER_VERTEX);
-	ret->addPrimitiveSet(indices);
-	return ret;
+    osg::ref_ptr<osg::Geometry> ret = new osg::Geometry;
+    ret->setVertexAttribArray(0, Vec3arrays, osg::Array::BIND_PER_VERTEX);
+    ret->addPrimitiveSet(indices);
+    return ret;
 }
 
 

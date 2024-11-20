@@ -57,7 +57,7 @@ namespace osg_3d_vis {
         this->initializeArrowGeometryRenderState();
 
         /* get main camera color & depth buffer */
-        mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
+        // mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
         // mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
         // temp way to read back depth buffer
         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
@@ -69,12 +69,12 @@ namespace osg_3d_vis {
         root->addChild(this->createSegmentDrawPass(mainCamera));
         root->addChild(this->createTrailDrawPass());
         root->addChild(this->createScreenDrawPass());
-        root->addChild(this->createCopyPass());
+        // root->addChild(this->createCopyPass());
 
-        root->addChild(this->createTextPass());
+//        root->addChild(this->createTextPass());
 
-        /* add pickHandler to viewer */
-        viewer.addEventHandler(new PickHandler(this));
+//        /* add pickHandler to viewer */
+//        viewer.addEventHandler(new PickHandler(this));
 
         /* connect to ui */
         auto wnd = new streamline_cpu();
@@ -116,7 +116,7 @@ namespace osg_3d_vis {
         dy = (maxY - minY) / (dimY - 1);
 
         idx = 0;
-        pointDensity = 5.0f;
+        pointDensity = 1.0f;
         h = 0.5f;
         speedScaleFactor = 0.5f;
         minLineLength = 10;
@@ -258,14 +258,14 @@ namespace osg_3d_vis {
 
         screenColorTexture = new osg::Texture2D;
         screenColorTexture->setSourceFormat(GL_RGBA);
-        screenColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        screenColorTexture->setInternalFormat(GL_RGBA);
         screenColorTexture->setSourceType(GL_FLOAT);
         screenColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         screenColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 
         segmentColorTexture = new osg::Texture2D;
         segmentColorTexture->setSourceFormat(GL_RGBA);
-        segmentColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        segmentColorTexture->setInternalFormat(GL_RGBA);
         segmentColorTexture->setSourceType(GL_FLOAT);
         segmentColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         segmentColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
@@ -273,7 +273,7 @@ namespace osg_3d_vis {
         currTrailColorTexture = new osg::Texture2D;
         currTrailColorTexture->setDataVariance(osg::Object::DYNAMIC);
         currTrailColorTexture->setSourceFormat(GL_RGBA);
-        currTrailColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        currTrailColorTexture->setInternalFormat(GL_RGBA);
         currTrailColorTexture->setSourceType(GL_FLOAT);
         currTrailColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         currTrailColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
@@ -281,7 +281,7 @@ namespace osg_3d_vis {
         nextTrailColorTexture = new osg::Texture2D;
         nextTrailColorTexture->setDataVariance(osg::Object::DYNAMIC);
         nextTrailColorTexture->setSourceFormat(GL_RGBA);
-        nextTrailColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        nextTrailColorTexture->setInternalFormat(GL_RGBA);
         nextTrailColorTexture->setSourceType(GL_FLOAT);
         nextTrailColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         nextTrailColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);

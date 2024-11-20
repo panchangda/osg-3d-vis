@@ -50,8 +50,8 @@ namespace osg_3d_vis{
 		segmentDrawCamera->setClearDepth(1.0f);
 		segmentDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		segmentDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-		segmentDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-		segmentDrawCamera->setRenderOrder(osg::Camera::PRE_RENDER, 0);
+        segmentDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+        segmentDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 0);
 		segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		segmentDrawCamera->attach(osg::Camera::COLOR_BUFFER, segmentColorTexture);
 		segmentDrawCamera->attach(osg::Camera::DEPTH_BUFFER, segmentDepthTexture);
@@ -126,8 +126,8 @@ namespace osg_3d_vis{
 		stateset->setTextureAttributeAndModes(3, segmentDepthTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(uniformSegmentDepth);
 
-		osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
-		stateset->addUniform(firstUniform);
+        osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
+        stateset->addUniform(firstUniform);
 
 		osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.996);
 		stateset->addUniform(fadeOpacityUniform);
@@ -145,7 +145,7 @@ namespace osg_3d_vis{
 		trailDrawCamera->setClearDepth(1.0f);
 		trailDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		trailDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 1);
-		trailDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+        trailDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 		trailDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		trailDrawCamera->attach(osg::Camera::COLOR_BUFFER, nextTrailColorTexture);
 		trailDrawCamera->attach(osg::Camera::DEPTH_BUFFER, nextTrailDepthTexture);
@@ -177,30 +177,30 @@ namespace osg_3d_vis{
 		stateset->setAttributeAndModes(program);
 
 
-		osg::ref_ptr<osg::Uniform> uniformScreenColor = new osg::Uniform("screenColorTexture", 0);
-		stateset->setTextureAttributeAndModes(0, screenColorTexture.get(), osg::StateAttribute::ON);
-		stateset->addUniform(uniformScreenColor);
+//        osg::ref_ptr<osg::Uniform> uniformScreenColor = new osg::Uniform("screenColorTexture", 0);
+//        stateset->setTextureAttributeAndModes(0, screenColorTexture.get(), osg::StateAttribute::ON);
+//        stateset->addUniform(uniformScreenColor);
 
-		osg::ref_ptr<osg::Uniform> uniformScreenDepth = new osg::Uniform("screenDepthTexture", 1);
-		stateset->setTextureAttributeAndModes(1, screenDepthTexture.get(), osg::StateAttribute::ON);
+        osg::ref_ptr<osg::Uniform> uniformScreenDepth = new osg::Uniform("screenDepthTexture", 0);
+        stateset->setTextureAttributeAndModes(0, screenDepthTexture.get(), osg::StateAttribute::ON);
 		stateset->addUniform(uniformScreenDepth);
 
-		osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 2);
-		stateset->setTextureAttributeAndModes(2, nextTrailColorTexture.get(), osg::StateAttribute::ON);
-		stateset->addUniform(uniformSegmentColor);
+        osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 1);
+        stateset->setTextureAttributeAndModes(1, nextTrailColorTexture.get(), osg::StateAttribute::ON);
+        stateset->addUniform(uniformSegmentColor);
 
-		osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 3);
-		stateset->setTextureAttributeAndModes(3, nextTrailDepthTexture.get(), osg::StateAttribute::ON);
-		stateset->addUniform(uniformSegmentDepth);
+        osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 2);
+        stateset->setTextureAttributeAndModes(2, nextTrailDepthTexture.get(), osg::StateAttribute::ON);
+        stateset->addUniform(uniformSegmentDepth);
 
 
-		// osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 2);
-		// stateset->setTextureAttributeAndModes(2, segmentColorTexture.get(), osg::StateAttribute::ON);
-		// stateset->addUniform(uniformSegmentColor);
-		//
-		// osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 3);
-		// stateset->setTextureAttributeAndModes(3, segmentDepthTexture.get(), osg::StateAttribute::ON);
-		// stateset->addUniform(uniformSegmentDepth);
+//         osg::ref_ptr<osg::Uniform> uniformSegmentColor = new osg::Uniform("streamlineColorTexture", 2);
+//         stateset->setTextureAttributeAndModes(2, segmentColorTexture.get(), osg::StateAttribute::ON);
+//         stateset->addUniform(uniformSegmentColor);
+
+//         osg::ref_ptr<osg::Uniform> uniformSegmentDepth = new osg::Uniform("streamlineDepthTexture", 3);
+//         stateset->setTextureAttributeAndModes(3, segmentDepthTexture.get(), osg::StateAttribute::ON);
+//         stateset->addUniform(uniformSegmentDepth);
 
 
 		// Blend Rendering Related ʹ����ɫ��ALPHAͨ������͸��������Ⱦ
@@ -275,7 +275,7 @@ namespace osg_3d_vis{
 		tmpGeo->addDrawable(copyPassGeometry.get());
 		copyCamera->addChild(tmpGeo);
 
-		copyCamera->setRenderOrder(osg::Camera::POST_RENDER, 2);
+        copyCamera->setRenderOrder(osg::Camera::POST_RENDER, 4);
 		// copyCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		// copyCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		copyCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);

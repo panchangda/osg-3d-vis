@@ -14,7 +14,7 @@
 #include <osgGA/TrackballManipulator>
 #include <osg/ShapeDrawable>
 #include <osgUtil/Tessellator>
-#include "globals.h"
+#include "../globals.h"
 
 // use high definition earth image
 // #define USE_HD_EARTH_IMAGE
@@ -35,6 +35,7 @@ namespace osg_3d_vis {
 
             auto* sd = new osg::ShapeDrawable(
                 new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), osg::WGS_84_RADIUS_POLAR), hints);
+
             sd->setUseVertexBufferObjects(true);
             //sd->setUseVertexArrayObject(true);
 

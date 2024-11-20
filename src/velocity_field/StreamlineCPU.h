@@ -44,8 +44,9 @@ namespace osg_3d_vis {
 
 	inline float getHueByVector(osg::Vec2 v, float hueRange, float hueOffset)
 	{
-		float hue = (atan2(v.y(), v.x()) / 3.1415926 + 1.0f) * 180;
-		return std::fmodf(hue * hueRange / 360.0 + hueOffset, 360.0f);
+        float hue = (atan2(v.y(), v.x()) / 3.1415926 + 1.0f) * 180;
+        auto k = hue * hueRange / 360.0 + hueOffset;
+        return k - (int)k/360*360;
 	}
 	inline osg::Vec3  hsvToRgb(osg::Vec3 hsv)
 	{
@@ -85,7 +86,7 @@ namespace osg_3d_vis {
 			D3
 		};
 		// true: 2d, false: 3d
-		EDataDimension dataDim = EDataDimension::D3;
+        EDataDimension dataDim = EDataDimension::D2;
 
 		// data dimensions
 		float dimX, dimY, dimZ;
@@ -529,7 +530,7 @@ namespace osg_3d_vis {
 		double my = ea.getYnormalized();
 		osg::ref_ptr<osgUtil::PolytopeIntersector> picker =
 			new osgUtil::PolytopeIntersector(osgUtil::Intersector::PROJECTION, mx - 0.02, my - 0.02, mx + 0.02, my + 0.02);
-		picker->setDimensionMask(osgUtil::PolytopeIntersector::POINT_PRIMITIVES | osgUtil::PolytopeIntersector::LINE_PRIMITIVES);
+        picker->setDimensionMask(osgUtil::PolytopeIntersector::DimZero | osgUtil::PolytopeIntersector::DimOne);
 		osgUtil::IntersectionVisitor iv(picker);
 		sl->segmentDrawCamera->accept(iv);
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <osg/ShapeDrawable>
 #include <osg/Texture3D>
-#include "Util.h"
+#include "../util.h"
 
 namespace VortexDetect {
 	

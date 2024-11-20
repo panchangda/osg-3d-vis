@@ -1,7 +1,7 @@
 //
 // Created by pcd on 2024/10/25.
 //
-#include "StreamLineCPU.h"
+#include "StreamlineCPU.h"
 
 using namespace osg_3d_vis;
 

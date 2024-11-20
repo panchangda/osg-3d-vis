@@ -112,6 +112,7 @@ namespace osg_3d_vis {
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
 
+        geom->setUseDisplayList(false);
         Primitives->setNumInstances(instanceCount);
 
         geom->addPrimitiveSet(Primitives);

@@ -1,4 +1,4 @@
-#version 450
+#version 330 core
 
 layout(location = 0) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
@@ -59,7 +59,7 @@ void main() {
         vec2 offsetUV = uv + offsets[i] * 0.002; // 控制模糊半径
         float sampleValue = fbm(offsetUV);
         float sampleAlpha = smoothstep(0.5, 1.0, sampleValue);
-        colorSum += vec4(vec3(1.0), sampleAlpha) * weights[i];
+        colorSum += vec4(1.0,1.0,1.0, sampleAlpha) * weights[i];
     }
 
     outColor = colorSum; // 模糊后的云效果

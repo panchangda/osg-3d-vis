@@ -16,7 +16,7 @@ Cloud::Cloud(osg::ref_ptr<osg::Group> _root)
 
     osg::ref_ptr<osg::Shader> vertexShader = new osg::Shader(osg::Shader::VERTEX);
     osg::ref_ptr<osg::Shader> fragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
-
+	auto s = std::string(OSG_3D_VIS_SHADER_PREFIX);
     vertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "cloud/cloudVS.glsl");
     fragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "cloud/cloudPS.glsl");
 

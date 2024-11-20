@@ -26,7 +26,7 @@ void main(){
 
     int x = gl_InstanceID / instanceX;
     int y = gl_InstanceID % instanceX;
-    vec3 instanceOffset = vec3(20 * x, -1.0, 20 * y);
+    vec3 instanceOffset = vec3(x, -1.0, y);
     vec3 instancePos =  Position + instanceOffset;
 
     // 越往下越固定

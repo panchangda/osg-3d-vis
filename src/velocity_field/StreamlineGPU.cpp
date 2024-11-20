@@ -1,7 +1,7 @@
 //
 // Created by pcd on 2024/9/16.
 //
-#include "StreamLineGPU.h"
+#include "StreamlineGPU.h"
 #include "StreamLineMainWindow.h"
 
 using namespace VelocityFieldGPU;

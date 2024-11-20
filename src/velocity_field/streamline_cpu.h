@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 
-#include <ui_streamline_cpu.h>
+#include "ui_streamline_cpu.h"
 
 #include "StreamlineCPU.h"
 
