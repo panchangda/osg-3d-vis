@@ -1,13 +1,13 @@
 #include "Radar.h"
 
 #include <osg/LineWidth>
-
+#include<osg/CullSettings>
 // ui part
 // color and drawway
 
 static osg::ref_ptr<osg::Uniform> colorUniform = new osg::Uniform("mainColor", osg::Vec4f(1,0.6,0.6,0.4));
 static osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth(2);
-static osg::ref_ptr<osg::Uniform> moveSpeed = new osg::Uniform("phiThetaSpeed", osg::Vec2f(0.0, 0.0));
+static osg::ref_ptr<osg::Uniform> moveSpeed = new osg::Uniform("phiThetaSpeed", osg::Vec2f(0.1, 0.05));
 static osg::ref_ptr<osg::Uniform> moveTime = new osg::Uniform("t",0.0f);
 static osg::ref_ptr<osg::Uniform> EmicolorUniform = new osg::Uniform("mainColor", osg::Vec4f(127 / 255, 1, 112 / 255, 0.2));
 
@@ -89,34 +89,35 @@ void Radar::Radar::updateEMITHETA(double value)
 	Emirt->getOrCreateStateSet()->getUniform("phiThetaSpeed")->set(speed);
 }
 
+void Radar::Radar::updateTime(){
+    static float t = 0;
+    t += 0.01;
+    Emirt->getOrCreateStateSet()->getUniform("t")->set(t);
+}
 
 Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 {
 	setCamera(viewer.getCamera());
 
 
-	Addllh(osg_3d_vis::llhRange(25.l, 35., 105., 115., 1., 600000.));
-	Addllh(osg_3d_vis::llhRange(14., 19., 90., 100., 100000., 600000.));
+    Addllh(osg_3d_vis::llhRange(25.l, 35., 105., 115., 1., 600000.));
+//    Addllh(osg_3d_vis::llhRange(14., 19., 90., 100., 100000., 600000.));
 
-	Addllh(osg_3d_vis::llhRange(30., 32., 118., 120., 200000., 600000.));
-	Addllh(osg_3d_vis::llhRange(37., 39., 100., 102., 2500., 600000.));
-	Addllh(osg_3d_vis::llhRange(30., 39., 130., 140., 3000., 600000.));
-	Addllh(osg_3d_vis::llhRange(14., 20., 95., 100., 1., 600000.));
+//    Addllh(osg_3d_vis::llhRange(30., 32., 118., 120., 200000., 600000.));
+//    Addllh(osg_3d_vis::llhRange(37., 39., 100., 102., 2500., 600000.));
+//    Addllh(osg_3d_vis::llhRange(30., 39., 130., 140., 3000., 600000.));
+//    Addllh(osg_3d_vis::llhRange(14., 20., 95., 100., 1., 600000.));
 
-	Addllh(osg_3d_vis::llhRange(10., 20., 110., 120., 200000., 600000.));
-	Addllh(osg_3d_vis::llhRange(5., 10., 110., 120., 300000., 600000.));
+//    Addllh(osg_3d_vis::llhRange(10., 20., 110., 120., 200000., 600000.));
+//    Addllh(osg_3d_vis::llhRange(5., 10., 110., 120., 300000., 600000.));
 	
-	GenerateRadarMesh();
+    GenerateRadarMesh();
     root->addChild(RadarRT);
 
-//    auto geode = new osg::Geode;
-//    geode->addChild(RadarRT);
     addEmi({ 30,110,700000,5 });
-    moveTime->setUpdateCallback( new osg_3d_vis::TimeUniformCallback() );
 	GenerateMeiMesh();
     root->addChild(Emirt);
-//    geode->addChild(Emirt);
-//    root->addChild(geode);
+
 }
 
 void Radar::Radar::GenerateRadarMesh()
@@ -140,8 +141,8 @@ void Radar::Radar::GenerateRadarMesh()
 	StateSet->addUniform(colorUniform);
 	StateSet->addUniform(mvpUniform);
 
-//    StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-//	StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    StateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 }
 
@@ -174,97 +175,98 @@ void Radar::Radar::GenerateMeiMesh()
 
 osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
 {
-	const int levels = 10;
-	std::vector<osg::Vec2> heights{ {0,0.3},{0.3,0.2}, { 0.2,0.5 },{0.5,0.4},{0.4,0.65},{0.65,0.55},{0.55,0.75},{0.75,0.65},{0.65,0.9},{0.9,0.75},{0.75,0.83},{0.83,0.79}
-	};
-	std::vector<osg::Vec2> radius{
-		{0,1},{1,0.2}, { 0.2,0.9 },{0.9,0.4},{0.4,0.85},{0.85,0.3	},{0.3,0.8},{0.8,0.2},{0.2,0.7},{0.7,0.1},{0.1,0.3},{0.3,0}
-	};
-	std::vector<osg::Vec3> llhs;
+        const int levels = 10;
+        std::vector<osg::Vec2> heights{ {0,0.3},{0.3,0.2}, { 0.2,0.5 },{0.5,0.4},{0.4,0.65},{0.65,0.55},{0.55,0.75},{0.75,0.65},{0.65,0.9},{0.9,0.75},{0.75,0.83},{0.83,0.79}
+        };
+        std::vector<osg::Vec2> radius{
+                {0,1},{1,0.2}, { 0.2,0.9 },{0.9,0.4},{0.4,0.85},{0.85,0.3	},{0.3,0.8},{0.8,0.2},{0.2,0.7},{0.7,0.1},{0.1,0.3},{0.3,0}
+        };
+        std::vector<osg::Vec3> llhs;
 
-	double lowLo = range.minLongtitude;
-	double highLo = range.maxLongtitude;
-	double lowLa = range.minLatitude;
-	double highLa = range.maxLatitude;
-	double lowH = range.minHeight;
-	double highH = range.maxHeight;
-	auto a = (range.maxLatitude - range.minLatitude) / 2;;
-	auto b = (range.maxLongtitude - range.minLongtitude) / 2;
-	auto c = range.maxHeight - range.minHeight;
+        double lowLo = range.minLongtitude;
+        double highLo = range.maxLongtitude;
+        double lowLa = range.minLatitude;
+        double highLa = range.maxLatitude;
+        double lowH = range.minHeight;
+        double highH = range.maxHeight;
+        auto a = (range.maxLatitude - range.minLatitude) / 2;;
+        auto b = (range.maxLongtitude - range.minLongtitude) / 2;
+        auto c = range.maxHeight - range.minHeight;
 
-	osg::ref_ptr<osg::Vec4Array> Vec4arrays = new osg::Vec4Array;
+        osg::ref_ptr<osg::Vec4Array> Vec4arrays = new osg::Vec4Array;
 
-	osg::Vec3 center((lowLa + highLa) / 2, (lowLo + highLo) / 2, lowH);
+        osg::Vec3 center((lowLa + highLa) / 2, (lowLo + highLo) / 2, lowH);
 
 
-	for (int level = 0; level < levels; level+=2) {
-		for (double theta = 0; theta <= osg::PI / 2; theta += osg::PI / 40)
-		{
-			auto RadiusFactor =  radius[level].x() + (radius[level].y() - radius[level].x()) * sin(theta);
-			auto HeightFactor = heights[level].x() + (heights[level].y() - heights[level].x()) * sin(theta);
-			auto llh = osg::Vec3(osg::Vec2(a, b) * RadiusFactor, (float)c * HeightFactor);
-			llhs.push_back(llh);
-		}
-		for (double theta = 0; theta <= osg::PI / 2; theta += osg::PI / 40)
-		{
-			auto RadiusFactor = radius[level+1].x() + (radius[level+1].y() - radius[level+1].x()) * (1- cos(theta));
-			auto HeightFactor = heights[level+1].x() + (heights[level+1].y() - heights[level+1].x()) * (1 - cos(theta));
-			auto llh = osg::Vec3(osg::Vec2(a, b) * RadiusFactor, (float)c * HeightFactor);
-			llhs.push_back(llh);
-		}
-	}
-	for(const auto& llh : llhs)
-	{
-		auto la = llh.x(), lo = llh.y(), he = llh.z();
-		for(double theta = 0; theta <= 2*osg::PI; theta += 0.0174533 )
-		{
-			double k = center.x() + la * cos(theta);
-			double j = center.y() + lo * sin(theta);
-			double x, y, z;
-			osg_3d_vis::llh2xyz_Ellipsoid(k, j, he, x, y, z);
-			osg::Vec4 p(x, y, z, 1.);
-			Vec4arrays->push_back(p);
-		}
-	} 
+        for (int level = 0; level < levels; level+=2) {
+            for (double theta = 0; theta <= osg::PI / 2; theta += osg::PI / 40)
+            {
+                auto RadiusFactor =  radius[level].x() + (radius[level].y() - radius[level].x()) * sin(theta);
+                auto HeightFactor = heights[level].x() + (heights[level].y() - heights[level].x()) * sin(theta);
+                auto llh = osg::Vec3(osg::Vec2(a, b) * RadiusFactor, (float)c * HeightFactor);
+                llhs.push_back(llh);
+            }
+            for (double theta = 0; theta <= osg::PI / 2; theta += osg::PI / 40)
+            {
+                auto RadiusFactor = radius[level+1].x() + (radius[level+1].y() - radius[level+1].x()) * (1- cos(theta));
+                auto HeightFactor = heights[level+1].x() + (heights[level+1].y() - heights[level+1].x()) * (1 - cos(theta));
+                auto llh = osg::Vec3(osg::Vec2(a, b) * RadiusFactor, (float)c * HeightFactor);
+                llhs.push_back(llh);
+            }
+        }
+        for(const auto& llh : llhs)
+        {
+            auto la = llh.x(), lo = llh.y(), he = llh.z();
+            for(double theta = 0; theta <= 2*osg::PI; theta += 0.0174533 )
+            {
+                double k = center.x() + la * cos(theta);
+                double j = center.y() + lo * sin(theta);
+                double x, y, z;
+                osg_3d_vis::llh2xyz_Ellipsoid(k, j, he, x, y, z);
+                osg::Vec4 p(x, y, z, 1.);
+                Vec4arrays->push_back(p);
+            }
+        }
 
-	const int maxk = Vec4arrays->size() / 360;
-	const int cnt = 360;
-	osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
-	for (int cntk = 0; cntk < maxk-1; ++cntk) {
-		int init = cntk * cnt;
-		for (int i = init; i < init + cnt - 1; ++i)
-		{
-			// ��һ�������� (i, i+1, i+n)
-			indices->push_back(i);
-			indices->push_back(i + 1);
-			indices->push_back(i + cnt);
+        const int maxk = Vec4arrays->size() / 360;
+        const int cnt = 360;
+        osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+        for (int cntk = 0; cntk < maxk-1; ++cntk) {
+            int init = cntk * cnt;
+            for (int i = init; i < init + cnt - 1; ++i)
+            {
+                // ��һ�������� (i, i+1, i+n)
+                indices->push_back(i);
+                indices->push_back(i + 1);
+                indices->push_back(i + cnt);
 
-			// �ڶ��������� (i+1, i+1+n, i+n)
-			indices->push_back(i + 1);
-			indices->push_back(i + 1 + cnt);
-			indices->push_back(i + cnt);
-		}
-		// ��������һ���ı��Σ���Ҫ����Բ����
-		int last = init + cnt - 1;  
-		int first = init;           
-		int upper_last = last + cnt; 
-		int upper_first = first + cnt; 
+                // �ڶ��������� (i+1, i+1+n, i+n)
+                indices->push_back(i + 1);
+                indices->push_back(i + 1 + cnt);
+                indices->push_back(i + cnt);
+            }
+            // �������һ���ı��Σ���Ҫ���Բ����
+            int last = init + cnt - 1;
+            int first = init;
+            int upper_last = last + cnt;
+            int upper_first = first + cnt;
 
-		// ��һ�������� (last, first, upper_last)
-		indices->push_back(last);
-		indices->push_back(first);
-		indices->push_back(upper_last);
+            // ��һ�������� (last, first, upper_last)
+            indices->push_back(last);
+            indices->push_back(first);
+            indices->push_back(upper_last);
 
-		// �ڶ��������� (first, upper_first, upper_last)
-		indices->push_back(first);
-		indices->push_back(upper_first);
-		indices->push_back(upper_last);
-	}
+            // �ڶ��������� (first, upper_first, upper_last)
+            indices->push_back(first);
+            indices->push_back(upper_first);
+            indices->push_back(upper_last);
+        }
 
-	osg::ref_ptr<osg::Geometry> ret = new osg::Geometry;
-	ret->setVertexAttribArray(0, Vec4arrays, osg::Array::BIND_PER_VERTEX);
-	ret->addPrimitiveSet(indices);
-	return ret;
+        osg::ref_ptr<osg::Geometry> ret = new osg::Geometry;
+        ret->setVertexAttribArray(0, Vec4arrays, osg::Array::BIND_PER_VERTEX);
+        ret->addPrimitiveSet(indices);
+        return ret;
+
 }
 
 osg::ref_ptr<osg::Geometry> Radar::Radar::GenerateEmi(osg_3d_vis::llhRange range)

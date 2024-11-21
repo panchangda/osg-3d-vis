@@ -15,7 +15,7 @@ float PI = 3.1415926536;
 float getWindowCoef(int i, int isSingleMoving)
 {
     if(isSingleMoving == 0)
-        return 1;
+        return 1.0;
     return 1 + sin(2 * PI * (i + phi) / T) / 2;
 }
 // 将所有texture(noiseTex, temptexCoord).x改为windowCoef * texture(noiseTex, temptexCoord).x，实现时变效果

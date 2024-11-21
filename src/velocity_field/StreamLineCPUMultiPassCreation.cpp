@@ -52,7 +52,7 @@ namespace osg_3d_vis{
 		segmentDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
         segmentDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
         segmentDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 0);
-		segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
+        segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		segmentDrawCamera->attach(osg::Camera::COLOR_BUFFER, segmentColorTexture);
 		segmentDrawCamera->attach(osg::Camera::DEPTH_BUFFER, segmentDepthTexture);
 		return segmentDrawCamera;
@@ -144,9 +144,9 @@ namespace osg_3d_vis{
 		// trailDrawCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		trailDrawCamera->setClearDepth(1.0f);
 		trailDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-		trailDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 1);
-        trailDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-		trailDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
+        trailDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 4);
+        trailDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER);
+        trailDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		trailDrawCamera->attach(osg::Camera::COLOR_BUFFER, nextTrailColorTexture);
 		trailDrawCamera->attach(osg::Camera::DEPTH_BUFFER, nextTrailDepthTexture);
 

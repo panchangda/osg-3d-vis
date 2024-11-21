@@ -184,13 +184,13 @@ namespace Radar {
 		void addEmi(osg::Vec4 fac)
 		{
 			EmiFactors.push_back(fac);
-            osg_3d_vis::llhRange range( fac.x(), fac.x() + fac.w(), fac.y(),fac.y() + fac.w(), fac.z(),fac.z() );
-			EmiGeos.push_back(GenerateEmi(range));
+            osg_3d_vis::llhRange range( fac.x()-fac.w(), fac.x() + fac.w(), fac.y()-fac.w(),fac.y() + fac.w(), fac.z()-50,fac.z() );
+            EmiGeos.push_back(Generate(range));
 		}
-		osg::ref_ptr<osg::Geometry>  Generate(osg_3d_vis::llhRange range);
+        osg::ref_ptr<osg::Geometry>  Generate(osg_3d_vis::llhRange range);
 
 		osg::ref_ptr<osg::Geometry>  GenerateEmi(osg_3d_vis::llhRange range);
-
+        void updateTime();
 		//for ui part 
 		void updateR(double value);
 		void updateG(double value);

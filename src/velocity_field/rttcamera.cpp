@@ -49,7 +49,7 @@ namespace osg_3d_vis {
         osg::Camera* mainCamera( viewer.getCamera() );
 
 
-        int rttTextureSize = 2048;
+        int rttTexSize = 128;
 
 
         screenColorTexture = new osg::Texture2D;
@@ -74,6 +74,14 @@ namespace osg_3d_vis {
         screenDepthTexture->setTextureHeight(mainCamera->getViewport()->height());
         // depthTexture->setTextureSize(1024, 768);
 
+
+        testColorTexture = new osg::Texture2D;
+        testColorTexture->setSourceFormat(GL_RGBA);
+        testColorTexture->setInternalFormat(GL_RGBA);
+        testColorTexture->setSourceType(GL_FLOAT);
+        testColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+        testColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+        testColorTexture->setTextureSize(rttTexSize, rttTexSize);
 
         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
 
@@ -106,7 +114,7 @@ namespace osg_3d_vis {
         // FBO: Based on Textures
         postRenderCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER);
         postRenderCamera->setReferenceFrame( osg::Camera::ABSOLUTE_RF );
-        postRenderCamera->setRenderOrder( osg::Camera::POST_RENDER );
+        postRenderCamera->setRenderOrder( osg::Camera::POST_RENDER, 1 );
         // postRenderCamera->setViewMatrix( osg::Matrixd::identity() );
         // postRenderCamera->setProjectionMatrix( osg::Matrixd::identity() );
 
@@ -139,21 +147,69 @@ namespace osg_3d_vis {
         stateset->setTextureAttributeAndModes(1, screenDepthTexture.get(), osg::StateAttribute::ON);
         stateset->addUniform(uniformScreenDepth);
 
+        osg::ref_ptr<osg::Uniform> uniformTestColor = new osg::Uniform("testColorTexture", 2);
+        stateset->setTextureAttributeAndModes(2, testColorTexture.get(), osg::StateAttribute::ON);
+        stateset->addUniform(uniformTestColor);
+
 
         renderPassGeometry->setStateSet(stateset);
 
 
         osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
         tmpGeode->addDrawable(renderPassGeometry);
-        osg::ref_ptr<osg::Transform> tmpNode = new osg::Transform;
-        tmpNode->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-        tmpNode->addChild(tmpGeode);
+//        osg::ref_ptr<osg::Transform> tmpNode = new osg::Transform;
+//        tmpNode->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+//        tmpNode->addChild(tmpGeode);
 
-        postRenderCamera->addChild(tmpNode);
+        postRenderCamera->addChild(tmpGeode);
 
         cameraNode = postRenderCamera.release();
 
         fullscreenQuadGeode = tmpGeode;
+
+
+
+        {
+            osg::ref_ptr< osg::Camera > TestRenderCamera( new osg::Camera );
+
+
+            TestRenderCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT);
+            TestRenderCamera->setReferenceFrame( osg::Camera::ABSOLUTE_RF );
+            TestRenderCamera->setRenderOrder( osg::Camera::PRE_RENDER, 0 );
+            TestRenderCamera->attach(osg::Camera::COLOR_BUFFER, testColorTexture);
+
+            osg::ref_ptr<osg::Geometry> renderPassGeometry = createScreenQuad();
+            osg::ref_ptr<osg::StateSet> stateset = renderPassGeometry->getOrCreateStateSet();
+            // Create vertex and fragment shaders
+            osg::ref_ptr<osg::Shader> vertexShader = new osg::Shader(osg::Shader::VERTEX); // Define your vertex shader source
+            osg::ref_ptr<osg::Shader> fragmentShader = new osg::Shader(osg::Shader::FRAGMENT); // Define your fragment shader source
+
+
+            std::string shaderPath = std::string(OSG_3D_VIS_SHADER_PREFIX) + "rtt/";
+            vertexShader->loadShaderSourceFromFile(shaderPath + "fullscreenQuad.vs");
+            fragmentShader->loadShaderSourceFromFile(shaderPath + "fullscreenColor.fs");
+
+            // Create a shader program and attach the shaders
+            osg::ref_ptr<osg::Program> program = new osg::Program;
+            program->addBindAttribLocation("Vertex", 0);
+            program->addBindAttribLocation("TexCoord", 1);
+            program->addShader(vertexShader.get());
+            program->addShader(fragmentShader.get());
+            stateset->setAttributeAndModes(program);
+
+            renderPassGeometry->setStateSet(stateset);
+
+
+            osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
+            tmpGeode->addDrawable(renderPassGeometry);
+            TestRenderCamera->addChild(tmpGeode);
+
+
+
+            fullscreenCameraNode = TestRenderCamera.release();
+        }
+
+
     }
 
 }

@@ -21,8 +21,10 @@ namespace osg_3d_vis {
 
         osg::ref_ptr<osg::Texture2D> screenColorTexture;
         osg::ref_ptr<osg::Texture2D> screenDepthTexture;
+        osg::ref_ptr<osg::Texture2D> testColorTexture;
         osg::ref_ptr<osg::Node> cameraNode;
         osg::ref_ptr<osg::Geode> fullscreenQuadGeode;
+        osg::ref_ptr<osg::Node> fullscreenCameraNode;
     };
 }
 

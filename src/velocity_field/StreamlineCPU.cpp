@@ -57,15 +57,15 @@ namespace osg_3d_vis {
         this->initializeArrowGeometryRenderState();
 
         /* get main camera color & depth buffer */
-        // mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
+        mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
         // mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
         // temp way to read back depth buffer
         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
         /* multi-pass creation */
         // use slave camera for segmentdraw to ensure following main camera
-        // osg::ref_ptr<osg::Camera> slaveCamera = this->createSegmentDrawPass(mainCamera);
-        // slaveCamera->setGraphicsContext(mainCamera->getGraphicsContext());
-        // viewer.addSlave(slaveCamera, false);
+//         osg::ref_ptr<osg::Camera> slaveCamera = this->createSegmentDrawPass(mainCamera);
+//         slaveCamera->setGraphicsContext(mainCamera->getGraphicsContext());
+//         viewer.addSlave(slaveCamera, false);
         root->addChild(this->createSegmentDrawPass(mainCamera));
         root->addChild(this->createTrailDrawPass());
         root->addChild(this->createScreenDrawPass());
@@ -253,7 +253,7 @@ namespace osg_3d_vis {
     }
 
     void StreamLineCPU::initializeTexturesAndImages() {
-        rttTextureSize = 2048;
+        rttTextureSize = 256;
 
 
         screenColorTexture = new osg::Texture2D;
@@ -264,11 +264,14 @@ namespace osg_3d_vis {
         screenColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 
         segmentColorTexture = new osg::Texture2D;
+        segmentColorTexture->setDataVariance(osg::Object::DYNAMIC);
         segmentColorTexture->setSourceFormat(GL_RGBA);
         segmentColorTexture->setInternalFormat(GL_RGBA);
+        segmentColorTexture->setTextureSize(rttTextureSize, rttTextureSize);
         segmentColorTexture->setSourceType(GL_FLOAT);
         segmentColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         segmentColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+
 
         currTrailColorTexture = new osg::Texture2D;
         currTrailColorTexture->setDataVariance(osg::Object::DYNAMIC);

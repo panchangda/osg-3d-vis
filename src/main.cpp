@@ -27,7 +27,7 @@
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 #include "velocity_field/VelocityLIC.h"
-// #include "velocity_field/VortexDetect.h"
+#include "velocity_field/VortexDetect.h"
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
@@ -114,11 +114,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 	// Show Streamline: CPU (enable choosing one streamling)
 	//
-        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-        viewer,
-        root,
-        viewer.getCamera(),
-        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+//        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+//        viewer,
+//        root,
+//        viewer.getCamera(),
+//        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 
 
 	//// Show Streamline: GPU
@@ -129,25 +129,30 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 
     //	// Show LIC
-    //    VelocityLIC::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
-    //    osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
-    //    root->addChild(vlicGeode);
-
+    if(osg_3d_vis::showLIC){
+        VelocityLIC::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+        osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
+        root->addChild(vlicGeode);
+    }
     //    //  Show Vortex Detect
-//        VortexDetect::Generate3D(root, camera.get(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
-//         VortexDetect::GenerateML(root, camera.get(), osg_3d_vis::llhRangellhRange(0.f, 30.f, 120.f, 150.f, 100000.f, 1000000.f));
-//        osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, camera.get(), osg_3d_vis::llhRangellhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
-//        root->addChild(vortexGeode);
+    if(osg_3d_vis::VortexDetect){
+        VortexDetect::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+         VortexDetect::GenerateML(root, viewer.getCamera(), osg_3d_vis::llhRange(0.f, 30.f, 120.f, 150.f, 100000.f, 1000000.f));
+        osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
+        root->addChild(vortexGeode);
+    }
 
 
 
+    /*
+     * PBR
+     */
+    if(osg_3d_vis::showPbr){
+        PBR* pbr = new PBR();
+        auto geode = pbr->createLightModel(viewer.getCamera());
+        root->addChild(geode);
+    }
 
-//    /*
-//     * PBR
-//     */
-//    PBR* pbr = new PBR();
-//    auto geode = pbr->createLightModel(viewer.getCamera());
-//    root->addChild(geode);
 
 
 	///*
@@ -182,10 +187,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	 * Loader Examples
 	 */
 
-//     // Show OSGB Loader
-//     osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGBLoader::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
-//     root->addChild(osgbNode);
-
+     // Show OSGB Loader
+    if(osg_3d_vis::osgbLoadar){
+        osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGBLoader::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
+        root->addChild(osgbNode);
+    }
 ////	 Show Point Cloud Loader
 //    OSGPCDLoader* loader = new OSGPCDLoader();
 //    loader->LoadFromFileXYZRGB(std::string(OSG_3D_VIS_DATA_PREFIX) + "milk_cartoon_all_small_clorox.pcd");
@@ -208,8 +214,9 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 //     // For RTT Test
 //     osg_3d_vis::rttcamera* testRTTCamera = new osg_3d_vis::rttcamera(viewer);
+//     root->addChild(testRTTCamera->fullscreenCameraNode);
 //     root->addChild(testRTTCamera->cameraNode);
-//     root->addChild(testRTTCamera->fullscreenQuadGeode);
+
 
 
 	return root.get();
@@ -269,8 +276,8 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 		osg_3d_vis::frameFPS = 1.0f / (currentTime - prevTime);;
 
 		prevTime = currentTime;
-		viewer.frame();
-
+        viewer.frame();  //meshRadar
+        meshRadar->updateTime();
 		/*if (flag == 0) {
 				Axis* axis = new Axis();
 				root->addChild(axis->DrawAxis(0, 0, 0, 21, 21, 21, 1));

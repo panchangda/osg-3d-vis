@@ -27,21 +27,8 @@ void main(){
 
 	// FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, decayedTrailColor.a);
 	FragColor = segmentColor;
-	
-//     if(first){
-//         gl_FragDepthEXT = segmentDepth;
-//     }else
-//     {
-//         gl_FragDepthEXT = min(trailDepth, segmentDepth);
-//     }
-
+	// FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	// FragColor = vec4(segmentDepth, segmentDepth, segmentDepth, 1.0);
     // gl_FragDepthEXT = min(trailDepth, segmentDepth);
 
-
-    // gl_FragDepthEXT = segmentDepth;
-    // gl_FragDepthEXT = trailDepth;
-    // gl_FragDepthEXT = segmentDepth;
-    // gl_FragDepthEXT = trailDepth;
-    // FragColor = vec4(segmentDepth, 0.0, 0.0, 1.0);
-    // FragColor = screenColor;
 }

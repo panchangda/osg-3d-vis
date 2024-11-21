@@ -444,7 +444,7 @@ namespace VortexDetect {
 
 	vector<osg::Vec2> vecdata;
 
-	osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), float alphaCoef = 1.0f)
+    osg::ref_ptr<osg::Geode> Generate(osg::Group* grp, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange(), float alphaCoef = 1.0f)
 	{
 		osg::Geode* geode = new osg::Geode;
 		osg::Geometry* geometry = new osg::Geometry;
@@ -458,7 +458,7 @@ namespace VortexDetect {
 			double y = vertices[i].y() / longitudeNum;
 			double z = 0;
 			double tx, ty, tz;
-			llh2xyz_Ellipsoid(range,
+            osg_3d_vis::llh2xyz_Ellipsoid(range,
 				x, y, z,
 				tx, ty, tz);
 			v->push_back(osg::Vec3(tx, ty, tz));
@@ -484,7 +484,7 @@ namespace VortexDetect {
 		return geode;
 	}
 
-	void Generate3D(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange(), int height = 1)
+    void Generate3D(osg::Group* grp, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange(), int height = 1)
 	{
 		// 读取参数
 		getParas();
@@ -524,7 +524,7 @@ namespace VortexDetect {
 					}
 				}
 			}
-			llhRange newRange = range;
+            osg_3d_vis::llhRange newRange = range;
 			newRange.minHeight = float(i) / height * (range.maxHeight - range.minHeight) + range.minHeight;
 			grp->addChild(Generate(grp, camera, newRange, 1.0f / height));
 		}
@@ -565,7 +565,7 @@ namespace VortexDetect {
 
 	}
 
-	void GenerateML(osg::Group* grp, osg::Camera* camera, llhRange range = llhRange())
+    void GenerateML(osg::Group* grp, osg::Camera* camera, osg_3d_vis::llhRange range = osg_3d_vis::llhRange())
 	{
 		// 第二次渲染：使用framebuffer的结果作为纹理，用program2进行渲染，渲染到屏幕上
 		// 第二次渲染使用的面片
@@ -581,7 +581,7 @@ namespace VortexDetect {
 			double y = vertices[i].y();
 			double z = vertices[i].z();
 			double tx, ty, tz;
-			llh2xyz_Ellipsoid(range,
+            osg_3d_vis::llh2xyz_Ellipsoid(range,
 				x, y, z,
 				tx, ty, tz);
 			v->push_back(osg::Vec3(tx, ty, tz));
@@ -613,7 +613,7 @@ namespace VortexDetect {
 
 		// 绑定 mvp
 		osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
-		mvpUniform->setUpdateCallback(new ModelViewProjectionMatrixCallback(camera));
+        mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(camera));
 		stateset->addUniform(mvpUniform);
 
 		stateset->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);//管理深度测试
