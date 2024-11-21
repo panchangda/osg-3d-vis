@@ -114,7 +114,7 @@ Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
     GenerateRadarMesh();
     root->addChild(RadarRT);
 
-    addEmi({ 30,110,700000,5 });
+    addEmi({ 30,110,7000000,5 });
 	GenerateMeiMesh();
     root->addChild(Emirt);
 
@@ -221,8 +221,9 @@ osg::ref_ptr<osg::Geometry>  Radar::Radar::Generate(osg_3d_vis::llhRange range)
             {
                 double k = center.x() + la * cos(theta);
                 double j = center.y() + lo * sin(theta);
+                double kk = center.z() + he;
                 double x, y, z;
-                osg_3d_vis::llh2xyz_Ellipsoid(k, j, he, x, y, z);
+                osg_3d_vis::llh2xyz_Ellipsoid(k, j, kk, x, y, z);
                 osg::Vec4 p(x, y, z, 1.);
                 Vec4arrays->push_back(p);
             }
