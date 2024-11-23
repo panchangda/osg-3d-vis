@@ -31,6 +31,8 @@
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
+// #include "velocity_field/VelocityFieldGPU.h"
+
 
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
 void osgSetUp();
@@ -109,11 +111,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	}
 
 
-	///*
-	// * Velocity Field Visualizations
-	// */
-	// Show Streamline: CPU (enable choosing one streamling)
-	//
+    /*
+     * Velocity Field Visualizations
+     */
+    // Show Streamline: CPU (enable choosing multi streamling, display per streamline info text)
+    //
 //        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
 //        viewer,
 //        root,
@@ -121,14 +123,15 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 //        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 
 
-	//// Show Streamline: GPU
-	// auto slPtr = VelocityFieldGPU::Generate(
-	// 	root,
-	// 	viewer.getCamera(),
-	// 	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
+
+    // Show Streamline: GPU
+     auto slPtr = VelocityFieldGPU::Generate(
+        root.get(),
+        viewer.getCamera(),
+        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
 
 
-    //	// Show LIC
+    // Show LIC
     if(osg_3d_vis::showLIC){
         VelocityLIC::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
         osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
@@ -277,7 +280,7 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 
 		prevTime = currentTime;
         viewer.frame();  //meshRadar
-        meshRadar->updateTime();
+//        meshRadar->updateTime();
 		/*if (flag == 0) {
 				Axis* axis = new Axis();
 				root->addChild(axis->DrawAxis(0, 0, 0, 21, 21, 21, 1));

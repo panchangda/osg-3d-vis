@@ -81,7 +81,7 @@ namespace osg_3d_vis {
         testColorTexture->setSourceType(GL_FLOAT);
         testColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         testColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-        testColorTexture->setTextureSize(rttTexSize, rttTexSize);
+        // testColorTexture->setTextureSize(rttTexSize, rttTexSize);
 
         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
 
@@ -139,16 +139,16 @@ namespace osg_3d_vis {
         stateset->setAttributeAndModes(program);
 
 
-        osg::ref_ptr<osg::Uniform> uniformScreenColor = new osg::Uniform("screenColorTexture", 0);
-        stateset->setTextureAttributeAndModes(0, screenColorTexture.get(), osg::StateAttribute::ON);
-        stateset->addUniform(uniformScreenColor);
+//        osg::ref_ptr<osg::Uniform> uniformScreenColor = new osg::Uniform("screenColorTexture", 0);
+//        stateset->setTextureAttributeAndModes(0, screenColorTexture.get(), osg::StateAttribute::ON);
+//        stateset->addUniform(uniformScreenColor);
 
-        osg::ref_ptr<osg::Uniform> uniformScreenDepth = new osg::Uniform("screenDepthTexture", 1);
-        stateset->setTextureAttributeAndModes(1, screenDepthTexture.get(), osg::StateAttribute::ON);
+        osg::ref_ptr<osg::Uniform> uniformScreenDepth = new osg::Uniform("screenDepthTexture", 0);
+        stateset->setTextureAttributeAndModes(0, screenDepthTexture.get(), osg::StateAttribute::ON);
         stateset->addUniform(uniformScreenDepth);
 
-        osg::ref_ptr<osg::Uniform> uniformTestColor = new osg::Uniform("testColorTexture", 2);
-        stateset->setTextureAttributeAndModes(2, testColorTexture.get(), osg::StateAttribute::ON);
+        osg::ref_ptr<osg::Uniform> uniformTestColor = new osg::Uniform("testColorTexture", 1);
+        stateset->setTextureAttributeAndModes(1, testColorTexture.get(), osg::StateAttribute::ON);
         stateset->addUniform(uniformTestColor);
 
 
@@ -175,8 +175,9 @@ namespace osg_3d_vis {
 
             TestRenderCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT);
             TestRenderCamera->setReferenceFrame( osg::Camera::ABSOLUTE_RF );
-            TestRenderCamera->setRenderOrder( osg::Camera::PRE_RENDER, 0 );
+            TestRenderCamera->setRenderOrder( osg::Camera::POST_RENDER, 0 );
             TestRenderCamera->attach(osg::Camera::COLOR_BUFFER, testColorTexture);
+            // TestRenderCamera->setViewport(0, 0, rttTexSize, rttTexSize);
 
             osg::ref_ptr<osg::Geometry> renderPassGeometry = createScreenQuad();
             osg::ref_ptr<osg::StateSet> stateset = renderPassGeometry->getOrCreateStateSet();

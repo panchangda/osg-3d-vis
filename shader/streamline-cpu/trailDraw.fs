@@ -1,6 +1,6 @@
 #version 330 core
 
-// #extension GL_EXT_frag_depth : enable
+#extension GL_EXT_frag_depth : enable
 
 uniform sampler2D trailColorTexture;
 uniform sampler2D trailDepthTexture;
@@ -25,10 +25,10 @@ void main(){
     vec4 decayedTrailColor = trailColor * fadeOpacity;
     FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, decayedTrailColor.a);
 
-	// FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, decayedTrailColor.a);
-	FragColor = segmentColor;
+	FragColor = vec4(segmentColor.rgb + decayedTrailColor.rgb, 1.0);
+	// FragColor = segmentColor + trailColor;
 	// FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 	// FragColor = vec4(segmentDepth, segmentDepth, segmentDepth, 1.0);
-    // gl_FragDepthEXT = min(trailDepth, segmentDepth);
+    gl_FragDepthEXT = min(trailDepth, segmentDepth);
 
 }

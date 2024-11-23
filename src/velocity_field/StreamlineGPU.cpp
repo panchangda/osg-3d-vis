@@ -27,9 +27,9 @@ StreamLineGPU * VelocityFieldGPU::Generate(osg::Group *root, osg::Camera *camera
     sl->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT", std::string(OSG_3D_VIS_DATA_PREFIX)+"V.DAT", range);
     //sl->initFromConfigFile("E:/osg-vis/config");
 #else
-    sl->setShaderPath("/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/shaders/");
-    sl->initFromDatFile("/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/data/U.DAT",
-                        "/home/user/temp/gis3/kylin64_desk_arm_ft_g++_private/bin/gtconfig/modules/gis3_ztbh/Mgs3D_Data/MoeData/spaceDivide/Streamline/data/V.DAT", range);
+    sl->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX));
+    sl->initFromDatFile(std::string(OSG_3D_VIS_DATA_PREFIX) + "U.DAT",
+                        std::string(OSG_3D_VIS_DATA_PREFIX) + "V.DAT", range);
 #endif
 
     sl->createCalculateSpeedPass();

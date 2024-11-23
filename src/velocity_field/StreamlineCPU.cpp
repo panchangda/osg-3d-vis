@@ -57,7 +57,7 @@ namespace osg_3d_vis {
         this->initializeArrowGeometryRenderState();
 
         /* get main camera color & depth buffer */
-        mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
+        // mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
         // mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
         // temp way to read back depth buffer
         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
@@ -69,7 +69,7 @@ namespace osg_3d_vis {
         root->addChild(this->createSegmentDrawPass(mainCamera));
         root->addChild(this->createTrailDrawPass());
         root->addChild(this->createScreenDrawPass());
-        // root->addChild(this->createCopyPass());
+        root->addChild(this->createCopyPass());
 
 //        root->addChild(this->createTextPass());
 
@@ -116,9 +116,9 @@ namespace osg_3d_vis {
         dy = (maxY - minY) / (dimY - 1);
 
         idx = 0;
-        pointDensity = 1.0f;
+        pointDensity = 10.0f;
         h = 0.5f;
-        speedScaleFactor = 0.5f;
+        speedScaleFactor = 1.0f;
         minLineLength = 10;
         pointsSum = int(dimX * dimY / pointDensity);
         linesSum = pointsSum;
@@ -253,7 +253,7 @@ namespace osg_3d_vis {
     }
 
     void StreamLineCPU::initializeTexturesAndImages() {
-        rttTextureSize = 256;
+        rttTextureSize = 512;
 
 
         screenColorTexture = new osg::Texture2D;
@@ -264,10 +264,9 @@ namespace osg_3d_vis {
         screenColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 
         segmentColorTexture = new osg::Texture2D;
-        segmentColorTexture->setDataVariance(osg::Object::DYNAMIC);
         segmentColorTexture->setSourceFormat(GL_RGBA);
         segmentColorTexture->setInternalFormat(GL_RGBA);
-        segmentColorTexture->setTextureSize(rttTextureSize, rttTextureSize);
+        // segmentColorTexture->setTextureSize(rttTextureSize, rttTextureSize);
         segmentColorTexture->setSourceType(GL_FLOAT);
         segmentColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         segmentColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);

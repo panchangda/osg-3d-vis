@@ -30,7 +30,7 @@ namespace osg_3d_vis{
     constexpr bool enableFog = false; // ok
     constexpr bool fogLinear = false;
 
-    constexpr bool meshRadar = true;  // ok
+    constexpr bool meshRadar = false;  // ok
     constexpr bool VoxelRadar = false; // no ok
     // 3D Charts:
     constexpr bool showCharts = false; //ok

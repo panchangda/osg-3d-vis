@@ -687,7 +687,7 @@ namespace osg_3d_vis {
 				osg::ref_ptr<osg::Image> tmpImage = new osg::Image;
 				// what's this used for?
 				// subImage->copySubImage(0, 0, 0, tmpImage);
-				subImage->dirty();
+                // subImage->dirty();
 
 				sl->updateMainCameraView(viewMatrix);
 			}
