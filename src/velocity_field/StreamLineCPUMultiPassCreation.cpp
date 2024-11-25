@@ -40,9 +40,10 @@ namespace osg_3d_vis{
 		updateNodeGeometryCallbackPtr = new updateNodeGeometryCallback(this);
 		tmpGeode->addUpdateCallback(updateNodeGeometryCallbackPtr);
 
-//		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
-//		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-//		segmentDrawCamera->setStateSet(stateset);
+//        stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+//        stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//        stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+        //segmentDrawCamera->setStateSet(stateset);
 
 		segmentDrawCamera->addChild(tmpGeode);
 
@@ -52,7 +53,7 @@ namespace osg_3d_vis{
 		segmentDrawCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
         segmentDrawCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
         segmentDrawCamera->setRenderOrder(osg::Camera::POST_RENDER, 0);
-        // segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
+        segmentDrawCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		segmentDrawCamera->attach(osg::Camera::COLOR_BUFFER, segmentColorTexture);
 		segmentDrawCamera->attach(osg::Camera::DEPTH_BUFFER, segmentDepthTexture);
 		return segmentDrawCamera;
@@ -88,7 +89,12 @@ namespace osg_3d_vis{
 
 			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (camera->getChild(0));
 			osg::ref_ptr<osg::StateSet> stateset = tmpGeo->getDrawable(0)->getOrCreateStateSet();
-			stateset->getUniform("first")->set(bool(false));
+            if(sl->cameraMoving){
+                stateset->getUniform("first")->set(bool(true));
+            }else{
+                stateset->getUniform("first")->set(bool(false));
+            }
+
 
 		}
 	};
@@ -129,11 +135,14 @@ namespace osg_3d_vis{
         osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
         stateset->addUniform(firstUniform);
 
-        osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.996);
+        osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.95);
 		stateset->addUniform(fadeOpacityUniform);
 
-//		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
-//		stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//        stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+//        osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
+//        blendFunc->setFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//        stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON);
+//        stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 		osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
 		tmpGeode->addDrawable(trailDrawPassGometry);
@@ -204,15 +213,15 @@ namespace osg_3d_vis{
 
 
 		// Blend Rendering Related ʹ����ɫ��ALPHAͨ������͸��������Ⱦ
-		// stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
-		// stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//         stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+//         stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 		// stateset->setRenderBinDetails(11, "RenderBin");
 
-		// stateset->setMode(GL_DEPTH_WRITEMASK, GL_FALSE);
+//         stateset->setMode(GL_DEPTH_WRITEMASK, GL_FALSE);
 		//
-		osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
-		blendFunc->setFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON);
+//        osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
+//        blendFunc->setFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//        stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON);
 
 
 		renderPassGeometry->setStateSet(stateset);
@@ -276,11 +285,11 @@ namespace osg_3d_vis{
 		copyCamera->addChild(tmpGeo);
 
         copyCamera->setRenderOrder(osg::Camera::POST_RENDER, 4);
-		// copyCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        // copyCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		// copyCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		copyCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		copyCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-		copyCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
+        copyCamera->setViewport(0, 0, this->rttTextureSize, this->rttTextureSize);
 		copyCamera->attach(osg::Camera::COLOR_BUFFER, currTrailColorTexture);
 		copyCamera->attach(osg::Camera::DEPTH_BUFFER, currTrailDepthTexture);
 

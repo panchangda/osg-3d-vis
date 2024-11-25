@@ -116,7 +116,7 @@ namespace osg_3d_vis {
         dy = (maxY - minY) / (dimY - 1);
 
         idx = 0;
-        pointDensity = 10.0f;
+        pointDensity = 5.0f;
         h = 0.5f;
         speedScaleFactor = 1.0f;
         minLineLength = 10;
@@ -253,7 +253,7 @@ namespace osg_3d_vis {
     }
 
     void StreamLineCPU::initializeTexturesAndImages() {
-        rttTextureSize = 512;
+        rttTextureSize = 1024;
 
 
         screenColorTexture = new osg::Texture2D;

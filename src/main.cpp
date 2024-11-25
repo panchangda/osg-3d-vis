@@ -116,19 +116,19 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
      */
     // Show Streamline: CPU (enable choosing multi streamling, display per streamline info text)
     //
-//        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-//        viewer,
-//        root,
-//        viewer.getCamera(),
-//        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+        viewer,
+        root,
+        viewer.getCamera(),
+        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 
 
 
     // Show Streamline: GPU
-     auto slPtr = VelocityFieldGPU::Generate(
-        root.get(),
-        viewer.getCamera(),
-        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
+//     auto slPtr = VelocityFieldGPU::Generate(
+//        root.get(),
+//        viewer.getCamera(),
+//        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
 
 
     // Show LIC

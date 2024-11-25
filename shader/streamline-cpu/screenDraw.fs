@@ -15,15 +15,16 @@ void main(){
     float streamlineDepth = texture(streamlineDepthTexture, v_textureCoordinates).r;
 
 	// FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-	FragColor = vec4(streamlineDepth,streamlineDepth,streamlineDepth,1.0);
-FragColor = streamlineColor;
-return;
+	//FragColor = vec4(streamlineDepth,streamlineDepth,streamlineDepth,1.0);
+  //FragColor = streamlineColor;
+ //return;
     if(streamlineDepth < screenDepth){
         FragColor =  streamlineColor;
 		// FragColor = vec4(1.0, 0.0, 0.0, 0.9);
     }
     else{
-        discard;
+		discard;
+        //FragColor =  vec4(1.0, 0.0, 0.0, 1.0);
     }
    
 

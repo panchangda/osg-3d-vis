@@ -237,6 +237,7 @@ namespace osg_3d_vis {
 		osg::Matrixd mainCameraViewMatrix;
 		osg::Matrixd mainCameraViewProjMatrix;
 
+        bool cameraMoving = false;
 		/* simple get & set value funcs */ 
 		bool isCameraSteady(osg::Matrixd _m) {
 			return mainCameraViewMatrix == _m;
@@ -683,14 +684,35 @@ namespace osg_3d_vis {
 
 			// dynamic redraw for non pixel texturing
 			if (!sl->isCameraSteady(viewMatrix)) {
+                // clear color texture
 				osg::ref_ptr<osg::Image> subImage = sl->nextTrailColorTexture->getImage();
 				osg::ref_ptr<osg::Image> tmpImage = new osg::Image;
 				// what's this used for?
-				// subImage->copySubImage(0, 0, 0, tmpImage);
-                // subImage->dirty();
+                // subImage->copySubImage(0, 0, 0, tmpImage);
+                subImage->dirty();
+
+                // clear depth texture
+                osg::ref_ptr<osg::Camera> trailDrawcamera = sl->trailDrawCamera;
+                osg::State* state = trailDrawcamera->getGraphicsContext()->getState();
+//                    if (state) {
+//                        // 确定帧缓冲是否已绑定
+//                        GLint framebufferID;
+//                        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebufferID);
+
+//                        if (framebufferID != 0) {
+//                            // 清除深度缓冲
+//                            glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+//                            glClear(GL_DEPTH_BUFFER_BIT);
+//                            glBindFramebuffer(GL_FRAMEBUFFER, 0); // 解除绑定
+//                        }
+//                    }
 
 				sl->updateMainCameraView(viewMatrix);
-			}
+
+                sl->cameraMoving = true;
+            }else{
+                sl->cameraMoving = false;
+            }
 		}
 	};
 
