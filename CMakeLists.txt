@@ -35,6 +35,7 @@ CACHE PATH "Root of OpenSceneGraph library (Debug)")
 file(GLOB OSG_RELEASE_LIBS "${OSG_RELEASE}/lib/*.lib")
 file(GLOB OSG_DEBUG_LIBS "${OSG_DEBUG}/lib/*.lib")
 
+
 # 设置包含目录
 if(NOT CMAKE_CONFIGURATION_TYPES)
 	# 单配置生成器（如 Makefile、Ninja）
@@ -85,7 +86,7 @@ add_executable(${TARGET_NAME}
     ${SOURCE_FILES} ${HEADER_FILES} 
     ${RESOURCE_FILE}
 		# ${GUI_HEADER} ${GUI_UI})
-		)
+		 )
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

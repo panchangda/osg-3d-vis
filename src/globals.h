@@ -17,11 +17,11 @@ namespace osg_3d_vis{
     constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
 
     // Earth
-    constexpr bool drawEarth = false;
+    constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
     constexpr  bool drawTree = false;
-    constexpr bool showCloud = true;
+    constexpr bool showCloud = false;
     // Particles:
     constexpr bool drawCessna = false;
     constexpr bool drawWeather = false;
@@ -31,7 +31,7 @@ namespace osg_3d_vis{
 
 
     // 3D Charts:
-    constexpr bool showCharts = false;
+    constexpr bool showCharts = true;
 
 
     // Frame Timer

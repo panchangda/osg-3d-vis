@@ -122,4 +122,5 @@ namespace osg_3d_vis {
         stateset->setTextureAttributeAndModes(0, data.geometries[index].textures[0], osg::StateAttribute::ON);
         Geos->addDrawable(geom);
     }
+
 }
