@@ -10,10 +10,7 @@
 #include <osg/NodeVisitor>     // For osg::NodeVisitor
 #include <osg/Geode>           // For osg::Geode
 #include <osg/Geometry>        // For osg::Geometry and related types
-#include <osg/Texture>         // For osg::Texture
-#include <osg/StateSet>        // For osg::StateSet
 
-#include <iostream>
 #include <qnamespace.h>
 
 namespace osg_3d_vis {

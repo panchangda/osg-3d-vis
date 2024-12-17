@@ -71,6 +71,17 @@ public:
 		osg::Camera* Cam;
 	};
 
+	class thetaUniformCallback : public osg::Uniform::Callback {
+	public:
+
+		virtual void operator()(osg::Uniform* uniform, osg::NodeVisitor* nv) {
+			theta += 0.01;
+			theta = theta > osg::PI_2 ? theta-osg::PI_2 : theta;
+			uniform->set(theta);
+		}
+		float theta = 0;;
+	};
+
 	void createLightModel(osg::ref_ptr<osg::Group> _root, osg::ref_ptr<osg::Camera> camera ) {
 		Geos = new osg::Geode;
 		osg::ref_ptr<osg::Node> objModel = osgDB::readNodeFile(TankerObj.c_str());
@@ -86,7 +97,7 @@ public:
 		for (int i = 0; i < geoExtractor.geometries.size(); ++i) {
 			Geos->addChild(CreareSingleGeode(geoExtractor, i));
 		}
-		 
+		
 		auto stateSet = Geos->getOrCreateStateSet();
 		// shaders
 		osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
@@ -119,6 +130,9 @@ public:
 		auto cpos = new osg::Uniform( osg::Uniform::FLOAT_VEC3, "camPos");
 		cpos->setUpdateCallback(new CameraPosUniformCallback(camera));
 		stateSet->addUniform(cpos);
+		auto theta = new osg::Uniform(osg::Uniform::FLOAT, "theta");
+		theta->setUpdateCallback( new thetaUniformCallback());
+		stateSet->addUniform(theta);
 		osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
 		transform->setPosition(osg_3d_vis::HangZhouPos);
 		transform->setScale({ 20000,20000,20000 });

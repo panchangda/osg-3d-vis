@@ -10,11 +10,12 @@
 
 #include <osg/BlendFunc>
 #include <osg/PrimitiveSet>
-#include <osg/Texture2D>
+
 #include <osgDB/ReadFile>
-#include <osg/MatrixTransform>
+#include "../globals.h"
 
 #include "../util.h"
+#include "osg/PositionAttitudeTransform"
 
 const std::string treeOBJ = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/trees9.obj";
 const std::string vs = std::string(OSG_3D_VIS_SHADER_PREFIX) + "gpu-instances/tree.vert";
@@ -42,10 +43,35 @@ namespace osg_3d_vis {
         for(int i=0;i<1; ++i) {
             CreareSingleGeode(geoExtractor,i);
         }
+        float singleStep = 0.0000001;
+        double x, y, z;
+        osg::Vec3 hzLLH{ osg::DegreesToRadians(30.0f),
+            osg::DegreesToRadians(120.0f + 180.0f),
+            1000.0f };
+        osg::ref_ptr<osg::Vec3Array> offset = new osg::Vec3Array;
+        for(int i=-4; i<=5; ++i)
+        {
+	        for(int j=-4; j<5; ++j)
+	        {
+                auto v = osg::Vec3(hzLLH.x() + i * singleStep, hzLLH.y() + j * singleStep, hzLLH.z());
+                llh2xyz_Ellipsoid(v.x(), v.y(), v.z(), x, y, z);
+                offset->push_back(osg::Vec3( x,y,z ));
+	        }
+        }
+        auto offsetUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "offset",instanceCount);
+        for(int i=0;i<instanceCount;++i)
+        {
+            offsetUniform->setElement(i, offset->at(i));
+        }
+        Geos->getOrCreateStateSet()->addUniform(offsetUniform);
         setShader();
         setUniforms();
+        osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
+        //transform->setPosition(osg_3d_vis::HangZhouPos);
+        transform->setScale({ 20000,20000,20000 });
+        transform->addChild(Geos);
 
-        root->addChild(Geos);
+        root->addChild(transform);
      }
 
     void Tree::setShader() {
@@ -111,9 +137,9 @@ namespace osg_3d_vis {
         geom->setVertexAttribArray(0, data.geometries[index].vertices, osg::Array::BIND_PER_VERTEX);
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
-
+        // key of instance draw 
+    	geom->setUseDisplayList(false);
         Primitives->setNumInstances(instanceCount);
-
         geom->addPrimitiveSet(Primitives);
 
 

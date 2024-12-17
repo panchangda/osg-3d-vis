@@ -66,7 +66,7 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
 
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0.f, 200000.f);
+    static std::uniform_int_distribution<> dis(0.f, 2000000.f);
 
 
     // ´´½¨ osg::Vec3Array
@@ -88,6 +88,9 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
         for (int j = 1; j < 360; j += 2)
         {
             auto v = osg::Vec3{ (float)i, (float)j, (float)dis(gen)};
+            if (i % 5 == 0 && j % 5 == 0) v.z() ;
+            else v.z() /= 10;
+            cout << v.x() << ' ' << v.y() << ' ' << v.z() << endl;
             geode->addChild(drawQuads( v,colors[ abs(i)/46%8]));
         }
     }
@@ -106,5 +109,6 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
     state->addUniform(mvpUniform);
     state->setMode(GL_BLEND, osg::StateAttribute::ON);
     state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    state->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     return geode;
 }

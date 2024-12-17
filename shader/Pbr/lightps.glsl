@@ -24,6 +24,8 @@ out vec4 FragColor;
 
 const float PI = 3.14159265359;
 
+uniform float theta;
+
 const vec4 lights[6] = vec4[6](
 	vec4(-1,-1,-1,0),
 	vec4(1,1,1,0),
@@ -53,6 +55,15 @@ float Fd_Lambert() {
     return 1.0 / PI;
 }
 
+mat3 rotationZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        c, -s, 0,
+        s,  c, 0,
+        0,  0, 1
+    );
+}
 
 // ----------------------------------------------------------------------------
 void main()
@@ -74,7 +85,7 @@ void main()
 	// Specular contribution
 	vec3 Lo = vec3(0.0);
 	for (int i = 0; i < 6; i++) {
-		vec3 l = lights[i].xyz;
+		vec3 l = lights[i].xyz * rotationZ(theta);
 		float NoL = clamp(dot(n, l), 0.0, 1.0);
 		if (NoL > 0.0){
 			float LoH = clamp(dot(l, h), 0.0, 1.0);

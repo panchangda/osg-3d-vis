@@ -20,6 +20,43 @@ enum DrawWay
 };
 static DrawWay usePattern = surface ;
 
+class UpdateIndexCallback : public osg::NodeCallback {
+public:
+	UpdateIndexCallback(int begin)
+		: frameCount(begin) {
+		indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+	}
+	unsigned int frameCount;
+	osg::ref_ptr<osg::DrawElementsUInt> indices;
+
+	virtual void operator()(osg::Node* node, osg::NodeVisitor* nv) {
+		osg::Geode* geode = dynamic_cast<osg::Geode*>(node);
+		if (geode) {
+
+			osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(geode->getDrawable(0));
+			if (geometry) {
+				indices->clear();
+				static int loop = 0;
+				osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+				for (int i = frameCount; i <= frameCount + 30; ++i)
+				{
+					indices->push_back(0);
+					indices->push_back(i % (360 + 1));
+					indices->push_back((i + 1) % (360 + 1));
+				}
+				geometry->setPrimitiveSet(0, indices.get());
+				loop++;
+
+				if (loop == 5) {
+					frameCount++;
+					loop = 0;
+				}
+			}
+		}
+		traverse(node, nv);
+	}
+
+};
 void Radar::Radar::updateR(double value) {
 	osg::Vec4 color;
 	colorUniform->get(color);
@@ -109,7 +146,7 @@ osg::ref_ptr<osg::Geometry> createCircle(osg::Vec2 center, osg::Vec2 radius, uns
 		float angle = 2.0f * osg::PI * float(i) / float(numSegments);
 		auto la = center.x() + radius.x() * cos(angle), lo = center.y() + radius.y() * sin(angle);
 		double x, y, z;
-		osg_3d_vis::llh2xyz_Ellipsoid(la, lo, 60000, x, y, z);
+		osg_3d_vis::llh2xyz_Ellipsoid(la, lo, 360000, x, y, z);
 		vertices->push_back(osg::Vec3(x, y, z));
 		indices->push_back(i);
 	}
@@ -128,13 +165,13 @@ osg::ref_ptr<osg::Geometry> MakeCircle(osg::Vec2 center, osg::Vec2 radius, unsig
 
 	float angleStep = 2.0f * osg::PI / numSegments;
 	double xx, yy, zz;
-	osg_3d_vis::llh2xyz_Ellipsoid({ center.x(), center.y(), 60000 }, xx, yy, zz);
+	osg_3d_vis::llh2xyz_Ellipsoid({ center.x(), center.y(), 360000 }, xx, yy, zz);
 	vertices->push_back(osg::Vec3(xx, yy, zz));
 	osg_3d_vis::llh2xyz_Ellipsoid({ center.x(), center.y(), 500 }, xx, yy, zz);
 	vertices->push_back(osg::Vec3(xx, yy, zz));
-	float zTop = 60000;
+	float zTop = 360000;
 	float zBottom = 500;
-
+	float zMidle = 260000;
 	for (unsigned int i = 0; i < numSegments; ++i) {
 		float angle = angleStep * i;
 		float x = radius.x() * cos(angle);
@@ -142,51 +179,73 @@ osg::ref_ptr<osg::Geometry> MakeCircle(osg::Vec2 center, osg::Vec2 radius, unsig
 
 		osg_3d_vis::llh2xyz_Ellipsoid(center.x() + x*0.9, center.y() + y*0.9, zTop, xx, yy, zz);
 		vertices->push_back(osg::Vec3(xx, yy, zz));
+		float k = rand();
+		k = k > 1.3 ? 1.3 : (k < 0.8 ? 0.8 : k);
+		osg_3d_vis::llh2xyz_Ellipsoid(center.x() + x * k, center.y() + y * k, zMidle, xx, yy, zz);
+		vertices->push_back(osg::Vec3(xx, yy, zz));
+
 		osg_3d_vis::llh2xyz_Ellipsoid(center.x() + x, center.y() + y, zBottom, xx, yy, zz);
 		vertices->push_back(osg::Vec3(xx, yy, zz));
 	}
-
+	// single index in side 
 	unsigned int topCenterIndex = 0;
-	unsigned int bottomCenterIndex = 1;
-	int mod = numSegments * 2 + 2;
-	for (unsigned int i = 2; i < numSegments * 2; i += 2) {
-		unsigned int next = (i + 2) % mod;
+	unsigned int midleCenterIndex = 1;
+	unsigned int bottomCenterIndex = 2;
+	int mod = numSegments * 3 + 2;
+	// sphere
+	for (unsigned int i = 2; i +3< mod; i += 3) {
 		indices->push_back(topCenterIndex);
 		indices->push_back(i);
-		indices->push_back(next);
+		indices->push_back(i+3);
 	}
 	indices->push_back(topCenterIndex);
-	indices->push_back(mod - 2);
+	indices->push_back(mod - 3);
 	indices->push_back(2);
-	for (unsigned int i = 3; i < numSegments * 2; i += 2) {
-		unsigned int next = (i + 2) % (numSegments * 2 + 2);
+	for (unsigned int i = 3; i +3<mod; i += 3) {
 		indices->push_back(bottomCenterIndex);
 		indices->push_back(i);
-		indices->push_back(next);
+		indices->push_back(i+3);
 	}
 	indices->push_back(bottomCenterIndex);
 	indices->push_back(mod - 1);
-	indices->push_back(3);
+	indices->push_back(4);
 
-	for (unsigned int i = 2; i < numSegments * 2; i += 2) {
-		unsigned int next = (i + 2) % (numSegments * 2);
+	for (unsigned int i = 2; i +5< mod; i += 3) {
 		indices->push_back(i);
 		indices->push_back(i + 1);
-		indices->push_back(next + 1);
+		indices->push_back(i+4);
 
 		indices->push_back(i);
-		indices->push_back(next + 1);
-		indices->push_back(next);
+		indices->push_back(i+4);
+		indices->push_back(i + 3);
+
+		indices->push_back(i+1);
+		indices->push_back(i + 2);
+		indices->push_back(i+5);
+
+		indices->push_back(i+1);
+		indices->push_back(i+5);
+		indices->push_back(i+4);
 	}
-	unsigned int lastTop = numSegments * 2;
-	unsigned int lastBottom = numSegments * 2 + 1;
+	unsigned int lastTop = mod-3;
+	unsigned int lastMid = mod - 2;
+	unsigned int lastBottom = mod-1;
+
 	indices->push_back(lastTop);
-	indices->push_back(lastBottom);
+	indices->push_back(lastMid);
 	indices->push_back(3);
 
-	indices->push_back(lastBottom);
+	indices->push_back(lastTop);
 	indices->push_back(2);
 	indices->push_back(3);
+
+	indices->push_back(lastMid);
+	indices->push_back(lastBottom);
+	indices->push_back(4);
+
+	indices->push_back(lastMid);
+	indices->push_back(3);
+	indices->push_back(4);
 
 	geometry->setVertexArray(vertices);
 
@@ -195,7 +254,7 @@ osg::ref_ptr<osg::Geometry> MakeCircle(osg::Vec2 center, osg::Vec2 radius, unsig
 	return geometry;
 }
 
-osg::ref_ptr<osg::Geometry> MakeCircleSearch(osg::Vec2 center, osg::Vec2 radius, float height= 61110, unsigned int numSegments = 360) {
+osg::ref_ptr<osg::Geometry> MakeCircleSearch(osg::Vec2 center, osg::Vec2 radius, float height= 361000, unsigned int numSegments = 360) {
 	osg::ref_ptr<osg::Geometry> circleGeometry = new osg::Geometry();
 	osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
 
@@ -212,11 +271,12 @@ osg::ref_ptr<osg::Geometry> MakeCircleSearch(osg::Vec2 center, osg::Vec2 radius,
 		vertices->push_back(osg::Vec3(x, y, z));
 	}
 
-	osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+
 	static std::random_device rd; 
 	static std::mt19937 gen(rd());
 	static std::uniform_int_distribution<> dis(1, numSegments);
 	int k = dis(gen);
+	osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
 	for(int i= k; i<=k+30; ++i)
 	{
 		indices->push_back(0);
@@ -329,7 +389,7 @@ Radar::Radar::Radar(osgViewer::Viewer& viewer, osg::ref_ptr<osg::Group> root)
 	root->addChild(Radarline);
 	root->addChild(Radarsearch);
 
-	addEmi({ 16,115,60000,5 });
+	addEmi({ 16,115,5 });
 	GenerateEmiMesh();
 	root->addChild(Emirt);
 }
@@ -448,9 +508,9 @@ osg::ref_ptr<osg::Geode> Radar::Radar::GenerateEmi(osg_3d_vis::llhRange range)
 	osg::Vec2 center = osg::Vec2(minLa , minLo );
 	osg::Vec2 radiusMAX = osg::Vec2(maxLa - minLa, maxLo - minLo) ;
 
-	geode->addChild(createCustomCylinder(osg::Vec3(center, minH + 50000), radiusMAX.x(), 40000));
+	geode->addChild(createCustomCylinder(osg::Vec3(center, (minH + maxH)/2), radiusMAX.x(), (maxH-minH)));
 	
-	geode->addChild(createCustomCylinder(osg::Vec3(center, minH + 100000), radiusMAX.x()/10, 60000));
+	geode->addChild(createCustomCylinder(osg::Vec3(center, maxH+50000), radiusMAX.x()/10, 100000));
 	return geode;
 
 }
@@ -497,8 +557,7 @@ osg::ref_ptr<osg::Geode> Radar::Radar::GenerateCieclesearch(osg_3d_vis::llhRange
 	osg::Vec2 radiusMAX = osg::Vec2(maxLa - minLa, maxLo - minLo) / 2;
 
 	Geode->addChild(MakeCircleSearch(center, radiusMAX));
-
+	auto list = dynamic_cast<osg::DrawElementsUInt*>(dynamic_cast<osg::Geometry*>(Geode->getDrawable(0))->getPrimitiveSet(0))->at(1);
+	Geode->addUpdateCallback(new UpdateIndexCallback(list));
 	return Geode;
 }
-
-

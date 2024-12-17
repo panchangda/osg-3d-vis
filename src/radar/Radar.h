@@ -187,10 +187,10 @@ namespace Radar {
 			Circlesearch.push_back(GenerateCieclesearch(range));
 		}
 
-		void addEmi(osg::Vec4 fac)
+		void addEmi(osg::Vec3 fac)
 		{
 
-			osg_3d_vis::llhRange range{ fac.x(), fac.x() + fac.w(), fac.y(),fac.y() + fac.w(), fac.z(),fac.z()+200000 };
+			osg_3d_vis::llhRange range{ fac.x(), fac.x() + fac.z(), fac.y(),fac.y() + fac.z(), 360000,360000 +200000 };
 			EmiGeos.push_back(GenerateEmi(range));
 		}
 		osg::ref_ptr<osg::Geode>  Generate(osg_3d_vis::llhRange range);
