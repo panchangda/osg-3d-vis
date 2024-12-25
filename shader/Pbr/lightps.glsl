@@ -5,6 +5,7 @@
 //in vec2 TexCoords;
 in vec3 WorldPos;
 in vec2 uv;
+in vec3 Nor;
 
 uniform sampler2D alb1;
 uniform sampler2D Nor1;
@@ -57,9 +58,7 @@ float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
     return 0.5 / (GGXV + GGXL);
 }
 
-float Fd_Lambert() {
-    return 1.0 / PI;
-}
+
 
 mat3 rotationZ(float theta) {
     float c = cos(theta);
@@ -84,7 +83,7 @@ void main()
 {		  
 	if( index == 1){
 		vec3 albedo = texture(alb1,uv).rgb;
-		vec3 inNormal = texture(Nor1,uv).rgb;
+		vec3 inNormal = Nor + texture(Nor1,uv).rgb;
 		vec3 n = normalize(inNormal);
 		vec3 v = normalize(camPos - WorldPos);
 		vec3 h = normalize(n+v);
@@ -110,15 +109,15 @@ void main()
 				vec3 Fr = (D * V) * F;
 
 				// diffuse BRDF
-				vec3 Fd = albedo * Fd_Lambert();
-				Lo += Fr+Fd;
+				vec3 Fd = albedo * (1-F) /PI * ao;
+				Lo += (Fr+Fd) * NoL;
 			}
 		};
 
 		FragColor = vec4(Lo,1);
 	}else{
 		vec3 albedo = texture(alb2,uv).rgb;
-		vec3 inNormal = texture(Nor2,uv).rgb;
+		vec3 inNormal =  Nor +  texture(Nor2,uv).rgb;
 		vec3 n = normalize(inNormal);
 		vec3 v = normalize(camPos - WorldPos);
 		vec3 h = normalize(n+v);
@@ -143,8 +142,8 @@ void main()
 				vec3 Fr = (D * V) * F;
 
 				// diffuse BRDF
-				vec3 Fd = albedo * Fd_Lambert();
-				Lo += Fr+Fd;
+				vec3 Fd = albedo * (1-F) /PI * ao;
+				Lo += (Fr+Fd) * NoL;
 			}
 		};
 

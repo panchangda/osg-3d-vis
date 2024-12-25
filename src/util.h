@@ -47,6 +47,10 @@ namespace osg_3d_vis {
 							data.uvs->insert(data.uvs->end(), uvs->begin(), uvs->end());
 						}
 					}
+					osg::ref_ptr<osg::Vec3Array> normals = dynamic_cast<osg::Vec3Array*>(geometry->getNormalArray());
+					if (normals) {
+						data.noramls->insert(data.noramls->end(), normals->begin(), normals->end());
+					}
 
 					// Extract index array from each primitive set
 					for (unsigned int p = 0; p < geometry->getNumPrimitiveSets(); ++p) {

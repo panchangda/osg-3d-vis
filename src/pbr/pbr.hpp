@@ -32,7 +32,7 @@ public:
 		osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
 		geom->setVertexAttribArray(0, data.geometries[index].vertices, osg::Array::BIND_PER_VERTEX);
 		geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
-
+		geom->setVertexAttribArray(2, data.geometries[index].noramls, osg::Array::BIND_PER_VERTEX);
 		auto Primitives = data.geometries[index].shortIndices;
 		geom->addPrimitiveSet(Primitives);
 		if( index <2736)
