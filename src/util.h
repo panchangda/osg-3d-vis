@@ -61,26 +61,24 @@ namespace osg_3d_vis {
 						}
 					}
 
-					// Check for and extract textures on all texture units
-					osg::StateSet* stateSet = geometry->getStateSet();
-					if (stateSet) {
-						for (unsigned int unit = 0; unit < 16; ++unit) { // Assuming up to 16 texture units
-							osg::Texture* texture = dynamic_cast<osg::Texture*>(stateSet->getTextureAttribute(unit, osg::StateAttribute::TEXTURE));
-							if (texture) {
-								data.textures.push_back(texture);
-								std::cout << "Found texture on unit " << unit << std::endl;
-							}
-						}
-						osg::ref_ptr<osg::Material> material = dynamic_cast<osg::Material*>(stateSet->getAttribute(osg::StateAttribute::MATERIAL));
-						PbrMaterial& mat = data.materials;
-						mat.ka = material->getAmbient(osg::Material::FRONT);
-						mat.kd = material->getDiffuse(osg::Material::FRONT);
-						mat.ks = material->getSpecular(osg::Material::FRONT);
-						mat.Ao = material->getEmission(osg::Material::FRONT);
-						mat.shiness = material->getShininess(osg::Material::FRONT);
-
-					}
-
+					//// Check for and extract textures on all texture units
+					//osg::StateSet* stateSet = geometry->getStateSet();
+					//if (stateSet) {
+					//	for (unsigned int unit = 0; unit < 16; ++unit) { // Assuming up to 16 texture units
+					//		osg::Texture* texture = dynamic_cast<osg::Texture*>(stateSet->getTextureAttribute(unit, osg::StateAttribute::TEXTURE));
+					//		if (texture) {
+					//			data.textures.push_back(texture);
+					//			std::cout << "Found texture on unit " << unit << std::endl;
+					//		}
+					//	}
+					//	osg::ref_ptr<osg::Material> material = dynamic_cast<osg::Material*>(stateSet->getAttribute(osg::StateAttribute::MATERIAL));
+					//	PbrMaterial& mat = data.materials;
+					//	mat.ka = material->getAmbient(osg::Material::FRONT);
+					//	mat.kd = material->getDiffuse(osg::Material::FRONT);
+					//	mat.ks = material->getSpecular(osg::Material::FRONT);
+					//	mat.Ao = material->getEmission(osg::Material::FRONT);
+					//	mat.shiness = material->getShininess(osg::Material::FRONT);
+					//}
 
 					// 将数据存入 geometries 向量
 					geometries.push_back(data);
@@ -161,6 +159,7 @@ inline void llh2xyz_Ellipsoid(osg::Vec3 v, double& x, double& y, double& z) {
 	static osg::EllipsoidModel* pEllModel = new osg::EllipsoidModel();
 	pEllModel->convertLatLongHeightToXYZ(lat, lon, h, x, y, z);
 }
+
 
 inline osg::Vec3d llh2xyz_Ellipsoid(double _lat, double _lon, double _h) {
 	double lat = _lat;

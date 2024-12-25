@@ -17,12 +17,13 @@ namespace osg_3d_vis {
         void setShader(osg::ref_ptr<osg::Geode> geode);
         void setUniforms(osg::ref_ptr<osg::Geode> geode);
         void setBlend(osg::ref_ptr<osg::Geode> geode);
+
     private:
         osg::ref_ptr<osg::Camera> viewerCamera;
         osg::ref_ptr<osg::Group> root;
         osg::ref_ptr<osg::Geode> quads;
         const int instanceCount = 2500;
-        std::vector<osg::Vec3> instancePos;
+        std::vector<osg::Matrix> instancePos;
 
     };
 

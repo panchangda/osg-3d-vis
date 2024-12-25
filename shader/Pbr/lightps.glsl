@@ -6,17 +6,16 @@
 in vec3 WorldPos;
 in vec2 uv;
 
-uniform sampler2D alb;
-uniform sampler2D Nor;
-uniform sampler2D Rou;
+uniform sampler2D alb1;
+uniform sampler2D Nor1;
+uniform sampler2D Rou1;
 
-// material parameters
+uniform sampler2D alb2;
+uniform sampler2D Nor2;
+uniform sampler2D Rou2;
 
-uniform vec3 F0;
-uniform vec3 kd;
-uniform vec3 ks;
-uniform vec3 ao;
 
+uniform int index;
 
 uniform vec3 camPos;
 
@@ -26,14 +25,21 @@ const float PI = 3.14159265359;
 
 uniform float theta;
 
-const vec4 lights[6] = vec4[6](
-	vec4(-1,-1,-1,0),
-	vec4(1,1,1,0),
-	vec4(-1,0,-1,0),
-	vec4(1,0,1,0),
-	vec4(0,1,1,0),
-	vec4(0,-1,-1,0)
+const vec4 lights[12] = vec4[12](
+	vec4(-1,0,0,0),
+	vec4(1,0,0,0),
+	vec4(0,0,-1,0),
+	vec4(0,0,1,0),
+	vec4(0,1,0,0),
+	vec4(0,-1,0,0),
+	vec4(-1,0,1,0),
+	vec4(1,0,-1,0),
+	vec4(0,1,-1,0),
+	vec4(0,-1,1,0),
+	vec4(-1,1,0,0),
+	vec4(1,-1,0,0)
 );
+
 float D_GGX(float NoH, float a) {
     float a2 = a * a;
     float f = (NoH * a2 - NoH) * NoH + 1.0;
@@ -64,45 +70,84 @@ mat3 rotationZ(float theta) {
         0,  0, 1
     );
 }
+vec3 HDRtoLDR(vec3 color) {
+    // 1. Tone mapping (Reinhard tone mapping as an example)
+    color = color / (color + vec3(1.0));
 
+    // 2. Gamma correction
+    color = pow(color, vec3(1.0 / 2.2));
+
+    return color;
+}
 // ----------------------------------------------------------------------------
 void main()
 {		  
-	vec3 albedo = texture(alb,uv).rgb;
-	vec3 inNormal = texture(Nor,uv).rgb;
-	vec3 n = normalize(inNormal);
-	vec3 v = normalize(camPos - WorldPos);
-	vec3 h = normalize(n+v);
-	float roughness = texture(Rou,uv).r;
-	float NoV = abs(dot(n, v)) + 1e-5;
-    float NoH = clamp(dot(n, h), 0.0, 1.0);
+	if( index == 1){
+		vec3 albedo = texture(alb1,uv).rgb;
+		vec3 inNormal = texture(Nor1,uv).rgb;
+		vec3 n = normalize(inNormal);
+		vec3 v = normalize(camPos - WorldPos);
+		vec3 h = normalize(n+v);
+		float ao = texture(Rou1,uv).r;
+		float roughness = texture(Rou1,uv).g;
+		float metallic = texture(Rou1,uv).b;
+		float NoV = abs(dot(n, v)) + 1e-5;
+		float NoH = clamp(dot(n, h), 0.0, 1.0);
 
+		vec3 F0 = vec3(mix(vec3(0.04), albedo , metallic));
 
-#ifdef ROUGHNESS_PATTERN
-	roughness = max(roughness, step(fract(inWorldPos.y * 2.02), 0.5));
-#endif
+		// Specular contribution
+		vec3 Lo = vec3(0);
+		for (int i = 0; i < 12; i++) {
+			vec3 l = lights[i].xyz * rotationZ(theta);
+			float NoL = clamp(dot(n, l), 0.0, 1.0);
+			if (NoL > 0.0){
+				float LoH = clamp(dot(l, h), 0.0, 1.0);
+				float D = D_GGX(NoH, roughness);
+				vec3  F = F_Schlick(LoH, F0);
+				float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+					// specular BRDF
+				vec3 Fr = (D * V) * F;
 
-	// Specular contribution
-	vec3 Lo = vec3(0.0);
-	for (int i = 0; i < 6; i++) {
-		vec3 l = lights[i].xyz * rotationZ(theta);
-		float NoL = clamp(dot(n, l), 0.0, 1.0);
-		if (NoL > 0.0){
-			float LoH = clamp(dot(l, h), 0.0, 1.0);
-			float D = D_GGX(NoH, roughness);
-			vec3  F = F_Schlick(LoH, F0);
-			float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
-			    // specular BRDF
-			vec3 Fr = (D * V) * F;
+				// diffuse BRDF
+				vec3 Fd = albedo * Fd_Lambert();
+				Lo += Fr+Fd;
+			}
+		};
 
-			// diffuse BRDF
-			vec3 Fd = albedo * Fd_Lambert();
-			Lo += Fr+Fd;
-		}
-	};
+		FragColor = vec4(Lo,1);
+	}else{
+		vec3 albedo = texture(alb2,uv).rgb;
+		vec3 inNormal = texture(Nor2,uv).rgb;
+		vec3 n = normalize(inNormal);
+		vec3 v = normalize(camPos - WorldPos);
+		vec3 h = normalize(n+v);
+		float ao = texture(Rou2,uv).r;
+		float roughness = texture(Rou2,uv).g;
+		float metallic = texture(Rou2,uv).b;
+		float NoV = abs(dot(n, v)) + 1e-5;
+		float NoH = clamp(dot(n, h), 0.0, 1.0);
+		vec3 F0 = vec3(mix(vec3(0.04), albedo , metallic));
 
-	// Combine with ambient
-	vec3 color = Lo;
+		// Specular contribution
+		vec3 Lo = vec3(0);
+		for (int i = 0; i < 6; i++) {
+			vec3 l = -lights[i].xyz * rotationZ(theta);
+			float NoL = clamp(dot(n, l), 0.0, 1.0);
+			if (NoL > 0.0){
+				float LoH = clamp(dot(l, h), 0.0, 1.0);
+				float D = D_GGX(NoH, roughness);
+				vec3  F = F_Schlick(LoH, F0);
+				float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+					// specular BRDF
+				vec3 Fr = (D * V) * F;
 
-	FragColor = vec4(color,1);
+				// diffuse BRDF
+				vec3 Fd = albedo * Fd_Lambert();
+				Lo += Fr+Fd;
+			}
+		};
+
+		FragColor = vec4(Lo,1);
+	}
 }

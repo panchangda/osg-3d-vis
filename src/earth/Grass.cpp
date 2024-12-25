@@ -9,7 +9,9 @@
 #include <osg/Texture2D>
 #include <osgDB/ReadFile>
 
+#include "../globals.h"
 #include "../util.h"
+#include "osg/PositionAttitudeTransform"
 
 const std::string grassImage = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/grass.png";
 const std::string vs = std::string(OSG_3D_VIS_SHADER_PREFIX) + "gpu-instances/grass.vert";
@@ -23,12 +25,12 @@ namespace osg_3d_vis {
     {
 
         quads = createInstancedQuad(instanceCount);
-        // createInstancePos();
+        createInstancePos();
         setShader(quads);
         setUniforms(quads);
         setBlend(quads);
         root->addChild(quads);
-        root->addChild(createPlane(10.0f, 10.0f));
+        //root->addChild(createPlane(10.0f, 10.0f));
 
 
     }
@@ -163,13 +165,45 @@ namespace osg_3d_vis {
 
     // instancePOs calculation was moved to gpu in vert shader
     void Grass::createInstancePos() {
-        instancePos = std::vector<osg::Vec3>(instanceCount, osg::Vec3d());
-        int X = std::pow(instanceCount, 0.5);
-        int Y = std::pow(instanceCount, 0.5);
+        instancePos = std::vector<osg::Matrix>(instanceCount);
+        double step = 0.11 / 50;
+        osg::Vec3d pos;
+        auto calculateTransformMatrix = [&](const osg::PositionAttitudeTransform* pat) {
+            osg::Matrix matrix;
 
-        for(int i=0;i<X;i++) {
-            for(int j=0;j<Y;j++) {
-                instancePos[i*X + j] = osg::Vec3(0.2f * i, -1.0f, 0.2f * j);
+            // 获取平移矩阵
+            matrix.makeTranslate(pat->getPosition());
+
+            // 将旋转矩阵乘到平移矩阵之前
+            matrix.preMult(osg::Matrix::rotate(pat->getAttitude()));
+
+            // 将缩放矩阵乘到前面
+            matrix.preMult(osg::Matrix::scale(pat->getScale()));
+
+            return matrix;
+        };
+        auto  calculateOrientation = [&](const osg::Vec3d& position) {
+            osg::Vec3 normal = position; // 法线
+            normal.normalize();
+
+            // 初始向上的参考向量
+            osg::Vec3 up(0, 0, 1);
+
+            // 计算旋转四元数
+            osg::Quat quat;
+            quat.makeRotate(up, normal); // 将 "up" 对齐到 "normal"
+
+            return quat;
+        };
+        for (int i = -24; i <= 25; ++i)
+        {
+            for (int j = -24; j <= 25; ++j)
+            {
+                osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
+                llh2xyz_Ellipsoid(instanceLLH + osg::Vec3d(step * i, step * j, 0), pos.x(), pos.y(), pos.z());
+                transform->setPosition(pos);
+                transform->setAttitude(calculateOrientation(pos));
+                instancePos.push_back(calculateTransformMatrix(transform));
             }
         }
     }
@@ -220,17 +254,13 @@ namespace osg_3d_vis {
         stateset->addUniform(timerUniform);
         stateset->addUniform(new osg::Uniform("windDirection", osg::Vec3(1.0f, 0.0f, 1.0f)));
 
-        // instance pos
-        // osg::ref_ptr<osg::Uniform> instancePosUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "instancePos", instanceCount);
-        // for(int i=0;i<instanceCount;i++) {
-        //     instancePosUniform->setElement(i, instancePos[i]);
-        // }
-        // stateset->addUniform(instancePosUniform);
+         //instance pos
+         osg::ref_ptr<osg::Uniform> instancePosUniform = new osg::Uniform(osg::Uniform::DOUBLE_MAT4, "Poss", instanceCount);
+         for(int i=0;i<instanceCount;i++) {
+             instancePosUniform->setElement(i, instancePos[i]);
+         }
+         stateset->addUniform(instancePosUniform);
 
-        int X = std::pow(instanceCount, 0.5);
-        int Y = std::pow(instanceCount, 0.5);
-        stateset->addUniform(new osg::Uniform("instanceX", X));
-        stateset->addUniform(new osg::Uniform("instanceY", Y));
     }
 
     void Grass::setBlend(osg::ref_ptr<osg::Geode> geode) {

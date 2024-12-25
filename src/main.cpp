@@ -144,8 +144,8 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//// */
 	///i
 	
-	/*	PBR* pbr = new PBR();
-		pbr->createLightModel(root,viewer.getCamera());*/
+		//PBR* pbr = new PBR();
+		//pbr->createLightModel(root,viewer.getCamera());
 
 
 
