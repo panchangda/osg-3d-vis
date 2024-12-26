@@ -43,35 +43,40 @@ namespace osg_3d_vis {
         for(int i=0;i<1; ++i) {
             CreareSingleGeode(geoExtractor,i);
         }
-        float singleStep = 0.0000001;
-        double x, y, z;
-        osg::Vec3 hzLLH{ osg::DegreesToRadians(30.0f),
-            osg::DegreesToRadians(120.0f + 180.0f),
-            1000.0f };
-        osg::ref_ptr<osg::Vec3Array> offset = new osg::Vec3Array;
-        for(int i=-4; i<=5; ++i)
-        {
-	        for(int j=-4; j<5; ++j)
-	        {
-                auto v = osg::Vec3(hzLLH.x() + i * singleStep, hzLLH.y() + j * singleStep, hzLLH.z());
-                llh2xyz_Ellipsoid(v.x(), v.y(), v.z(), x, y, z);
-                offset->push_back(osg::Vec3( x,y,z ));
-	        }
-        }
-        auto offsetUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "offset",instanceCount);
-        for(int i=0;i<instanceCount;++i)
-        {
-            offsetUniform->setElement(i, offset->at(i));
-        }
-        Geos->getOrCreateStateSet()->addUniform(offsetUniform);
+
+
         setShader();
         setUniforms();
-        osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
-        //transform->setPosition(osg_3d_vis::HangZhouPos);
-        transform->setScale({ 20000,20000,20000 });
-        transform->addChild(Geos);
 
-        root->addChild(transform);
+        auto  calculateOrientation = [&](const osg::Vec3& position) {
+            osg::Vec3 normal = position;
+            normal.normalize();
+
+            osg::Vec3 up(0, 0, 1);
+
+            osg::Quat quat;
+            quat.makeRotate(up, normal); 
+
+            return quat;
+        };
+        float step = 0.1;
+        int p = 5;
+
+        for(int i=-p; i<p; ++i)
+        {
+	        for(int j=-p; j<p; ++j)
+	        {
+                osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
+                osg::Vec3d pos;
+                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30+step*i), osg::DegreesToRadians(300+step*j), 200000), pos.x(), pos.y(), pos.z());
+                transform->setPosition(pos);
+                transform->setScale({ 20000,20000,20000 });
+                transform->setAttitude(calculateOrientation(pos));
+                transform->addChild(Geos);
+                std::cout << pos.x()<<' '<<pos.y()<<' '<<pos.z()<<std::endl;
+                root->addChild(transform);
+	        }
+        }
      }
 
     void Tree::setShader() {
@@ -118,17 +123,7 @@ namespace osg_3d_vis {
         stateset->addUniform(timerUniform);
         stateset->addUniform(new osg::Uniform("windDirection", osg::Vec3(1.0f, 0.0f, 1.0f)));
 
-        // instance pos
-        // osg::ref_ptr<osg::Uniform> instancePosUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "instancePos", instanceCount);
-        // for(int i=0;i<instanceCount;i++) {
-        //     instancePosUniform->setElement(i, instancePos[i]);
-        // }
-        // stateset->addUniform(instancePosUniform);
-
-        int X = std::pow(instanceCount, 0.5);
-        int Y = std::pow(instanceCount, 0.5);
-        stateset->addUniform(new osg::Uniform("instanceX", X));
-        stateset->addUniform(new osg::Uniform("instanceY", Y));
+		
     }
 
 
@@ -138,8 +133,8 @@ namespace osg_3d_vis {
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
         // key of instance draw 
-    	geom->setUseDisplayList(false);
-        Primitives->setNumInstances(instanceCount);
+    	//geom->setUseDisplayList(false);
+     //   Primitives->setNumInstances(instanceCount);
         geom->addPrimitiveSet(Primitives);
 
 

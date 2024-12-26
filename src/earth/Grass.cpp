@@ -25,14 +25,44 @@ namespace osg_3d_vis {
     {
 
         quads = createInstancedQuad(instanceCount);
-        createInstancePos();
+        //createInstancePos();
         setShader(quads);
         setUniforms(quads);
         setBlend(quads);
+
+
         root->addChild(quads);
         //root->addChild(createPlane(10.0f, 10.0f));
 
+        auto  calculateOrientation = [&](const osg::Vec3& position) {
+            osg::Vec3 normal = position;
+            normal.normalize();
 
+            osg::Vec3 up(0, 1,0);
+
+            osg::Quat quat;
+            quat.makeRotate(up, normal);
+
+            return quat;
+            };
+        float step = 0.1;
+        int p = 5;
+
+        for (int i = -p; i < p; ++i)
+        {
+            for (int j = -p; j < p; ++j)
+            {
+                osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
+                osg::Vec3d pos;
+                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 100000), pos.x(), pos.y(), pos.z());
+                transform->setPosition(pos);
+                transform->setScale({ 2000,2000,2000 });
+                transform->setAttitude(calculateOrientation(pos));
+                transform->addChild(quads);
+                //std::cout << pos.x() << ' ' << pos.y() << ' ' << pos.z() << std::endl;
+                root->addChild(transform);
+            }
+        }
     }
 
     osg::ref_ptr<osg::Geode> Grass::createPlane(float width, float height) {
@@ -152,8 +182,8 @@ namespace osg_3d_vis {
         // 设置实例数量
         // instance draw must have this line!!!!
         // fuck you god damn son of a bitch mother fucker osg shitsssssssss
-        geom->setUseDisplayList( false );
-        quad->setNumInstances(instanceCount);
+        //geom->setUseDisplayList( false );
+        //quad->setNumInstances(instanceCount);
         geom->addPrimitiveSet(quad.get());
 
         // 创建几何体节点
@@ -187,7 +217,7 @@ namespace osg_3d_vis {
             normal.normalize();
 
             // 初始向上的参考向量
-            osg::Vec3 up(0, 0, 1);
+            osg::Vec3 up(0, 1, 0);
 
             // 计算旋转四元数
             osg::Quat quat;
@@ -195,14 +225,16 @@ namespace osg_3d_vis {
 
             return quat;
         };
-        for (int i = -24; i <= 25; ++i)
+        int p = sqrt(instanceCount)/2;
+        for (int i = -p+1; i <= p; ++i)
         {
-            for (int j = -24; j <= 25; ++j)
+            for (int j = -p+1; j <= p; ++j)
             {
                 osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
                 llh2xyz_Ellipsoid(instanceLLH + osg::Vec3d(step * i, step * j, 0), pos.x(), pos.y(), pos.z());
                 transform->setPosition(pos);
                 transform->setAttitude(calculateOrientation(pos));
+                transform->setScale({ 1000,1000,1000 });
                 instancePos.push_back(calculateTransformMatrix(transform));
             }
         }
@@ -254,12 +286,7 @@ namespace osg_3d_vis {
         stateset->addUniform(timerUniform);
         stateset->addUniform(new osg::Uniform("windDirection", osg::Vec3(1.0f, 0.0f, 1.0f)));
 
-         //instance pos
-         osg::ref_ptr<osg::Uniform> instancePosUniform = new osg::Uniform(osg::Uniform::DOUBLE_MAT4, "Poss", instanceCount);
-         for(int i=0;i<instanceCount;i++) {
-             instancePosUniform->setElement(i, instancePos[i]);
-         }
-         stateset->addUniform(instancePosUniform);
+
 
     }
 

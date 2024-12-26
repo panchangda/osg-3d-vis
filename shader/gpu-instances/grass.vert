@@ -8,7 +8,7 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-#define InstanceMAX 2500
+#define InstanceMAX 100
 uniform mat4x4 Poss[InstanceMAX];
 
 // 风的相关参数
@@ -19,8 +19,8 @@ out vec2 texCoord;
 
 void main(){
     texCoord = TexCoord;
-    vec4 t = Poss[gl_InstanceID] * vec4(Position,1.f)
-    vec3 instancePos = t.xyz;
+//    vec4 t = Poss[gl_InstanceID] * vec4(Position,1.f);
+    vec3 instancePos = Position;
 
     // 越往下越固定
     float heightInfluence = smoothstep(0.0, 1.0, Position.y); // y 值范围在 [0, 1] 之间

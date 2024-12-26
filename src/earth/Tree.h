@@ -20,17 +20,6 @@ namespace osg_3d_vis {
 	class Tree {
     public:
         explicit Tree(osg::ref_ptr<osg::Group> _root, osg::ref_ptr<osg::Camera> _camera);
-        void createInstancePos() {
-            instancePos = std::vector<osg::Vec3>(instanceCount, osg::Vec3d());
-            int X = std::pow(instanceCount, 0.5);
-            int Y = std::pow(instanceCount, 0.5);
-
-            for(int i=0;i<X;i++) {
-                for(int j=0;j<Y;j++) {
-                    instancePos[i*X + j] = osg::Vec3( 0,(i+j)*20,0);
-                }
-            }
-        }
         void setShader();
         void setUniforms();
         void CreareSingleGeode(const GeometryExtractor& data, int index);
@@ -40,7 +29,7 @@ namespace osg_3d_vis {
         osg::ref_ptr<osg::Group> root;
         osg::ref_ptr<osg::Geode> quads;
         const int instanceCount = 100;
-        std::vector<osg::Vec3> instancePos;
+        std::vector<osg::Matrix> instancePos;
     };
 
 

@@ -8,15 +8,14 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-#define InstanceMAX 100
-uniform vec3 offset[InstanceMAX];
+//#define InstanceMAX 100
+//uniform mat4 offset[InstanceMAX];
+
 
 // 风的相关参数
 uniform float time;         // 时间变量，传入随时间变化的值
 uniform vec3 windDirection;
 
-uniform int instanceX;
-uniform int instanceY;
 
 out vec2 texCoord;
 
@@ -24,7 +23,8 @@ void main(){
     texCoord = TexCoord;
 
     // 为每个实例设置不同的位移
-    vec3 instancePos = Position + offset[gl_InstanceID];
+//    vec3 instancePos = (offset[gl_InstanceID]*vec4( Position ,1.f)).rgb;
+    vec3 instancePos = Position;
 
 
     // 越往下越固定

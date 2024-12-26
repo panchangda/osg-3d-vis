@@ -22,7 +22,7 @@ namespace osg_3d_vis {
         osg::ref_ptr<osg::Camera> viewerCamera;
         osg::ref_ptr<osg::Group> root;
         osg::ref_ptr<osg::Geode> quads;
-        const int instanceCount = 2500;
+        const int instanceCount = 100;
         std::vector<osg::Matrix> instancePos;
 
     };

@@ -20,7 +20,7 @@ namespace osg_3d_vis{
     constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
-    constexpr  bool drawTree = false;
+    constexpr  bool drawTree = true;
     constexpr bool showCloud = false;
     // Particles:
     constexpr bool drawCessna = false;
@@ -29,7 +29,7 @@ namespace osg_3d_vis{
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
 
-    constexpr bool pbr = true   ;
+    constexpr bool pbr = false;
 
     // 3D Charts:
     constexpr bool showCharts = false;
@@ -62,7 +62,7 @@ namespace osg_3d_vis{
 
     const osg::Vec3d instanceLLH{ osg::DegreesToRadians(30.0f),
         osg::DegreesToRadians(120.0f + 180.0f),
-        10 };
+        10000 };
     const osg::Vec3d HangZhouPos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30.0f),
                 osg::DegreesToRadians(120.0f+180.0f),
                 1000.0f);

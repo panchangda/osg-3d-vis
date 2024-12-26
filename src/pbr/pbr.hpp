@@ -147,9 +147,7 @@ public:
 		auto theta = new osg::Uniform(osg::Uniform::FLOAT, "theta");
 		theta->setUpdateCallback( new thetaUniformCallback());
 		stateSet->addUniform(theta);
-		osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
-		transform->setPosition(osg_3d_vis::HangZhouPos);
-		transform->setScale({ 200,200,200 });
+
 
 		auto  calculateOrientation = [&](const osg::Vec3& position) {
 			osg::Vec3 normal = position; // 法线
@@ -164,6 +162,9 @@ public:
 
 			return quat;
 			};
+		osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
+		transform->setPosition(osg_3d_vis::HangZhouPos);
+		transform->setScale({ 200,200,200 });
 		transform->setAttitude( calculateOrientation(osg_3d_vis::HangZhouPos));
 		transform->addChild(Geos);
 		_root->addChild(transform);
