@@ -37,8 +37,8 @@ const vec4 lights[12] = vec4[12](
 	vec4(1,0,-1,0),
 	vec4(0,1,-1,0),
 	vec4(0,-1,1,0),
-	vec4(-1,1,0,0),
-	vec4(1,-1,0,0)
+	vec4(0.433737 ,-0.751254, 0.497484,0),
+	vec4(-0.433737 ,0.751254, -0.497484,0)
 );
 
 float D_GGX(float NoH, float a) {
@@ -131,7 +131,7 @@ void main()
 		// Specular contribution
 		vec3 Lo = vec3(0);
 		for (int i = 0; i < 6; i++) {
-			vec3 l = -lights[i].xyz * rotationZ(theta);
+			vec3 l =  rotationZ(theta) * -lights[i].xyz ;
 			float NoL = clamp(dot(n, l), 0.0, 1.0);
 			if (NoL > 0.0){
 				float LoH = clamp(dot(l, h), 0.0, 1.0);
@@ -139,7 +139,7 @@ void main()
 				vec3  F = F_Schlick(LoH, F0);
 				float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
 					// specular BRDF
-				vec3 Fr = (D * V) * F;
+				vec3 Fr = (D * V) * F *2;
 
 				// diffuse BRDF
 				vec3 Fd = albedo * (1-F) /PI * ao;
@@ -147,6 +147,6 @@ void main()
 			}
 		};
 
-		FragColor = vec4(Lo,1);
+		FragColor = vec4(HDRtoLDR(Lo),1);
 	}
 }

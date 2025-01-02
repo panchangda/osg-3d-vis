@@ -9,6 +9,7 @@
 #include <osg/View>
 
 #include "util.h"
+#include "velocity_field/StreamLineMainWindow.h"
 
 // control earth showing & effects scales
 namespace osg_3d_vis{
@@ -20,7 +21,7 @@ namespace osg_3d_vis{
     constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
-    constexpr  bool drawTree = true;
+    constexpr  bool drawTree = false;
     constexpr bool showCloud = false;
     // Particles:
     constexpr bool drawCessna = false;
@@ -29,7 +30,7 @@ namespace osg_3d_vis{
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
 
-    constexpr bool pbr = false;
+    constexpr bool pbr = true;
 
     // 3D Charts:
     constexpr bool showCharts = false;

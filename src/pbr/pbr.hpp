@@ -76,8 +76,7 @@ public:
 	public:
 
 		virtual void operator()(osg::Uniform* uniform, osg::NodeVisitor* nv) {
-			theta += 0.0005;
-			theta = theta > osg::PI_2 ? theta-osg::PI_2 : theta;
+			theta += 0.005;
 			uniform->set(theta);
 		}
 		float theta = 0;;
@@ -164,8 +163,10 @@ public:
 			};
 		osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
 		transform->setPosition(osg_3d_vis::HangZhouPos);
+
 		transform->setScale({ 200,200,200 });
 		transform->setAttitude( calculateOrientation(osg_3d_vis::HangZhouPos));
+
 		transform->addChild(Geos);
 		_root->addChild(transform);
 	}

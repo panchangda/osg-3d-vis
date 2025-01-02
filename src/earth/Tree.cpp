@@ -15,6 +15,7 @@
 #include "../globals.h"
 
 #include "../util.h"
+#include "osg/MatrixTransform"
 #include "osg/PositionAttitudeTransform"
 
 const std::string treeOBJ = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/trees9.obj";
@@ -48,35 +49,8 @@ namespace osg_3d_vis {
         setShader();
         setUniforms();
 
-        auto  calculateOrientation = [&](const osg::Vec3& position) {
-            osg::Vec3 normal = position;
-            normal.normalize();
+        root->addChild(Geos);
 
-            osg::Vec3 up(0, 0, 1);
-
-            osg::Quat quat;
-            quat.makeRotate(up, normal); 
-
-            return quat;
-        };
-        float step = 0.1;
-        int p = 5;
-
-        for(int i=-p; i<p; ++i)
-        {
-	        for(int j=-p; j<p; ++j)
-	        {
-                osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
-                osg::Vec3d pos;
-                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30+step*i), osg::DegreesToRadians(300+step*j), 200000), pos.x(), pos.y(), pos.z());
-                transform->setPosition(pos);
-                transform->setScale({ 20000,20000,20000 });
-                transform->setAttitude(calculateOrientation(pos));
-                transform->addChild(Geos);
-                std::cout << pos.x()<<' '<<pos.y()<<' '<<pos.z()<<std::endl;
-                root->addChild(transform);
-	        }
-        }
      }
 
     void Tree::setShader() {
@@ -123,7 +97,35 @@ namespace osg_3d_vis {
         stateset->addUniform(timerUniform);
         stateset->addUniform(new osg::Uniform("windDirection", osg::Vec3(1.0f, 0.0f, 1.0f)));
 
-		
+
+        float step = 3;
+        int p = 5;
+
+        auto matsUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "offset", 100);
+        std::vector<osg::Matrixf> matrices;
+        for (int i = -5; i < 5; ++i)
+        {
+            for (int j = -5; j < 5; ++j)
+            {
+
+                double x, y, z;
+                auto llh = osg::Vec3{ 30 + step * i ,300 + step * j ,200000 };
+                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 200000), x, y, z);
+                auto pos = osg::Vec3(x, y, z);
+
+                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,pos);
+                osg::Matrix transM = osg::Matrix::translate(pos);
+                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(20000, 20000, 20000));
+
+                auto mat = osg::Matrix( scaleM * rotM * transM );
+                matrices.push_back(mat);
+            }
+        }
+		for(int i=0; i<100; ++i)
+		{
+            matsUniform->setElement(i, matrices[i]);
+		}
+        stateset->addUniform(matsUniform);
     }
 
 
@@ -131,10 +133,11 @@ namespace osg_3d_vis {
         osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
         geom->setVertexAttribArray(0, data.geometries[index].vertices, osg::Array::BIND_PER_VERTEX);
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
+        geom->setVertexAttribArray(2, data.geometries[index].noramls, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
         // key of instance draw 
-    	//geom->setUseDisplayList(false);
-     //   Primitives->setNumInstances(instanceCount);
+    	geom->setUseDisplayList(false);
+        Primitives->setNumInstances(instanceCount);
         geom->addPrimitiveSet(Primitives);
 
 

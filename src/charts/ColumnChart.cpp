@@ -10,12 +10,13 @@ using namespace std;
 
 osg::ref_ptr<osg::Geometry> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3 color, float height = 0)
 {
-    auto vec3 = new osg::Vec3Array;
-    auto llh = osg_3d_vis::llhRange(location.x() - step, location.x() + step, 
+    auto llh = osg_3d_vis::llhRange(location.x() - step, location.x() + step,
         location.y() - step, location.y() + step, baseHeight, baseHeight + location.z());
 
-    auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
+
+    auto vec3 = new osg::Vec3Array;
     double x, y, z;
+    auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
     osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, minH, x, y, z);
     vec3->push_back(osg::Vec3( x,y,z ));
     osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, minH, x, y, z);
@@ -33,7 +34,7 @@ osg::ref_ptr<osg::Geometry> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3
     osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, maxH, x, y, z);
     vec3->push_back(osg::Vec3(x, y, z));
 
-    osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
+
 
 
 
@@ -52,7 +53,7 @@ osg::ref_ptr<osg::Geometry> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3
     for (int i = 0; i < 36; ++i) {
         indices->at(i) = idx[i];
     }
-
+    osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
     geometry->addPrimitiveSet(indices.get());
     geometry->setVertexAttribArray(0, vec3, osg::Array::BIND_PER_VERTEX);
     geometry->getOrCreateStateSet()->addUniform(new osg::Uniform("mainColor", osg::Vec4(color,0.4)));
@@ -74,27 +75,55 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
 
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-    const std::array<osg::Vec3, 8> colors{
-        osg::Vec3(1.0f, 0.0f, 0.0f),  // 红色
-        osg::Vec3(0.0f, 1.0f, 0.0f),  // 绿色
-        osg::Vec3(0.0f, 0.0f, 1.0f),  // 蓝色
-        osg::Vec3(1.0f, 1.0f, 0.0f),  // 黄色
-        osg::Vec3(0.0f, 1.0f, 1.0f),  // 青色
-        osg::Vec3(1.0f, 0.0f, 1.0f),  // 品红
-        osg::Vec3(1.0f, 1.0f, 1.0f),  // 白色
-        osg::Vec3(0.0f, 0.0f, 0.0f)   // 黑色
+    auto vec4 = new osg::Vec4Array;
+    double x, y, z;
+    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
+
+    unsigned int idx[] = {
+        0, 1, 2,  0, 2, 3,    
+        4, 5, 6,  4, 6, 7,    
+        0, 1, 5,  0, 5, 4,    
+        2, 3, 7,  2, 7, 6,    
+        0, 3, 7,  0, 7, 4,    
+        1, 2, 6,  1, 6, 5     
     };
+    int cnt = 0;
     for (int i = -179; i < 180; i += 2) {
         for (int j = 1; j < 360; j += 2)
         {
             auto v = osg::Vec3{ (float)i, (float)j, (float)dis(gen)};
             if (i % 5 == 0 && j % 5 == 0) v.z() ;
             else v.z() /= 10;
-            cout << v.x() << ' ' << v.y() << ' ' << v.z() << endl;
-            geode->addChild(drawQuads( v,colors[ abs(i)/46%8]));
+
+            auto llh = osg_3d_vis::llhRange(v.x() - step, v.x() + step,
+                v.y() - step, v.y() + step, baseHeight, baseHeight + v.z());
+            auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, minH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z,(int)v.z()%8));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, minH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z,(int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, minH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, minH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, maxH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, maxH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, maxH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, maxH, x, y, z);
+            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            for (int i = 0; i < 36; ++i) {
+                indices->push_back(idx[i] + 8 * cnt);
+            }
+            cnt++;
         }
     }
-
+    osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
+    geometry->addPrimitiveSet(indices.get());
+    geometry->setVertexAttribArray(0, vec4, osg::Array::BIND_PER_VERTEX);
+    geode->addChild(geometry);
     auto state = geode->getOrCreateStateSet();
     osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
     osg::ref_ptr<osg::Shader> FragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
@@ -109,6 +138,6 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
     state->addUniform(mvpUniform);
     state->setMode(GL_BLEND, osg::StateAttribute::ON);
     state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-    state->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+
     return geode;
 }
