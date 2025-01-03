@@ -43,8 +43,8 @@ osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createExplode() {
 
 osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createWeather() {
 
-        //设置雪花类
-        osg::ref_ptr<osgParticle::PrecipitationEffect> precipitationEffect = new osgParticle::PrecipitationEffect;
+    //设置雪花类
+    osg::ref_ptr<osgParticle::PrecipitationEffect> precipitationEffect = new osgParticle::PrecipitationEffect;
     //设置雪花浓度
     // precipitationEffect->snow(1.0f);
     // 设置雨
@@ -59,13 +59,18 @@ osg::ref_ptr<osg::Node> osg_3d_vis::Particle::createWeather() {
     precipitationEffect->setWind(osg::Vec3(2, 0, 0));
 
 
+
+
     osg::ref_ptr<osg::PositionAttitudeTransform> pat = new osg::PositionAttitudeTransform();
     pat->addChild(precipitationEffect.get());
     if(osg_3d_vis::drawEarth) {
-        pat->setPosition(cameraPosition);
-        pat->setScale(osg::Vec3d(earthScale,earthScale,earthScale));
+        precipitationEffect->setPosition(cameraPosition);
+        precipitationEffect->setCellSize({10000.0f,10000.0f,10000.0f});
+        // pat->setScale(osg::Vec3d(earthScale,earthScale,earthScale));
+
     }else {
         float scale = 1.0f;
+        precipitationEffect->setCellSize({10.0f,10.0f,10.0f});
         pat->setScale(osg::Vec3d(scale,scale,scale));
     }
 

@@ -21,10 +21,10 @@ namespace osg_3d_vis{
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
     constexpr  bool drawTree = false;
-    constexpr bool showCloud = true;
+    constexpr bool showCloud = false;
     // Particles:
-    constexpr bool drawCessna = false;
-    constexpr bool drawWeather = false;
+    constexpr bool drawCessna = true;
+    constexpr bool drawWeather = true;
     constexpr bool drawExplode = false;
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;

@@ -129,7 +129,7 @@ namespace osg_3d_vis{
 		osg::ref_ptr<osg::Uniform> firstUniform = new osg::Uniform("first", bool(true));
 		stateset->addUniform(firstUniform);
 
-		osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.996);
+		osg::ref_ptr<osg::Uniform> fadeOpacityUniform = new osg::Uniform("fadeOpacity", (float)0.9997);
 		stateset->addUniform(fadeOpacityUniform);
 
 		stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
