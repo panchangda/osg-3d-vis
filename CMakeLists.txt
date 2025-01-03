@@ -69,6 +69,8 @@ add_compile_definitions(
 # qt .h & .ui
 file(GLOB GUI_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.h")
 file(GLOB GUI_UI "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.ui")
+message(STATUS ${GUI_UI})
+
 # C++ .h & .cpp
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")

@@ -42,12 +42,12 @@ osg::ref_ptr<osg::Geometry> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3
 
 
     unsigned int idx[] = {
-        0, 1, 2,  0, 2, 3,    // Ç°Ãæ
-        4, 5, 6,  4, 6, 7,    // ºóÃæ
-        0, 1, 5,  0, 5, 4,    // µ×Ãæ
-        2, 3, 7,  2, 7, 6,    // ¶¥Ãæ
-        0, 3, 7,  0, 7, 4,    // ×óÃæ
-        1, 2, 6,  1, 6, 5     // ÓÒÃæ
+        0, 1, 2,  0, 2, 3,    // Ç°ï¿½ï¿½
+        4, 5, 6,  4, 6, 7,    // ï¿½ï¿½ï¿½ï¿½
+        0, 1, 5,  0, 5, 4,    // ï¿½ï¿½ï¿½ï¿½
+        2, 3, 7,  2, 7, 6,    // ï¿½ï¿½ï¿½ï¿½
+        0, 3, 7,  0, 7, 4,    // ï¿½ï¿½ï¿½ï¿½
+        1, 2, 6,  1, 6, 5     // ï¿½ï¿½ï¿½ï¿½
     };
 
     for (int i = 0; i < 36; ++i) {
@@ -70,9 +70,10 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
     static std::uniform_int_distribution<> dis(0.f, 2000000.f);
 
 
-    // ´´½¨ osg::Vec3Array
+    // ï¿½ï¿½ï¿½ï¿½ osg::Vec3Array
     osg::ref_ptr<osg::Vec3Array> vecArray = new osg::Vec3Array;
 
+    osg::ref_ptr<osg::FloatArray> index = new osg::FloatArray();
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     auto vec4 = new osg::Vec4Array;
@@ -98,22 +99,26 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
             auto llh = osg_3d_vis::llhRange(v.x() - step, v.x() + step,
                 v.y() - step, v.y() + step, baseHeight, baseHeight + v.z());
             auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
+            const int k = (int)v.z() % 8;
+            for(int i=0; i<8; ++i) {
+                index->push_back( k);
+            }
             osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, minH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z,(int)v.z()%8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, minH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z,(int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, minH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, minH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, maxH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, maxH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, maxH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, maxH, x, y, z);
-            vec4->push_back(osg::Vec4(x, y, z, (int)v.z() % 8));
+            vecArray->push_back(osg::Vec3(x, y, z));
             for (int i = 0; i < 36; ++i) {
                 indices->push_back(idx[i] + 8 * cnt);
             }
@@ -122,7 +127,8 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
     }
     osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
     geometry->addPrimitiveSet(indices.get());
-    geometry->setVertexAttribArray(0, vec4, osg::Array::BIND_PER_VERTEX);
+    geometry->setVertexAttribArray(0, vecArray, osg::Array::BIND_PER_VERTEX);
+    geometry->setVertexAttribArray(1,index, osg::Array::BIND_PER_VERTEX);
     geode->addChild(geometry);
     auto state = geode->getOrCreateStateSet();
     osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);

@@ -21,7 +21,7 @@ namespace osg_3d_vis{
     constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
-    constexpr  bool drawTree = false;
+    constexpr  bool drawTree = true;
     constexpr bool showCloud = false;
     // Particles:
     constexpr bool drawCessna = false;
@@ -33,7 +33,7 @@ namespace osg_3d_vis{
     constexpr bool pbr = false;
 
     // 3D Charts:
-    constexpr bool showCharts = true;
+    constexpr bool showCharts = false;
 
 
     // Frame Timer
@@ -54,7 +54,7 @@ namespace osg_3d_vis{
     };
 
 
-    constexpr bool bSetCameraToCity = false;
+    constexpr bool bSetCameraToCity = true;
     constexpr ECity cameraTargetCity = ECity::HangZhou;
     extern osg::Vec3d cameraPosition;
     extern osg::Vec3d cameraCenter;
@@ -66,13 +66,13 @@ namespace osg_3d_vis{
         10000 };
     const osg::Vec3d HangZhouPos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30.0f),
                 osg::DegreesToRadians(120.0f+180.0f),
-                1000.0f);
+                10000.0f);
     const std::map<ECity, CameraViewParams> cameraCityMap = {
         {
             ECity::HangZhou,
             CameraViewParams{
-                HangZhouPos,
                 osg::Vec3d(HangZhouPos.x()+100000.0f, HangZhouPos.y()+100000.0f, HangZhouPos.z()+100000.0f),
+                HangZhouPos,
                 osg::Vec3d(0.0f, -1.0f, 0.0f)
             }
         }
