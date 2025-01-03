@@ -10,11 +10,13 @@
 
 #include <osg/BlendFunc>
 #include <osg/PrimitiveSet>
-#include <osg/Texture2D>
+
 #include <osgDB/ReadFile>
-#include <osg/MatrixTransform>
+#include "../globals.h"
 
 #include "../util.h"
+#include "osg/MatrixTransform"
+#include "osg/PositionAttitudeTransform"
 
 const std::string treeOBJ = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/trees9.obj";
 const std::string vs = std::string(OSG_3D_VIS_SHADER_PREFIX) + "gpu-instances/tree.vert";
@@ -42,10 +44,13 @@ namespace osg_3d_vis {
         for(int i=0;i<1; ++i) {
             CreareSingleGeode(geoExtractor,i);
         }
+
+
         setShader();
         setUniforms();
 
         root->addChild(Geos);
+
      }
 
     void Tree::setShader() {
@@ -92,17 +97,35 @@ namespace osg_3d_vis {
         stateset->addUniform(timerUniform);
         stateset->addUniform(new osg::Uniform("windDirection", osg::Vec3(1.0f, 0.0f, 1.0f)));
 
-        // instance pos
-        // osg::ref_ptr<osg::Uniform> instancePosUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "instancePos", instanceCount);
-        // for(int i=0;i<instanceCount;i++) {
-        //     instancePosUniform->setElement(i, instancePos[i]);
-        // }
-        // stateset->addUniform(instancePosUniform);
 
-        int X = std::pow(instanceCount, 0.5);
-        int Y = std::pow(instanceCount, 0.5);
-        stateset->addUniform(new osg::Uniform("instanceX", X));
-        stateset->addUniform(new osg::Uniform("instanceY", Y));
+        float step = 3;
+        int p = 5;
+
+        auto matsUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "offset", 100);
+        std::vector<osg::Matrixf> matrices;
+        for (int i = -5; i < 5; ++i)
+        {
+            for (int j = -5; j < 5; ++j)
+            {
+
+                double x, y, z;
+                auto llh = osg::Vec3{ 30 + step * i ,300 + step * j ,200000 };
+                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 200000), x, y, z);
+                auto pos = osg::Vec3(x, y, z);
+
+                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,pos);
+                osg::Matrix transM = osg::Matrix::translate(pos);
+                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(20000, 20000, 20000));
+
+                auto mat = osg::Matrix( scaleM * rotM * transM );
+                matrices.push_back(mat);
+            }
+        }
+		for(int i=0; i<100; ++i)
+		{
+            matsUniform->setElement(i, matrices[i]);
+		}
+        stateset->addUniform(matsUniform);
     }
 
 
@@ -110,10 +133,11 @@ namespace osg_3d_vis {
         osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
         geom->setVertexAttribArray(0, data.geometries[index].vertices, osg::Array::BIND_PER_VERTEX);
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
+        geom->setVertexAttribArray(2, data.geometries[index].noramls, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
-
+        // key of instance draw 
+    	geom->setUseDisplayList(false);
         Primitives->setNumInstances(instanceCount);
-
         geom->addPrimitiveSet(Primitives);
 
 
@@ -122,4 +146,5 @@ namespace osg_3d_vis {
         stateset->setTextureAttributeAndModes(0, data.geometries[index].textures[0], osg::StateAttribute::ON);
         Geos->addDrawable(geom);
     }
+
 }

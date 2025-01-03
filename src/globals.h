@@ -9,6 +9,7 @@
 #include <osg/View>
 
 #include "util.h"
+#include "velocity_field/StreamLineMainWindow.h"
 
 // control earth showing & effects scales
 namespace osg_3d_vis{
@@ -17,7 +18,7 @@ namespace osg_3d_vis{
     constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
 
     // Earth
-    constexpr bool drawEarth = false;
+    constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
     constexpr  bool drawTree = false;
@@ -29,6 +30,7 @@ namespace osg_3d_vis{
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
 
+    constexpr bool pbr = true;
 
     // 3D Charts:
     constexpr bool showCharts = false;
@@ -59,7 +61,9 @@ namespace osg_3d_vis{
     constexpr osg::View::LightingMode lightingMode = osg::View::NO_LIGHT;
 
 
-
+    const osg::Vec3d instanceLLH{ osg::DegreesToRadians(30.0f),
+        osg::DegreesToRadians(120.0f + 180.0f),
+        10000 };
     const osg::Vec3d HangZhouPos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30.0f),
                 osg::DegreesToRadians(120.0f+180.0f),
                 1000.0f);

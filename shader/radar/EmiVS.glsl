@@ -44,8 +44,8 @@ uniform float t;
 void main()             
 {
     vec3 rpt = cartesianToSpherical(pos);
-    rpt.y += phiThetaSpeed.x * t;
-    rpt.z += phiThetaSpeed.y * t;
+    rpt.y += phiThetaSpeed.x * t ;
+    rpt.z += phiThetaSpeed.y * t ;
     vec3 p = sphericalToCartesian(rpt);
     gl_Position = mvp * vec4(p, 1.0);
 }

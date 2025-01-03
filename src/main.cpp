@@ -29,7 +29,6 @@
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
-
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
 void osgSetUp();
 void initViewer(osgViewer::Viewer &viewer);
@@ -138,12 +137,14 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 
 
-	///*
-	// * PBR
-	// */
-	//PBR* pbr = new PBR();
-	//auto geode = pbr->createLightModel(viewer.getCamera());
-	//root->addChild(geode);
+	/////*
+	//// * PBR
+	//// */
+	///i
+	if (osg_3d_vis::pbr) {
+		PBR* pbr = new PBR();
+		pbr->createLightModel(root, viewer.getCamera());
+	}
 
 
 	///*
@@ -166,7 +167,6 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//meshRadar = new Radar::Radar(viewer, root);
 	//rui->setRad(meshRadar);
 	//rui->show();
-
 
 
 	/*
@@ -201,7 +201,6 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// osg_3d_vis::rttcamera* testRTTCamera = new osg_3d_vis::rttcamera(viewer);
 	// root->addChild(testRTTCamera->cameraNode);
 	// root->addChild(testRTTCamera->fullscreenQuadGeode);
-
 
 	return root.get();
 }
@@ -257,7 +256,7 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 
 		float currentTime = osg::Timer::instance()->time_s();
 		osg_3d_vis::frameTime =  (currentTime - prevTime);
-		osg_3d_vis::frameFPS = 1.0f / (currentTime - prevTime);;
+		osg_3d_vis::frameFPS = 1.0f / (currentTime - prevTime);
 
 		prevTime = currentTime;
 		viewer.frame();
