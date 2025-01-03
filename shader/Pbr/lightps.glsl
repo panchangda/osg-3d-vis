@@ -106,10 +106,10 @@ void main()
 				vec3  F = F_Schlick(LoH, F0);
 				float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
 					// specular BRDF
-				vec3 Fr = (D * V) * F;
+				vec3 Fr = (D * V) * F *2;
 
 				// diffuse BRDF
-				vec3 Fd = albedo * (1-F) /PI * ao;
+				vec3 Fd = albedo * (1-F) /PI * ao *3;
 				Lo += (Fr+Fd) * NoL;
 			}
 		};

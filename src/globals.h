@@ -24,16 +24,16 @@ namespace osg_3d_vis{
     constexpr  bool drawTree = false;
     constexpr bool showCloud = false;
     // Particles:
-    constexpr bool drawCessna = true;
-    constexpr bool drawWeather = true;
+    constexpr bool drawCessna = false;
+    constexpr bool drawWeather = false;
     constexpr bool drawExplode = false;
     constexpr bool enableFog = false;
     constexpr bool fogLinear = false;
 
-    constexpr bool pbr = true;
+    constexpr bool pbr = false;
 
     // 3D Charts:
-    constexpr bool showCharts = false;
+    constexpr bool showCharts = true;
 
 
     // Frame Timer

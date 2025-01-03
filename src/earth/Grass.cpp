@@ -182,8 +182,8 @@ namespace osg_3d_vis {
         // 设置实例数量
         // instance draw must have this line!!!!
         // fuck you god damn son of a bitch mother fucker osg shitsssssssss
-        //geom->setUseDisplayList( false );
-        //quad->setNumInstances(instanceCount);
+        geom->setUseDisplayList( false );
+        quad->setNumInstances(instanceCount);
         geom->addPrimitiveSet(quad.get());
 
         // 创建几何体节点
