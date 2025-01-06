@@ -27,7 +27,6 @@
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 #include "radar/radarui.h"
-#include "pbr/focus.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
@@ -146,7 +145,6 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	if (osg_3d_vis::pbr) {
 		PBR* pbr = new PBR();
 		pbr->createLightModel(root, viewer.getCamera());
-
 	}
 
 

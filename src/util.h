@@ -72,7 +72,9 @@ namespace osg_3d_vis {
 							osg::Texture* texture = dynamic_cast<osg::Texture*>(stateSet->getTextureAttribute(unit, osg::StateAttribute::TEXTURE));
 							if (texture) {
 								data.textures.push_back(texture);
+								/*
 								std::cout << "Found texture on unit " << unit << std::endl;
+								*/
 							}
 						}
 

@@ -21,7 +21,7 @@ namespace osg_3d_vis{
     constexpr bool drawEarth = true;
     constexpr float earthScale = 100000.0f;
     constexpr bool drawGrass = false;
-    constexpr  bool drawTree = true;
+    constexpr  bool drawTree = false;
     constexpr bool showCloud = false;
     // Particles:
     constexpr bool drawCessna = false;
@@ -33,7 +33,7 @@ namespace osg_3d_vis{
     constexpr bool pbr = false;
 
     // 3D Charts:
-    constexpr bool showCharts = false;
+    constexpr bool showCharts = true;
 
 
     // Frame Timer
