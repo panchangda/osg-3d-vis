@@ -90,7 +90,7 @@ osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Vie
     };
     int cnt = 0;
     for (int i = -179; i < 180; i += 2) {
-        for (int j = 1; j < 360; j += 2)
+        for (int j = 1; j < 180; j += 2)
         {
             auto v = osg::Vec3{ (float)i, (float)j, (float)dis(gen)};
             if (i % 5 == 0 && j % 5 == 0) v.z() ;

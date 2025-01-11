@@ -113,7 +113,7 @@ namespace osg_3d_vis {
         addLightsToScene(root);
         */
 
-        float step = 0.4;
+        float step = 0.01;
         int p = 5;
 
         auto matsUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "offset", 100);
@@ -124,11 +124,9 @@ namespace osg_3d_vis {
             {
 
                 auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 20000);
-
                 osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,osg::Vec3f(pos));
                 osg::Matrix transM = osg::Matrix::translate(pos);
-                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(8000, 8000, 8000));
-
+                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(200, 200, 200));
                 auto mat = osg::Matrix( scaleM * rotM * transM );
                 osg::MatrixTransform* transform = new osg::MatrixTransform(mat);
                 transform->addChild(gp);

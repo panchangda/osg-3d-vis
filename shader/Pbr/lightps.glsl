@@ -89,7 +89,7 @@ void main()
 		vec3 h = normalize(n+v);
 		float ao = texture(Rou1,uv).r;
 		float roughness = texture(Rou1,uv).g;
-		float metallic = texture(Rou1,uv).b;
+		float metallic = texture(Rou1,uv).b*3;
 		float NoV = abs(dot(n, v)) + 1e-5;
 		float NoH = clamp(dot(n, h), 0.0, 1.0);
 
@@ -109,7 +109,7 @@ void main()
 				vec3 Fr = (D * V) * F *2;
 
 				// diffuse BRDF
-				vec3 Fd = albedo * (1-F) /PI * ao *3;
+				vec3 Fd = albedo * (1-F) /PI * ao;
 				Lo += (Fr+Fd) * NoL;
 			}
 		};

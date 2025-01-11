@@ -2,7 +2,7 @@
 
 layout(location = 0) out vec4 fragmentColor;
 in vec3 Nor;
-flat in float index;
+flat in int index;
 
 
 const vec3 light[] = vec3[6](
@@ -29,7 +29,7 @@ const vec3 colors[8] = vec3[](
 
 void main()
 {
-	vec4 mainColor = vec4(colors[int(index)],0.6);
+	vec4 mainColor = vec4(colors[index],0.6);
 
 
 	fragmentColor = mainColor ;

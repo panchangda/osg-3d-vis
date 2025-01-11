@@ -26,6 +26,7 @@ public:
 	const std::string texAlbedo2 = std::string(OSG_3D_VIS_DATA_PREFIX) + "Tanker/OBJ/T_West_Tank_M1A1Abrams_Track_D.PNG";
 	const std::string texArm2 = std::string(OSG_3D_VIS_DATA_PREFIX) + "Tanker/OBJ/T_West_Tank_M1A1Abrams_Track_ARM.PNG";
 	const std::string texNormal2 = std::string(OSG_3D_VIS_DATA_PREFIX) + "Tanker/OBJ/T_West_Tank_M1A1Abrams_Track_N.PNG";
+
 	osg::ref_ptr<osg::Geode> Geos;
 	osg::ref_ptr<osg::Geometry> CreareSingleGeode(const osg_3d_vis::GeometryExtractor& data, int index)
 	{

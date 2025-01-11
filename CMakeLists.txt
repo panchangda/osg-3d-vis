@@ -55,7 +55,7 @@ else()
 	message(STATUS "Using OSG Include Directory")
 endif()
 
-# macro definitions for paths:
+# macro definitions for paths
 add_compile_definitions(
 	OSG_3D_VIS_SHADER_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/shader/"
 )

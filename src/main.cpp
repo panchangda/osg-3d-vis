@@ -27,7 +27,6 @@
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
 #include "radar/radarui.h"
-#include "pbr/focus.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
@@ -146,7 +145,6 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	if (osg_3d_vis::pbr) {
 		PBR* pbr = new PBR();
 		pbr->createLightModel(root, viewer.getCamera());
-
 	}
 
 
@@ -226,7 +224,7 @@ void initViewer(osgViewer::Viewer &viewer) {
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
 	bool b = false;
-	if( osg_3d_vis::pbr || osg_3d_vis::drawTree ) { b = true;}
+	if( osg_3d_vis::pbr || osg_3d_vis::drawTree || osg_3d_vis::drawGrass ) { b = true;}
 	if(osg_3d_vis::drawEarth && osg_3d_vis::bSetCameraToCity && b) {
 		const osg_3d_vis::CameraViewParams& camParams = osg_3d_vis::cameraCityMap.at(osg_3d_vis::cameraTargetCity);
 		// 设置摄像机的“Home”位置

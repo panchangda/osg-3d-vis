@@ -5,6 +5,7 @@
 #include "Grass.h"
 
 #include <osg/BlendFunc>
+#include <osg/MatrixTransform>
 #include <osg/PrimitiveSet>
 #include <osg/Texture2D>
 #include <osgDB/ReadFile>
@@ -31,20 +32,10 @@ namespace osg_3d_vis {
         setBlend(quads);
 
 
+        /*
         root->addChild(quads);
-        //root->addChild(createPlane(10.0f, 10.0f));
+        */
 
-        auto  calculateOrientation = [&](const osg::Vec3& position) {
-            osg::Vec3 normal = position;
-            normal.normalize();
-
-            osg::Vec3 up(0, 1,0);
-
-            osg::Quat quat;
-            quat.makeRotate(up, normal);
-
-            return quat;
-            };
         float step = 0.1;
         int p = 5;
 
@@ -52,14 +43,15 @@ namespace osg_3d_vis {
         {
             for (int j = -p; j < p; ++j)
             {
-                osg::ref_ptr<osg::PositionAttitudeTransform> transform = new osg::PositionAttitudeTransform;
-                osg::Vec3d pos;
-                llh2xyz_Ellipsoid(osg::Vec3d(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 100000), pos.x(), pos.y(), pos.z());
-                transform->setPosition(pos);
-                transform->setScale({ 2000,2000,2000 });
-                transform->setAttitude(calculateOrientation(pos));
+                auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 20000);
+
+                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,osg::Vec3f(pos));
+                osg::Matrix transM = osg::Matrix::translate(pos);
+                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(800, 800, 800));
+
+                auto mat = osg::Matrix( scaleM * rotM * transM );
+                osg::MatrixTransform* transform = new osg::MatrixTransform(mat);
                 transform->addChild(quads);
-                //std::cout << pos.x() << ' ' << pos.y() << ' ' << pos.z() << std::endl;
                 root->addChild(transform);
             }
         }
