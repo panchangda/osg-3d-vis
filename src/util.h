@@ -4,6 +4,10 @@
 
 #include "osg/Material"
 
+const std::string OSG_3D_VIS_SHADER_PREFIX="/data/osg-3d-vis/shader/";
+const std::string  OSG_3D_VIS_DATA_PREFIX="/data/osg-3d-vis/data/";
+const std::string OSG_3D_VIS_CONFIG_PREFIX="/data/osg-3d-vis/config/";
+
 namespace osg_3d_vis {
 
 	struct PbrMaterial
