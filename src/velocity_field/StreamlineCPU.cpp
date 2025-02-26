@@ -206,10 +206,10 @@ namespace osg_3d_vis {
         dz = (maxZ - minZ) / (dimZ - 1);
 
         idx = 0;
-        pointDensity = 500.0f;
+        pointDensity = 5000.0f;
         h = 0.5f;
-        speedScaleFactor = 0.5f;
-        minLineLength = 10;
+        speedScaleFactor = 5.0f;
+        minLineLength = 30;
         pointsSum = int(dimX * dimY * dimZ / pointDensity);
         linesSum = pointsSum;
         lines.resize(linesSum);

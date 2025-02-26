@@ -16,7 +16,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # 查找PCL依赖
-set(PCL_PATH "E:/Libraries/PCL 1.14.1")
+set(PCL_PATH "F:/PCL")
 find_package(PCL REQUIRED)
 add_definitions(${PCL_DEFINITIONS})
 
@@ -34,6 +34,7 @@ CACHE PATH "Root of OpenSceneGraph library (Debug)")
 # 自动链接所有 .lib 静态库
 file(GLOB OSG_RELEASE_LIBS "${OSG_RELEASE}/lib/*.lib")
 file(GLOB OSG_DEBUG_LIBS "${OSG_DEBUG}/lib/*.lib")
+
 
 # 设置包含目录
 if(NOT CMAKE_CONFIGURATION_TYPES)
@@ -54,7 +55,7 @@ else()
 	message(STATUS "Using OSG Include Directory")
 endif()
 
-# macro definitions for paths:
+# macro definitions for paths
 add_compile_definitions(
 	OSG_3D_VIS_SHADER_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/shader/"
 )
@@ -68,6 +69,8 @@ add_compile_definitions(
 # qt .h & .ui
 file(GLOB GUI_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.h")
 file(GLOB GUI_UI "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/*.ui")
+message(STATUS ${GUI_UI})
+
 # C++ .h & .cpp
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
@@ -85,7 +88,7 @@ add_executable(${TARGET_NAME}
     ${SOURCE_FILES} ${HEADER_FILES} 
     ${RESOURCE_FILE}
 		# ${GUI_HEADER} ${GUI_UI})
-		)
+		 )
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

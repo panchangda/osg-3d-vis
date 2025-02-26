@@ -4,7 +4,7 @@
 #include "../util.h"
 
 namespace VortexDetect {
-	
+	using namespace std;
 	// 参数文件地址
 	const string parasPath = std::string(OSG_3D_VIS_CONFIG_PREFIX) +"VortexDetect.txt";
 

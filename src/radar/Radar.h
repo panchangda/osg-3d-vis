@@ -7,8 +7,9 @@
 #include <osg/Texture2D>
 #include <osgViewer/Viewer>
 #include <osg/Group>
-#include <memory>
-#include "../util.h"
+
+
+#include "../Util.h"
 #include "APMRadarRender.h"
 #include <iostream>
 #include <osgDB/WriteFile>
@@ -161,36 +162,42 @@ namespace Radar {
 		};
 
 
-
-		std::vector<osg_3d_vis::llhRange> ranges;
-		std::vector<osg::ref_ptr<osg::Geometry>> Geos;
-		//for actualy radar draw 
+		std::vector<osg::ref_ptr<osg::Geode>> Circle;
+		std::vector<osg::ref_ptr<osg::Geode>> CircleLine;
+		std::vector<osg::ref_ptr<osg::Geode>> Circlesearch;
 		osg::ref_ptr<osg::Geode> RadarRT;
+		osg::ref_ptr<osg::Geode> Radarline;
+		osg::ref_ptr<osg::Geode> Radarsearch;
+		void GenerateRadarMesh();
+		void GenerateRadarlineMesh();
+		void GenerateRadarsearchMesh();
 
-		std::vector<osg::Vec4> EmiFactors;
-		std::vector<osg::ref_ptr<osg::Geometry>> EmiGeos;
+
 		// for EMI draw
+		std::vector<osg::ref_ptr<osg::Geode>> EmiGeos;
 		osg::ref_ptr<osg::Geode> Emirt;
 
-		void GenerateRadarMesh();
 
-		void GenerateMeiMesh();
+		void GenerateEmiMesh();
 
 		void Addllh(osg_3d_vis::llhRange range)
 		{
-			ranges.push_back(range);
-			Geos.push_back(Generate(ranges.back()));
+			Circle.push_back(Generate(range));
+			CircleLine.push_back(GenerateCiecleline(range));
+			Circlesearch.push_back(GenerateCieclesearch(range));
 		}
-		void addEmi(osg::Vec4 fac)
-		{
-			EmiFactors.push_back(fac);
-            osg_3d_vis::llhRange range( fac.x()-fac.w(), fac.x() + fac.w(), fac.y()-fac.w(),fac.y() + fac.w(), 700000.0 , 700000.0 );
-            EmiGeos.push_back(Generate(range));
-		}
-        osg::ref_ptr<osg::Geometry>  Generate(osg_3d_vis::llhRange range);
 
-		osg::ref_ptr<osg::Geometry>  GenerateEmi(osg_3d_vis::llhRange range);
-        void updateTime();
+		void addEmi(osg::Vec3 fac)
+		{
+
+			osg_3d_vis::llhRange range{ fac.x(), fac.x() + fac.z(), fac.y(),fac.y() + fac.z(), 360000,360000 +200000 };
+			EmiGeos.push_back(GenerateEmi(range));
+		}
+		osg::ref_ptr<osg::Geode>  Generate(osg_3d_vis::llhRange range);
+		osg::ref_ptr<osg::Geode>  GenerateCiecleline(osg_3d_vis::llhRange range);
+		osg::ref_ptr<osg::Geode>  GenerateCieclesearch(osg_3d_vis::llhRange range);
+		osg::ref_ptr<osg::Geode>  GenerateEmi(osg_3d_vis::llhRange range);
+
 		//for ui part 
 		void updateR(double value);
 		void updateG(double value);

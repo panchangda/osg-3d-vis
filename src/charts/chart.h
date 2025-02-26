@@ -19,7 +19,7 @@ class Chart : public QWidget
 public:
     explicit Chart(QWidget *parent = nullptr);
     osg::ref_ptr<osg::Group>  root;
-    osgViewer::Viewer *viewer;
+    osg::ref_ptr<osgViewer::Viewer> viewer;
     stack<unsigned int> index;
     
 
@@ -39,7 +39,7 @@ private:
     void createRadar();
     void exit()
     {
-        exit();
+        std::exit(0);
     }
 };
 

@@ -1,185 +1,149 @@
 #include "ColumnChart.h"
 
-osg::ref_ptr<osg::Geode> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3 color, float height)
+#include "osg/CoordinateSystemNode"
+#include "osg/ShapeDrawable"
+#include <osg/Material>
+#include <array>
+#include "../Util.h"
+#include <random>
+using namespace std;
+
+osg::ref_ptr<osg::Geometry> ColumnChart::drawQuads(osg::Vec3 location, osg::Vec3 color, float height = 0)
 {
-	osg::Vec3 ver1 = location;
-	osg::Vec3 ver2 = location + osg::Vec3(0.0f, 2.0f, 0.0f);
-	osg::Vec3 ver3 = location + osg::Vec3(2.0f, 2.0f, 0.0f);
-	osg::Vec3 ver4 = location + osg::Vec3(2.0f, 0.0f, 0.0f);
-	osg::Vec3 ver5 = location + osg::Vec3(0.0f, 0.0f, height);
-	osg::Vec3 ver6 = location + osg::Vec3(0.0f, 2.0f, height);
-	osg::Vec3 ver7 = location + osg::Vec3(2.0f, 2.0f, height);
-	osg::Vec3 ver8 = location + osg::Vec3(2.0f, 0.0f, height);
+    auto llh = osg_3d_vis::llhRange(location.x() - step, location.x() + step,
+        location.y() - step, location.y() + step, baseHeight, baseHeight + location.z());
 
-	//下面
-	osg::ref_ptr<osg::Geometry> geom1 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v1 = new osg::Vec3Array;
-	geom1->setVertexArray(v1.get());
-	v1->push_back(ver1);
-	v1->push_back(ver2);
-	v1->push_back(ver3);
-	v1->push_back(ver4);
-	geom1->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-	//上面
-	osg::ref_ptr<osg::Geometry> geom2 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v2 = new osg::Vec3Array;
-	geom2->setVertexArray(v2.get());
-	v2->push_back(ver5);
-	v2->push_back(ver6);
-	v2->push_back(ver7);
-	v2->push_back(ver8);
-	geom2->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
+    auto vec3 = new osg::Vec3Array;
+    double x, y, z;
+    auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
+    osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, minH, x, y, z);
+    vec3->push_back(osg::Vec3( x,y,z ));
+    osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, minH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, minH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, minH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, maxH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, maxH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, maxH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
+    osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, maxH, x, y, z);
+    vec3->push_back(osg::Vec3(x, y, z));
 
-	//前面
-	osg::ref_ptr<osg::Geometry> geom3 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v3 = new osg::Vec3Array;
-	geom3->setVertexArray(v3.get());
-	v3->push_back(ver4);
-	v3->push_back(ver3);
-	v3->push_back(ver7);
-	v3->push_back(ver8);
-	geom3->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-	//后面
-	osg::ref_ptr<osg::Geometry> geom4 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v4 = new osg::Vec3Array;
-	geom4->setVertexArray(v4.get());
-	v4->push_back(ver1);
-	v4->push_back(ver2);
-	v4->push_back(ver6);
-	v4->push_back(ver5);
-	geom4->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-	//左面
-	osg::ref_ptr<osg::Geometry> geom5 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v5 = new osg::Vec3Array;
-	geom5->setVertexArray(v5.get());
-	v5->push_back(ver1);
-	v5->push_back(ver4);
-	v5->push_back(ver8);
-	v5->push_back(ver5);
-	geom5->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-	//右面
-	osg::ref_ptr<osg::Geometry> geom6 = new osg::Geometry;
-	//创建四个顶点的数组
-	osg::ref_ptr<osg::Vec3Array> v6 = new osg::Vec3Array;
-	geom6->setVertexArray(v6.get());
-	v6->push_back(ver2);
-	v6->push_back(ver3);
-	v6->push_back(ver7);
-	v6->push_back(ver6);
-	geom6->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-	geode->addDrawable(geom1.get());
-	geode->addDrawable(geom2.get());
-	geode->addDrawable(geom3.get());
-	geode->addDrawable(geom4.get());
-	geode->addDrawable(geom5.get());
-	geode->addDrawable(geom6.get());
-	return geode.get();
+    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES, 36);
+
+
+    unsigned int idx[] = {
+        0, 1, 2,  0, 2, 3,    // 前锟斤拷
+        4, 5, 6,  4, 6, 7,    // 锟斤拷锟斤拷
+        0, 1, 5,  0, 5, 4,    // 锟斤拷锟斤拷
+        2, 3, 7,  2, 7, 6,    // 锟斤拷锟斤拷
+        0, 3, 7,  0, 7, 4,    // 锟斤拷锟斤拷
+        1, 2, 6,  1, 6, 5     // 锟斤拷锟斤拷
+    };
+
+    for (int i = 0; i < 36; ++i) {
+        indices->at(i) = idx[i];
+    }
+    osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
+    geometry->addPrimitiveSet(indices.get());
+    geometry->setVertexAttribArray(0, vec3, osg::Array::BIND_PER_VERTEX);
+    geometry->getOrCreateStateSet()->addUniform(new osg::Uniform("mainColor", osg::Vec4(color,0.4)));
+    return geometry;
 
 }
 
-osg::ref_ptr<osg::Geometry> ColumnChart::drawFace(osg::ref_ptr<osg::Vec3Array> v, osg::Vec4 color)
+
+osg::ref_ptr<osg::Geode> ColumnChart::generateColumn(osg::ref_ptr<osgViewer::Viewer> viwer)
 {
-	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
-	geom->setVertexArray(v.get());
-	osg::ref_ptr<osg::Vec4Array> c = new osg::Vec4Array();
-	c->push_back(color);
-	c->push_back(color);
-	c->push_back(color);
-	c->push_back(color);
-	geom->setColorArray(c.get());
-	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-	geom->addPrimitiveSet(
-		new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
-	return geom;
-}
 
-osg::ref_ptr<osg::Geode> ColumnChart::generateColumn()
-{
-	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-	for (int j = 0; j < 5; j++) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(0.f, 2000000.f);
 
 
-		//生成一个随机的颜色
-		float r = rand() % 100 / 100.f;
-		float g = rand() % 100 / 100.f;
-		float b = rand() % 100 / 100.f;
-		osg::Vec4 color = osg::Vec4(r, g, b, 0.5f);
+    // 锟斤拷锟斤拷 osg::Vec3Array
+    osg::ref_ptr<osg::Vec3Array> vecArray = new osg::Vec3Array;
 
-		for (int i = 0; i < 5; i++) {
-			int random = rand() % 20;
-			while (random < 1)random = rand() % 20;
-			//geode->addDrawable(drawQuads(osg::Vec3(i * 4, 0.0f, 0.0f), osg::Vec3(0.0f, 0.0f, 0.0f), random));
-			osg::Vec3 location = osg::Vec3(j * 4,i*4 , 0.0f);
-			osg::Vec3 ver1 = location;
-			osg::Vec3 ver2 = location + osg::Vec3(0.0f, 2.0f, 0.0f);
-			osg::Vec3 ver3 = location + osg::Vec3(2.0f, 2.0f, 0.0f);
-			osg::Vec3 ver4 = location + osg::Vec3(2.0f, 0.0f, 0.0f);
-			osg::Vec3 ver5 = location + osg::Vec3(0.0f, 0.0f, random);
-			osg::Vec3 ver6 = location + osg::Vec3(0.0f, 2.0f, random);
-			osg::Vec3 ver7 = location + osg::Vec3(2.0f, 2.0f, random);
-			osg::Vec3 ver8 = location + osg::Vec3(2.0f, 0.0f, random);
+    osg::ref_ptr<osg::FloatArray> index = new osg::FloatArray();
 
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    auto vec4 = new osg::Vec4Array;
+    double x, y, z;
+    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_TRIANGLES);
 
-			osg::ref_ptr<osg::Vec3Array> v1 = new osg::Vec3Array;
-			v1->push_back(ver1);
-			v1->push_back(ver2);
-			v1->push_back(ver3);
-			v1->push_back(ver4);
-			geode->addDrawable(drawFace(v1, color));
+    unsigned int idx[] = {
+        0, 1, 2,  0, 2, 3,    
+        4, 5, 6,  4, 6, 7,    
+        0, 1, 5,  0, 5, 4,    
+        2, 3, 7,  2, 7, 6,    
+        0, 3, 7,  0, 7, 4,    
+        1, 2, 6,  1, 6, 5     
+    };
+    int cnt = 0;
+    for (int i = -179; i < 180; i += 2) {
+        for (int j = 1; j < 180; j += 2)
+        {
+            auto v = osg::Vec3{ (float)i, (float)j, (float)dis(gen)};
+            if (i % 5 == 0 && j % 5 == 0) v.z() ;
+            else v.z() /= 10;
 
-			osg::ref_ptr<osg::Vec3Array> v2 = new osg::Vec3Array;
-			v2->push_back(ver5);
-			v2->push_back(ver6);
-			v2->push_back(ver7);
-			v2->push_back(ver8);
-			geode->addDrawable(drawFace(v2, color));
+            auto llh = osg_3d_vis::llhRange(v.x() - step, v.x() + step,
+                v.y() - step, v.y() + step, baseHeight, baseHeight + v.z());
+            auto [minLa, maxLa, minLo, maxLo, minH, maxH] = llh;
+            const int k = (int)v.z() % 8;
+            for(int i=0; i<8; ++i) {
+                index->push_back( k);
+            }
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, minH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, minH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, minH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, minH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, minLo, maxH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, minLo, maxH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(maxLa, maxLo, maxH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            osg_3d_vis::llh2xyz_Ellipsoid(minLa, maxLo, maxH, x, y, z);
+            vecArray->push_back(osg::Vec3(x, y, z));
+            for (int i = 0; i < 36; ++i) {
+                indices->push_back(idx[i] + 8 * cnt);
+            }
+            cnt++;
+        }
+    }
+    osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
+    geometry->addPrimitiveSet(indices.get());
+    geometry->setVertexAttribArray(0, vecArray, osg::Array::BIND_PER_VERTEX);
+    geometry->setVertexAttribArray(1,index, osg::Array::BIND_PER_VERTEX);
+    geode->addChild(geometry);
+    auto state = geode->getOrCreateStateSet();
+    osg::ref_ptr<osg::Shader> VertexShader = new osg::Shader(osg::Shader::VERTEX);
+    osg::ref_ptr<osg::Shader> FragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
+    VertexShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "charts/vs.glsl");
+    FragmentShader->loadShaderSourceFromFile(std::string(OSG_3D_VIS_SHADER_PREFIX) + "charts/ps.glsl");
+    osg::ref_ptr<osg::Program> Program = new osg::Program;
+    Program->addShader(VertexShader);
+    Program->addShader(FragmentShader);
+    state->setAttributeAndModes(Program);
+    osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "mvp");
+    mvpUniform->setUpdateCallback(new osg_3d_vis::ModelViewProjectionMatrixCallback(viwer->getCamera()));
+    state->addUniform(mvpUniform);
+    state->setMode(GL_BLEND, osg::StateAttribute::ON);
+    state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
-			osg::ref_ptr<osg::Vec3Array> v3 = new osg::Vec3Array;
-			v3->push_back(ver4);
-			v3->push_back(ver3);
-			v3->push_back(ver7);
-			v3->push_back(ver8);
-			geode->addDrawable(drawFace(v3, color));
-
-			osg::ref_ptr<osg::Vec3Array> v4 = new osg::Vec3Array;
-			v4->push_back(ver1);
-			v4->push_back(ver2);
-			v4->push_back(ver6);
-			v4->push_back(ver5);
-			geode->addDrawable(drawFace(v4, color));
-
-			osg::ref_ptr<osg::Vec3Array> v5 = new osg::Vec3Array;
-			v5->push_back(ver1);
-			v5->push_back(ver4);
-			v5->push_back(ver8);
-			v5->push_back(ver5);
-			geode->addDrawable(drawFace(v5, color));
-
-			osg::ref_ptr<osg::Vec3Array> v6 = new osg::Vec3Array;
-			v6->push_back(ver2);
-			v6->push_back(ver3);
-			v6->push_back(ver7);
-			v6->push_back(ver6);
-			geode->addDrawable(drawFace(v6, color));
-		}
-	}
-	geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-	return geode;
+    return geode;
 }

@@ -47,7 +47,7 @@ void Chart::createColumn()
         index.pop();
    }
     ColumnChart* col = new ColumnChart();
-    osg::ref_ptr<osg::Geode> geo = col->generateColumn();
+    osg::ref_ptr<osg::Geode> geo = col->generateColumn(viewer);
     root->addChild(geo);
     unsigned int idx = root->getChildIndex(geo);
     index.push(idx);

@@ -26,14 +26,9 @@
 #include "radar/Radar.h"
 #include "velocity_field/StreamlineCPU.h"
 #include "velocity_field/StreamlineGPU.h"
-#include "velocity_field/VelocityLIC.h"
-#include "velocity_field/VortexDetect.h"
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
-// #include "velocity_field/VelocityFieldGPU.h"
-
-
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
 void osgSetUp();
 void initViewer(osgViewer::Viewer &viewer);
@@ -74,13 +69,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 		auto earth = new osg_3d_vis::Earth(root);
 	}
 
-    ///*
-    // * Particle Effects:
-    // */
-    // create particles: explode, snow, rain...
-
-    auto particle = new osg_3d_vis::Particle(root);
-
+	/*
+	 * Particle Effects:
+	 * create particles: explode, snow, rain...
+	 */
+	auto particle = new osg_3d_vis::Particle(root);
 
 	// fog
 	if(osg_3d_vis::enableFog) {
@@ -99,6 +92,7 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	if( osg_3d_vis::drawTree)
 	{
 		auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
+
 	}
 
 	/*
@@ -111,97 +105,86 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	}
 
 
-    /*
-     * Velocity Field Visualizations
-     */
-    // Show Streamline: CPU (enable choosing multi streamling, display per streamline info text)
-    //
-        auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-        viewer,
-        root,
-        viewer.getCamera(),
-        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+	///*
+	// * Velocity Field Visualizations
+	// */
+	// Show Streamline: CPU (enable choosing one streamling)
+	//
+	// auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+	// 	viewer,
+	// 	root,
+	// 	viewer.getCamera(),
+	// 	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+	//	
+
+	//// Show Streamline: GPU
+	// auto slPtr = VelocityFieldGPU::Generate(
+	// 	root,
+	// 	viewer.getCamera(),
+	// 	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
+
+
+	// Show LIC
+	//VelocityLIC::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+	//osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
+	//root->addChild(vlicGeode);
+
+	// Show Vortex Detect
+	//VortexDetect::Generate3D(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
+	// VortexDetect::GenerateML(root, camera.get(), llhRange(0.f, 30.f, 120.f, 150.f, 100000.f, 1000000.f));
+	//osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, camera.get(), llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
+	//root->addChild(vortexGeode);
 
 
 
-    // Show Streamline: GPU
-//     auto slPtr = VelocityFieldGPU::Generate(
-//        root.get(),
-//        viewer.getCamera(),
-//        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 2000.0f, 2000.f));
 
-
-    // Show LIC
-    if(osg_3d_vis::showLIC){
-        VelocityLIC::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
-        osg::ref_ptr<osg::Geode> vlicGeode = VelocityLIC::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 200000.f));
-        root->addChild(vlicGeode);
-    }
-    //    //  Show Vortex Detect
-    if(osg_3d_vis::VortexDetect){
-        VortexDetect::Generate3D(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 1000000.f), 3);
-         VortexDetect::GenerateML(root, viewer.getCamera(), osg_3d_vis::llhRange(0.f, 30.f, 120.f, 150.f, 100000.f, 1000000.f));
-        osg::ref_ptr<osg::Geode> vortexGeode = VortexDetect::Generate(root, viewer.getCamera(), osg_3d_vis::llhRange(-10.f, 52.f, 99.f, 150.f, 100000.f, 2000000.f));
-        root->addChild(vortexGeode);
-    }
-
-
-
-    /*
-     * PBR
-     */
-    if(osg_3d_vis::showPbr){
-        PBR* pbr = new PBR();
-        auto geode = pbr->createLightModel(viewer.getCamera());
-        root->addChild(geode);
-    }
-
+	/////*
+	//// * PBR
+	//// */
+	///i
+	if (osg_3d_vis::pbr) {
+		PBR* pbr = new PBR();
+		pbr->createLightModel(root, viewer.getCamera());
+	}
 
 
 	///*
 	// * VoxelRadar
 	// */
-//    if( osg_3d_vis::VoxelRadar){
-//        Radar::VoxelRadar* radar = new Radar::VoxelRadar();
-//        radar->initRadar(osg_3d_vis::llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
-//        radar->addRadar(osg_3d_vis::llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
-//        radar->addRadar(osg_3d_vis::llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
-//        radar->addRadar(osg_3d_vis::llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
-//        radar->ExportRadar();
-//        radar->submitRadar(root);
-//    }
+	//VoxelRadar::initRadar(osg_3d_vis::llhRange(25.f, 40.f, 100.f, 115.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(25.f, 35.f, 105.f, 115.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(28.f, 38.f, 102.f, 112.f, 1.f, 6000.f));
+	//VoxelRadar::addRadar(osg_3d_vis::llhRange(29.f, 39.f, 103.f, 113.f, 1.f, 6000.f));
+	//VoxelRadar::ExportRadar();
+	//VoxelRadar::submitRadar(root);
 
 
+	///*
+	// * Mesh radar
+	// */
 
-    /*
-     * Mesh radar
-     */
 
-    if(osg_3d_vis::meshRadar){
-        RadarUi* rui = new RadarUi();
-        meshRadar = new Radar::Radar(viewer, root);
-        rui->setRad(meshRadar);
-        rui->show();
-    }
-
+	//RadarUi* rui = new RadarUi();
+	//meshRadar = new Radar::Radar(viewer, root);
+	//rui->setRad(meshRadar);
+	//rui->show(w
 
 
 	/*
 	 * Loader Examples
 	 */
 
-     // Show OSGB Loader
-    if(osg_3d_vis::osgbLoadar){
-        osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGBLoader::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
-        root->addChild(osgbNode);
-    }
-////	 Show Point Cloud Loader
-//    OSGPCDLoader* loader = new OSGPCDLoader();
-//    loader->LoadFromFileXYZRGB(std::string(OSG_3D_VIS_DATA_PREFIX) + "milk_cartoon_all_small_clorox.pcd");
-//    loader->LoadFromFileXYZRGB(std::string(OSG_3D_VIS_DATA_PREFIX) +"CSite1_orig-utm.pcd");
-//    loader->LoadFromFolder(std::string(OSG_3D_VIS_DATA_PREFIX) +"kitchen");
-//    loader->LoadFromFileXYZI(std::string(OSG_3D_VIS_DATA_PREFIX) +"Statues_4.pcd");
-//    root->addChild(loader->geode);
+	// Show OSGB Loader
+	// osg::ref_ptr<osg::CoordinateSystemNode> osgbNode = OSGBLoader::LoadFromPath(std::string(OSG_3D_VIS_DATA_PREFIX) + "QJXC");
+	// root->addChild(osgbNode);
+
+	// Show Point Cloud Loader
+	//OSGPCDLoader* loader = new OSGPCDLoader();
+	//loader->LoadFromFileXYZRGB(std::string(OSG_3D_VIS_DATA_PREFIX) + "milk_cartoon_all_small_clorox.pcd");
+	//loader->LoadFromFileXYZRGB(std::string(OSG_3D_VIS_DATA_PREFIX) +"CSite1_orig-utm.pcd");
+	//loader->LoadFromFolder(std::string(OSG_3D_VIS_DATA_PREFIX) +"kitchen");
+	//loader->LoadFromFileXYZI(std::string(OSG_3D_VIS_DATA_PREFIX) +"Statues_4.pcd");
+	//root->addChild(loader->geode);
 
 
 	///*
@@ -215,12 +198,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 
 
-//     // For RTT Test
-//     osg_3d_vis::rttcamera* testRTTCamera = new osg_3d_vis::rttcamera(viewer);
-//     root->addChild(testRTTCamera->fullscreenCameraNode);
-//     root->addChild(testRTTCamera->cameraNode);
-
-
+	// For RTT Test
+	// osg_3d_vis::rttcamera* testRTTCamera = new osg_3d_vis::rttcamera(viewer);
+	// root->addChild(testRTTCamera->cameraNode);
+	// root->addChild(testRTTCamera->fullscreenQuadGeode);
 
 	return root.get();
 }
@@ -232,18 +213,19 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 
 void initViewer(osgViewer::Viewer &viewer) {
-    viewer.setUpViewInWindow(300, 300, 1080, 720);
+	viewer.setUpViewInWindow(300, 300, 1920, 1080);
 
 	viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
 	osg::ref_ptr<osg::Camera> camera = viewer.getCamera();
 
 	camera->setViewMatrixAsLookAt(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(0.0, 0.0, -1), osg::Vec3(0, 1, 0.0));
-    camera->setProjectionMatrixAsPerspective(60.0, 1.78, 0.1, 10000.0);
+	camera->setProjectionMatrixAsPerspective(60.0, 1.78, 0.1, 1000.0);
 
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
-
-	if(osg_3d_vis::drawEarth && osg_3d_vis::bSetCameraToCity) {
+	bool b = false;
+	if( osg_3d_vis::pbr || osg_3d_vis::drawTree || osg_3d_vis::drawGrass ) { b = true;}
+	if(osg_3d_vis::drawEarth && osg_3d_vis::bSetCameraToCity && b) {
 		const osg_3d_vis::CameraViewParams& camParams = osg_3d_vis::cameraCityMap.at(osg_3d_vis::cameraTargetCity);
 		// 设置摄像机的“Home”位置
 		manipulator->setHomePosition(camParams.position, camParams.center, camParams.up);
@@ -276,11 +258,11 @@ void draw( osgViewer::Viewer &viewer, const QApplication& QApp) {
 
 		float currentTime = osg::Timer::instance()->time_s();
 		osg_3d_vis::frameTime =  (currentTime - prevTime);
-		osg_3d_vis::frameFPS = 1.0f / (currentTime - prevTime);;
+		osg_3d_vis::frameFPS = 1.0f / (currentTime - prevTime);
 
 		prevTime = currentTime;
-        viewer.frame();  //meshRadar
-//        meshRadar->updateTime();
+		viewer.frame();
+
 		/*if (flag == 0) {
 				Axis* axis = new Axis();
 				root->addChild(axis->DrawAxis(0, 0, 0, 21, 21, 21, 1));
