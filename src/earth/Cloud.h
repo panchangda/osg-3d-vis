@@ -10,6 +10,7 @@
 #include <osg/Depth>
 
 
+
 class Cloud {
 public:
 	Cloud(osg::ref_ptr<osg::Group> _root);

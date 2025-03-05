@@ -3,6 +3,7 @@
 
 // osg headers
 #include <osgViewer/Viewer>
+#include <osgViewer/ViewerEventHandlers>
 #include <osg/Point>
 #include <osg/StateSet>
 #include <osgDB/ReadFile>
@@ -248,6 +249,9 @@ void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& ro
 	viewer.setSceneData(root.get());
 
 	viewer.setLightingMode(osg_3d_vis::lightingMode);
+
+	viewer.addEventHandler(new osgViewer::StatsHandler);//查看帧数 s
+
 	viewer.realize();
 }
 

@@ -4,7 +4,7 @@
 #include "osg/ShapeDrawable"
 #include <osg/Material>
 #include <array>
-#include "../Util.h"
+#include "../util.h"
 #include <random>
 using namespace std;
 

@@ -74,9 +74,9 @@ namespace osg_3d_vis{
         /* Trees: */
 
         TreeList trees;
-        int numTreesToCreate = 10000;
+        int numTreesToCreate = 5000;
         const int numTreesTypes = 7;
-        int treeScale = 20.0f;
+        int treeScale = 30.0f;
         const std::string trees_file = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/trees9.obj";
 
 
