@@ -18,32 +18,39 @@
 #include "osg/MatrixTransform"
 #include "osg/PositionAttitudeTransform"
 
+
+// for the grid data..
+#include <osg/ShapeDrawable>
+#include <osgUtil/SmoothingVisitor>
+
+#include "terrain_coords.h"
+
 const std::string treeOBJ = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/trees9.obj";
 const std::string vs = std::string(OSG_3D_VIS_SHADER_PREFIX) + "gpu-instances/tree.vert";
 const std::string fs = std::string(OSG_3D_VIS_SHADER_PREFIX) + "gpu-instances/tree.frag";
 
 const osg::Vec4 lightDirections[] = {
-    osg::Vec4(-1,  0,  0, 0),
-    osg::Vec4(1,   0,  0, 0),
-    osg::Vec4(0,   0, -1, 0),
-    osg::Vec4(0,   0,  1, 0),
-    osg::Vec4(0,   1,  0, 0),
-    osg::Vec4(0,  -1,  0, 0),
-    osg::Vec4(-1,  0,  1, 0),
-    osg::Vec4(1,   0, -1, 0),
-    osg::Vec4(0,   1, -1, 0),
-    osg::Vec4(0,  -1,  1, 0),
+    osg::Vec4(-1, 0, 0, 0),
+    osg::Vec4(1, 0, 0, 0),
+    osg::Vec4(0, 0, -1, 0),
+    osg::Vec4(0, 0, 1, 0),
+    osg::Vec4(0, 1, 0, 0),
+    osg::Vec4(0, -1, 0, 0),
+    osg::Vec4(-1, 0, 1, 0),
+    osg::Vec4(1, 0, -1, 0),
+    osg::Vec4(0, 1, -1, 0),
+    osg::Vec4(0, -1, 1, 0),
     osg::Vec4(0.433737, -0.751254, 0.497484, 0),
     osg::Vec4(-0.433737, 0.751254, -0.497484, 0),
 };
 
-osg::ref_ptr<osg::LightSource> createLightSource(int lightNum, const osg::Vec4& direction) {
+osg::ref_ptr<osg::LightSource> createLightSource(int lightNum, const osg::Vec4 &direction) {
     osg::ref_ptr<osg::Light> light = new osg::Light();
     light->setLightNum(lightNum); // GL_LIGHT0, GL_LIGHT1, ...
     light->setPosition(direction); // 设置方向光方向（w = 0 表示平行光）
-    light->setDiffuse(osg::Vec4(1.0, 1.0, 1.0, 1.0));  // 漫反射颜色
+    light->setDiffuse(osg::Vec4(1.0, 1.0, 1.0, 1.0)); // 漫反射颜色
     light->setSpecular(osg::Vec4(1.0, 1.0, 1.0, 1.0)); // 镜面反射颜色
-    light->setAmbient(osg::Vec4(0.2, 0.2, 0.2, 1.0));  // 环境光颜色
+    light->setAmbient(osg::Vec4(0.2, 0.2, 0.2, 1.0)); // 环境光颜色
 
     osg::ref_ptr<osg::LightSource> lightSource = new osg::LightSource();
     lightSource->setLight(light);
@@ -75,15 +82,13 @@ void configureSwitch(osg::ref_ptr<osg::Group> root) {
     root->removeChildren(0, root->getNumChildren());
     root->addChild(switchNode);
 }
+
+
 namespace osg_3d_vis {
-
-
     Tree::Tree(osg::ref_ptr<osg::Group> _root, osg::ref_ptr<osg::Camera> _camera)
-        :root(_root),viewerCamera(_camera)
-    {
+        : root(_root), viewerCamera(_camera) {
         Geos = new osg::Geode;
         osg::ref_ptr<osg::Node> objModel = osgDB::readNodeFile(treeOBJ.c_str());
-
 
 
         if (!objModel) {
@@ -91,7 +96,7 @@ namespace osg_3d_vis {
             exit(1);
         }
         auto gp = objModel->asGroup();
-        if( gp == NULL ) {
+        if (gp == NULL) {
             std::cerr << "Failed to load model.obj" << std::endl;
             exit(1);
         }
@@ -118,22 +123,20 @@ namespace osg_3d_vis {
 
         auto matsUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "offset", 100);
         std::vector<osg::Matrixf> matrices;
-        for (int i = -5; i < 5; ++i)
-        {
-            for (int j = -5; j < 5; ++j)
-            {
-
-                auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 20000);
-                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,osg::Vec3f(pos));
+        for (int i = -5; i < 5; ++i) {
+            for (int j = -5; j < 5; ++j) {
+                auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i),
+                                             osg::DegreesToRadians(300 + step * j), 10000);
+                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS, osg::Vec3f(pos));
                 osg::Matrix transM = osg::Matrix::translate(pos);
                 osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(200, 200, 200));
-                auto mat = osg::Matrix( scaleM * rotM * transM );
-                osg::MatrixTransform* transform = new osg::MatrixTransform(mat);
+                auto mat = osg::Matrix(scaleM * rotM * transM);
+                osg::MatrixTransform *transform = new osg::MatrixTransform(mat);
                 transform->addChild(gp);
                 root->addChild(transform);
             }
         }
-     }
+    }
 
     void Tree::setShader() {
         osg::ref_ptr<osg::StateSet> stateset = Geos->getOrCreateStateSet();
@@ -155,7 +158,6 @@ namespace osg_3d_vis {
 
 
         Geos->getOrCreateStateSet()->setAttributeAndModes(shaderProgram, osg::StateAttribute::ON);
-
     }
 
     void Tree::setUniforms() {
@@ -217,8 +219,8 @@ namespace osg_3d_vis {
         geom->setVertexAttribArray(1, data.geometries[index].uvs, osg::Array::BIND_PER_VERTEX);
         geom->setVertexAttribArray(2, data.geometries[index].noramls, osg::Array::BIND_PER_VERTEX);
         auto Primitives = data.geometries[index].indices;
-        // key of instance draw 
-    	geom->setUseDisplayList(false);
+        // key of instance draw
+        geom->setUseDisplayList(false);
         Primitives->setNumInstances(instanceCount);
         geom->addPrimitiveSet(Primitives);
 
@@ -228,5 +230,4 @@ namespace osg_3d_vis {
         stateset->setTextureAttributeAndModes(0, data.geometries[index].textures[0], osg::StateAttribute::ON);
         Geos->addDrawable(geom);
     }
-
 }

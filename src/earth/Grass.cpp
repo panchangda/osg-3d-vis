@@ -32,29 +32,29 @@ namespace osg_3d_vis {
         setBlend(quads);
 
 
-        /*
+
         root->addChild(quads);
-        */
 
-        float step = 0.1;
-        int p = 5;
-
-        for (int i = -p; i < p; ++i)
-        {
-            for (int j = -p; j < p; ++j)
-            {
-                auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 20000);
-
-                osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,osg::Vec3f(pos));
-                osg::Matrix transM = osg::Matrix::translate(pos);
-                osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(800, 800, 800));
-
-                auto mat = osg::Matrix( scaleM * rotM * transM );
-                osg::MatrixTransform* transform = new osg::MatrixTransform(mat);
-                transform->addChild(quads);
-                root->addChild(transform);
-            }
-        }
+        //
+        // float step = 0.1;
+        // int p = 5;
+        //
+        // for (int i = -p; i < p; ++i)
+        // {
+        //     for (int j = -p; j < p; ++j)
+        //     {
+        //         auto pos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30 + step * i), osg::DegreesToRadians(300 + step * j), 20000);
+        //
+        //         osg::Matrix rotM = osg::Matrix::rotate(osg::Z_AXIS,osg::Vec3f(pos));
+        //         osg::Matrix transM = osg::Matrix::translate(pos);
+        //         osg::Matrix scaleM = osg::Matrix::scale(osg::Vec3(800, 800, 800));
+        //
+        //         auto mat = osg::Matrix( scaleM * rotM * transM );
+        //         osg::MatrixTransform* transform = new osg::MatrixTransform(mat);
+        //         transform->addChild(quads);
+        //         root->addChild(transform);
+        //     }
+        // }
     }
 
     osg::ref_ptr<osg::Geode> Grass::createPlane(float width, float height) {

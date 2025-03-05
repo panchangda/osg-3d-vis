@@ -29,6 +29,8 @@
 #include "radar/radarui.h"
 #include "pbr/pbr.hpp"
 #include "velocity_field/rttcamera.h"
+#include "earth/Forest.h"
+
 osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer);
 void osgSetUp();
 void initViewer(osgViewer::Viewer &viewer);
@@ -84,16 +86,18 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	///*
 	// * GPU Instances
 	// */
-	if( osg_3d_vis::drawGrass)
-	{
-		auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
-	}
+	// if( osg_3d_vis::drawGrass)
+	// {
+		// auto grass = new osg_3d_vis::Grass(root, viewer.getCamera());
+	// }
+	//
+	// if( osg_3d_vis::drawTree)
+	// {
+	// 	auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
+	//
+	// }
 
-	if( osg_3d_vis::drawTree)
-	{
-		auto tree = new osg_3d_vis::Tree(root, viewer.getCamera());
-
-	}
+	auto forest = new osg_3d_vis::Forest(root, viewer.getCamera());
 
 	/*
 	 *Cloud
@@ -164,10 +168,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 
 
-	//RadarUi* rui = new RadarUi();
-	//meshRadar = new Radar::Radar(viewer, root);
-	//rui->setRad(meshRadar);
-	//rui->show(w
+	// RadarUi* rui = new RadarUi();
+	// meshRadar = new Radar::Radar(viewer, root);
+	// rui->setRad(meshRadar);
+	// rui->show();
 
 
 	/*
@@ -219,13 +223,13 @@ void initViewer(osgViewer::Viewer &viewer) {
 	osg::ref_ptr<osg::Camera> camera = viewer.getCamera();
 
 	camera->setViewMatrixAsLookAt(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(0.0, 0.0, -1), osg::Vec3(0, 1, 0.0));
-	camera->setProjectionMatrixAsPerspective(60.0, 1.78, 0.1, 1000.0);
+	camera->setProjectionMatrixAsPerspective(60.0, 1.78, 0.001, 10000.0);
 
 	// 创建轨迹球操纵器
 	osg::ref_ptr<osgGA::TrackballManipulator> manipulator = new osgGA::TrackballManipulator;
-	bool b = false;
-	if( osg_3d_vis::pbr || osg_3d_vis::drawTree || osg_3d_vis::drawGrass ) { b = true;}
-	if(osg_3d_vis::drawEarth && osg_3d_vis::bSetCameraToCity && b) {
+	if(osg_3d_vis::drawEarth &&
+		(osg_3d_vis::bSetCameraToCity || osg_3d_vis::pbr || osg_3d_vis::drawTree || osg_3d_vis::drawGrass || osg_3d_vis::drawExplode || osg_3d_vis::drawWeather)
+		) {
 		const osg_3d_vis::CameraViewParams& camParams = osg_3d_vis::cameraCityMap.at(osg_3d_vis::cameraTargetCity);
 		// 设置摄像机的“Home”位置
 		manipulator->setHomePosition(camParams.position, camParams.center, camParams.up);

@@ -1,6 +1,5 @@
 
 #version 330 core
-#extension GL_ARB_separate_shader_objects : enable
 
 //in vec2 TexCoords;
 in vec3 WorldPos;

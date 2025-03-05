@@ -19,8 +19,8 @@ namespace osg_3d_vis{
 
     // Earth
     constexpr bool drawEarth = true;
-    constexpr float earthScale = 100000.0f;
-    constexpr bool drawGrass = true;
+    constexpr float earthScale = 1000.0f;
+    constexpr bool drawGrass = false;
     constexpr  bool drawTree = false;
     constexpr bool showCloud = false;
     // Particles:
@@ -63,7 +63,8 @@ namespace osg_3d_vis{
 
     const osg::Vec3d instanceLLH{ osg::DegreesToRadians(30.0f),
         osg::DegreesToRadians(120.0f + 180.0f),
-        10000 };
+        10000};
+
     const osg::Vec3d HangZhouPos = llh2xyz_Ellipsoid(osg::DegreesToRadians(30.0f),
                 osg::DegreesToRadians(120.0f+180.0f),
                 10000.0f);

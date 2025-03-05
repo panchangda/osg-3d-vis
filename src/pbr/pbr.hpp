@@ -15,6 +15,8 @@
 #include <osg/ShapeDrawable>
 #include <osgUtil/Tessellator>
 
+#include <osgUtil/SmoothingVisitor>
+
 class PBR {
 public:
 	const std::string TankerObj = std::string(OSG_3D_VIS_DATA_PREFIX) + "Tanker/OBJ/Tank.obj";
@@ -145,6 +147,7 @@ public:
 		auto theta = new osg::Uniform(osg::Uniform::FLOAT, "theta");
 		theta->setUpdateCallback( new thetaUniformCallback());
 		stateSet->addUniform(theta);
+
 
 
 		auto  calculateOrientation = [&](const osg::Vec3& position) {
