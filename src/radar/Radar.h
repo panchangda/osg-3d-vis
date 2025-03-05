@@ -9,12 +9,14 @@
 #include <osg/Group>
 
 
-#include "../Util.h"
+#include "../util.h"
 #include "APMRadarRender.h"
 #include <iostream>
 #include <osgDB/WriteFile>
 #include <array>
 #include "../volumeRender.h"
+#include <memory>
+
 using namespace  std;
 
 
