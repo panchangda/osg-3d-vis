@@ -244,7 +244,7 @@ namespace osg_3d_vis{
         // 设置雨
         precipitationEffect->rain(1.0f);
 
-        precipitationEffect->setUseFarLineSegments(false); 
+        precipitationEffect->setUseFarLineSegments(false);
 
         // 可以设置风向，控制雨/雪飘落方向
         precipitationEffect->setWind(osg::Vec3(1.0f, 0.0f, 0.0f));
