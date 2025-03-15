@@ -85,11 +85,11 @@ class Forest {
     float random(float min,float max) { return min + (max-min)*(float)rand()/(float)RAND_MAX; }
     int random(int min,int max) { return min + (int)((float)(max-min)*(float)rand()/(float)RAND_MAX); }
 
-    void Forest::createTreeList(osg::Node* terrain,const osg::Vec3& origin, const osg::Vec3& size,
+    void createTreeList(osg::Node* terrain,const osg::Vec3& origin, const osg::Vec3& size,
         unsigned int numTreesToCreate, unsigned int numTreesTypes, TreeList& trees,
         bool uniformScale, unsigned int scale);
-    osg::Node* Forest::createBillboardGraph(Cell* cell,osg::StateSet* stateset);
-    osg::Geometry* Forest::createSprite( float w, float h, osg::Vec4ub color);
+    osg::Node* createBillboardGraph(Cell* cell,osg::StateSet* stateset);
+    osg::Geometry* createSprite( float w, float h, osg::Vec4ub color);
 };
 
 };

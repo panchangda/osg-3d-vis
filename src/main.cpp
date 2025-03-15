@@ -67,7 +67,7 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 
 	/*
 	 *  Earth Elliposoid
-	 */
+     */
 	if(osg_3d_vis::drawEarth) {
 		auto earth = new osg_3d_vis::Earth(root);
 	}
@@ -98,7 +98,7 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	//
 	// }
 
-	auto forest = new osg_3d_vis::Forest(root, viewer.getCamera());
+    //auto forest = new osg_3d_vis::Forest(root, viewer.getCamera());
 
 	/*
 	 *Cloud
@@ -169,10 +169,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 
 
-	// RadarUi* rui = new RadarUi();
-	// meshRadar = new Radar::Radar(viewer, root);
-	// rui->setRad(meshRadar);
-	// rui->show();
+    RadarUi* rui = new RadarUi();
+    meshRadar = new Radar::Radar(viewer, root);
+    rui->setRad(meshRadar);
+    rui->show();
 
 
 	/*
@@ -244,8 +244,62 @@ void initViewer(osgViewer::Viewer &viewer) {
 	viewer.setCameraManipulator(manipulator);
 }
 
+//----
+// 添加验证场景图的函数
+bool validateSceneGraph(osg::Node* node, std::string indent = "") {
+    if (!node) {
+        std::cout << indent << "警告: 发现空节点!" << std::endl;
+        return false;
+    }
+
+    bool valid = true;
+
+    // 检查StateSet
+    try {
+        osg::StateSet* ss = node->getStateSet();
+        // 只需尝试访问，如果存在问题会抛出异常
+    } catch (const std::exception& e) {
+        std::cout << indent << "错误: 节点StateSet无效: " << e.what() << std::endl;
+        valid = false;
+    }
+
+    // 如果是Group节点，递归检查所有子节点
+    osg::Group* group = dynamic_cast<osg::Group*>(node);
+    if (group) {
+        for (unsigned int i = 0; i < group->getNumChildren(); ++i) {
+            osg::Node* child = group->getChild(i);
+            std::string childIndent = indent + "  ";
+            if (!validateSceneGraph(child, childIndent)) {
+                std::cout << indent << "子节点 #" << i << " 无效" << std::endl;
+                valid = false;
+            }
+        }
+    }
+
+    // 如果是Geode节点，检查所有Drawable
+    osg::Geode* geode = dynamic_cast<osg::Geode*>(node);
+    if (geode) {
+        for (unsigned int i = 0; i < geode->getNumDrawables(); ++i) {
+            osg::Drawable* drawable = geode->getDrawable(i);
+            if (!drawable) {
+                std::cout << indent << "警告: Geode中发现空Drawable，索引 #" << i << std::endl;
+                valid = false;
+            }
+        }
+    }
+
+    return valid;
+}
+//----
+
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root) {
 
+    //---
+    bool isValid = validateSceneGraph(root.get());
+        if (!isValid) {
+            std::cout << "警告: 场景图包含无效节点，可能导致崩溃!" << std::endl;
+        }
+    //---
 	viewer.setSceneData(root.get());
 
 	viewer.setLightingMode(osg_3d_vis::lightingMode);

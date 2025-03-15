@@ -160,44 +160,44 @@ namespace osg_3d_vis{
 
         /* Grasses: */
 
-        TreeList grasses;
-        int numGrassToCreate = 20000;
-        const int numGrassTypes = 1;
-        int grassScale = 500.0f;
+//        TreeList grasses;
+//        int numGrassToCreate = 20000;
+//        const int numGrassTypes = 1;
+//        int grassScale = 500.0f;
 
-        createTreeList(terrain.get(),origin,size,numGrassToCreate,numGrassTypes, grasses, true, grassScale);
+//        createTreeList(terrain.get(),origin,size,numGrassToCreate,numGrassTypes, grasses, true, grassScale);
 
-        unsigned int maxNumGrassesPerCell = sqrtf(static_cast<float>(numGrassToCreate));
-        osg::ref_ptr<Cell> cell = new Cell;
-        cell->addTrees(grasses);
-        cell->divide(maxNumGrassesPerCell);
+//        unsigned int maxNumGrassesPerCell = sqrtf(static_cast<float>(numGrassToCreate));
+//        osg::ref_ptr<Cell> cell = new Cell;
+//        cell->addTrees(grasses);
+//        cell->divide(maxNumGrassesPerCell);
 
-        osg::Texture2D *tex = new osg::Texture2D;
-        tex->setWrap( osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP );
-        tex->setWrap( osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP );
+//        osg::Texture2D *tex = new osg::Texture2D;
+//        tex->setWrap( osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP );
+//        tex->setWrap( osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP );
 
-        const std::string grassImage = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/grass.png";
+//        const std::string grassImage = std::string(OSG_3D_VIS_DATA_PREFIX) + "gpu-instances/grass.png";
 
-        tex->setImage(osgDB::readRefImageFile(grassImage));
+//        tex->setImage(osgDB::readRefImageFile(grassImage));
 
-        osg::StateSet *dstate = new osg::StateSet;
-        {
-            dstate->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON );
+//        osg::StateSet *dstate = new osg::StateSet;
+//        {
+//            dstate->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON );
 
-            dstate->setTextureAttribute(0, new osg::TexEnv );
+//            dstate->setTextureAttribute(0, new osg::TexEnv );
 
-            dstate->setAttributeAndModes( new osg::BlendFunc, osg::StateAttribute::ON );
+//            dstate->setAttributeAndModes( new osg::BlendFunc, osg::StateAttribute::ON );
 
-            osg::AlphaFunc* alphaFunc = new osg::AlphaFunc;
-            alphaFunc->setFunction(osg::AlphaFunc::GEQUAL,0.05f);
-            dstate->setAttributeAndModes( alphaFunc, osg::StateAttribute::ON );
+//            osg::AlphaFunc* alphaFunc = new osg::AlphaFunc;
+//            alphaFunc->setFunction(osg::AlphaFunc::GEQUAL,0.05f);
+//            dstate->setAttributeAndModes( alphaFunc, osg::StateAttribute::ON );
 
-            dstate->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+//            dstate->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
 
-            dstate->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
-        }
+//            dstate->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
+//        }
 
-        _root->addChild(createBillboardGraph(cell.get(),dstate));
+//        _root->addChild(createBillboardGraph(cell.get(),dstate));
 
 
 
