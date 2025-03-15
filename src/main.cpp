@@ -246,6 +246,9 @@ void initViewer(osgViewer::Viewer &viewer) {
 
 void prepareViewer(osgViewer::Viewer &viewer, const osg::ref_ptr<osg::Group>& root) {
 
+    osgUtil::Optimizer optimizer;
+    optimizer.optimize(root.get());
+
 	viewer.setSceneData(root.get());
 
 	viewer.setLightingMode(osg_3d_vis::lightingMode);

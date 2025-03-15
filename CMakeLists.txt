@@ -16,19 +16,19 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # 查找PCL依赖
-set(PCL_PATH "F:/PCL")
+set(PCL_PATH "D:/PCL")
 find_package(PCL REQUIRED)
 add_definitions(${PCL_DEFINITIONS})
 
 # 查找Qt5依赖
-set(QT_PATH "E:/Libraries/Qt/Qt5.12.12/5.12.12/msvc2017_64")
+set(QT_PATH "D:/Library/Qt/5.12.12/msvc2017_64")
 set(CMAKE_PREFIX_PATH ${QT_PATH}/lib/cmake)
 find_package(Qt5 COMPONENTS Core Widgets Gui REQUIRED)
 
 # 设置osg依赖，lib文件夹中自带release版本，debug版本需自行下载
 set(OSG_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/OpenSceneGraph-3.6.5-VC2022-64-Release-2023-01"
 CACHE PATH "Root of OpenSceneGraph library (Release)")
-set(OSG_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/OpenSceneGraph-3.6.5-VC2022-64-Debug-2023-01"
+set(OSG_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/OpenSceneGraph-3.6.5-VC2022-64-Debug-2025-03"
 CACHE PATH "Root of OpenSceneGraph library (Debug)")
 
 # 自动链接所有 .lib 静态库
