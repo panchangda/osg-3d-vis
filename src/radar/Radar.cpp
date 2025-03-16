@@ -1,4 +1,3 @@
-// Radar.cpp
 #include "Radar.h"
 
 #include <qvariant.h>
@@ -139,10 +138,9 @@ void Radar::Radar::updateEMITHETA(double value)
 osg::ref_ptr<osg::Geometry> createCircle(osg::Vec2 center, osg::Vec2 radius, unsigned int numSegments = 360) {
     osg::ref_ptr<osg::Geometry> circleGeometry = new osg::Geometry();
     osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
-    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(GL_LINE_STRIP, 0);
+    osg::ref_ptr<osg::DrawElementsUInt> indices = new osg::DrawElementsUInt(osg::PrimitiveSet::Mode::LINE_LOOP, 0);
     radius *= 0.9;
 
-    // ����Բ���ϵĵ�
     for (unsigned int i = 0; i < numSegments; ++i) {
         float angle = 2.0f * osg::PI * float(i) / float(numSegments);
         auto la = center.x() + radius.x() * cos(angle), lo = center.y() + radius.y() * sin(angle);
@@ -151,10 +149,10 @@ osg::ref_ptr<osg::Geometry> createCircle(osg::Vec2 center, osg::Vec2 radius, uns
         vertices->push_back(osg::Vec3(x, y, z));
         indices->push_back(i);
     }
-    indices->push_back(0);
 
-    circleGeometry->setVertexAttribArray(0, vertices, osg::Array::BIND_PER_VERTEX);
+    circleGeometry->setVertexArray(vertices.get());
     circleGeometry->addPrimitiveSet(indices.get());
+
     return circleGeometry;
 }
 
@@ -284,9 +282,8 @@ osg::ref_ptr<osg::Geometry> MakeCircleSearch(osg::Vec2 center, osg::Vec2 radius,
         indices->push_back(i%(numSegments+1));
         indices->push_back((i + 1) % (numSegments + 1));
     }
-    circleGeometry->setVertexAttribArray(0, vertices, osg::Array::BIND_PER_VERTEX);
+    circleGeometry->setVertexArray(vertices.get());
     circleGeometry->addPrimitiveSet(indices.get());
-    circleGeometry->setVertexArray(vertices);
 
     return circleGeometry;
 }
@@ -438,7 +435,7 @@ void Radar::Radar::GenerateRadarlineMesh()
     osg::StateSet * StateSet = Radarline->getOrCreateStateSet();
 
     StateSet->setAttributeAndModes(Program);
-    StateSet->addUniform(new osg::Uniform("mainColor", osg::Vec4(0,1,1,1)));
+    StateSet->addUniform(new osg::Uniform("mainColor", osg::Vec4(1,1,1,1)));
     StateSet->addUniform(mvpUniform);
 
     StateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
@@ -509,8 +506,8 @@ osg::ref_ptr<osg::Group> Radar::Radar::GenerateEmi(osg_3d_vis::llhRange range)
     osg::Vec2 radiusMAX = osg::Vec2(maxLa - minLa, maxLo - minLo) ;
 
     geodeGroup->addChild(createCustomCylinder(osg::Vec3(center, (minH + maxH)/2), radiusMAX.x(), (maxH-minH)));
-
     geodeGroup->addChild(createCustomCylinder(osg::Vec3(center, maxH+50000), radiusMAX.x()/10, 100000));
+
     return geodeGroup;
 
 }

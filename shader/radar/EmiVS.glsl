@@ -35,5 +35,5 @@ void main()
     rpt.y += phiThetaSpeed.x * t ;
     rpt.z += phiThetaSpeed.y * t ;
     vec3 p = sphericalToCartesian(rpt);
-    gl_Position = mvp * vec4(p, 1.0);
+    gl_Position = mvp * vec4(p, 1.0f);
 }
