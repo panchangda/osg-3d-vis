@@ -48,8 +48,9 @@ namespace osg_3d_vis {
         this->initializeSmoothAlgorithm();
 
         this->initializeRandomSeedSelection();
-        this->initializeTexturesAndImages();
-        this->cb_resizeTexture(mainCamera);
+//        this->initializeTexturesAndImages();
+//        this->cb_resizeTexture(mainCamera);
+        ViewerMainCamera = mainCamera;
         this->initializeLineColorOptions();
         this->initializeSelectionRGBA();
 
@@ -162,10 +163,10 @@ namespace osg_3d_vis {
         dy = (maxY - minY) / (dimY - 1);
 
         idx = 0;
-        pointDensity = 5.0f;
+        pointDensity = 10.0f;
         h = 0.5f;
-        speedScaleFactor = 0.5f;
-        minLineLength = 30;
+        speedScaleFactor = 0.8f;
+        minLineLength = 20;
         pointsSum = int(dimX * dimY / pointDensity);
         linesSum = pointsSum;
         lines.resize(linesSum);

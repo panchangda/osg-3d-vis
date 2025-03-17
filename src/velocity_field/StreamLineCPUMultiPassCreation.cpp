@@ -90,11 +90,11 @@ namespace osg_3d_vis{
 
 			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (camera->getChild(0));
 			osg::ref_ptr<osg::StateSet> stateset = tmpGeo->getDrawable(0)->getOrCreateStateSet();
-            if(sl->cameraMoving){
-                stateset->getUniform("first")->set(bool(true));
-            }else{
-                stateset->getUniform("first")->set(bool(false));
-            }
+//            if(sl->cameraMoving){
+//                stateset->getUniform("first")->set(bool(true));
+//            }else{
+//                stateset->getUniform("first")->set(bool(false));
+//            }
 
 
 		}

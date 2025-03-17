@@ -115,11 +115,11 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 	// Show Streamline: CPU (enable choosing one streamling)
 	//
-	// auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
-	// 	viewer,
-	// 	root,
-	// 	viewer.getCamera(),
-	// 	osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
+     auto streamlineCPU = new osg_3d_vis::StreamLineCPU(
+        viewer,
+        root,
+        viewer.getCamera(),
+        osg_3d_vis::llhRange(-10.0, 52.0, 99.0, 150.0, 1000.0f, 1000.f));
 	//	
 
 	//// Show Streamline: GPU
@@ -169,10 +169,10 @@ osg::ref_ptr<osg::Group> loadScene(osgViewer::Viewer &viewer) {
 	// */
 
 
-    RadarUi* rui = new RadarUi();
-    meshRadar = new Radar::Radar(viewer, root);
-    rui->setRad(meshRadar);
-    rui->show();
+//    RadarUi* rui = new RadarUi();
+//    meshRadar = new Radar::Radar(viewer, root);
+//    rui->setRad(meshRadar);
+//    rui->show();
 
 
 	/*
