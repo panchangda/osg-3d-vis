@@ -5,22 +5,22 @@
 #include "streamline_cpu.h"
 
 
-class DepthCopyCallback : public osg::Camera::DrawCallback {
-public:
-    DepthCopyCallback(osg::Texture2D *depthTexture) : _depthTexture(depthTexture) {
-    }
-
-    virtual void operator()(osg::RenderInfo &renderInfo) const override {
-        // 使用 glCopyTexSubImage2D 复制深度缓冲到深度纹理
-        glBindTexture(GL_TEXTURE_2D, _depthTexture->getTextureObject(renderInfo.getState()->getContextID())->id());
-        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, _depthTexture->getTextureWidth(),
-                            _depthTexture->getTextureHeight());
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-private:
-    osg::ref_ptr<osg::Texture2D> _depthTexture;
-};
+//class DepthCopyCallback : public osg::Camera::DrawCallback {
+//public:
+//    DepthCopyCallback(osg::Texture2D *depthTexture) : _depthTexture(depthTexture) {
+//    }
+//
+//    virtual void operator()(osg::RenderInfo &renderInfo) const override {
+//        // 使用 glCopyTexSubImage2D 复制深度缓冲到深度纹理
+//        glBindTexture(GL_TEXTURE_2D, _depthTexture->getTextureObject(renderInfo.getState()->getContextID())->id());
+//        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, _depthTexture->getTextureWidth(),
+//                            _depthTexture->getTextureHeight());
+//        glBindTexture(GL_TEXTURE_2D, 0);
+//    }
+//
+//private:
+//    osg::ref_ptr<osg::Texture2D> _depthTexture;
+//};
 
 
 namespace osg_3d_vis {
@@ -41,6 +41,7 @@ namespace osg_3d_vis {
         }
 
         this->setRoot(root);
+        // 设置shader路径前缀
         this->setShaderPath(std::string(OSG_3D_VIS_SHADER_PREFIX) + "streamline-cpu/");
 
         this->initializeDifferentialMethod();
@@ -53,26 +54,71 @@ namespace osg_3d_vis {
         this->initializeSelectionRGBA();
 
         this->regenerateRandomPointsAndSteamLines();
-        this->initializeLineGeometryRenderState();
+//        this->initializeLineGeometryRenderState();
         this->initializeArrowGeometryRenderState();
 
+
+        // 基于多帧纹理混合实现流线动画的多PASS方法
         /* get main camera color & depth buffer */
-        mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
-        // mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
+//        mainCamera->attach(osg::Camera::COLOR_BUFFER, this->screenColorTexture);
+//        mainCamera->attach(osg::Camera::DEPTH_BUFFER, this->screenDepthTexture);
         // temp way to read back depth buffer
-        mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
+//         mainCamera->setPostDrawCallback(new DepthCopyCallback(screenDepthTexture));
         /* multi-pass creation */
         // use slave camera for segmentdraw to ensure following main camera
         // osg::ref_ptr<osg::Camera> slaveCamera = this->createSegmentDrawPass(mainCamera);
         // slaveCamera->setGraphicsContext(mainCamera->getGraphicsContext());
         // viewer.addSlave(slaveCamera, false);
-        root->addChild(this->createSegmentDrawPass(mainCamera));
-        root->addChild(this->createTrailDrawPass());
-        root->addChild(this->createScreenDrawPass());
-        root->addChild(this->createCopyPass());
 
+//        root->addChild(this->createSegmentDrawPass(mainCamera));
+//        root->addChild(this->createTrailDrawPass());
+//        root->addChild(this->createScreenDrawPass());
+//        root->addChild(this->createCopyPass());
+//
+
+//        // 初始化
+//        updateStreamlineGeometry();
+
+        streamlineGeode = new osg::Geode;
+        // bind updating time uniform
+        streamlineGeode->addUpdateCallback(new StreamlineTimeUpdateCallback(this));
+
+        streamlineGeode->addDrawable(geometry.get());
+        // 设置 StateSet（例如设置线宽、开启混合等效果，按需求可选）
+        osg::ref_ptr<osg::StateSet> stateSet = geometry->getOrCreateStateSet();
+        //  Create vertex and fragment shaders
+        osg::ref_ptr<osg::Shader> vertexShader = new osg::Shader(osg::Shader::VERTEX); // Define your vertex shader source
+        osg::ref_ptr<osg::Shader> fragmentShader = new osg::Shader(osg::Shader::FRAGMENT); // Define your fragment shader source
+        vertexShader->loadShaderSourceFromFile(shaderPath + "animate.vs");
+        fragmentShader->loadShaderSourceFromFile(shaderPath + "animate.ps");
+
+        // Create a shader program and attach the shaders
+        osg::ref_ptr<osg::Program> program = new osg::Program;
+        program->addBindAttribLocation("Vertex", 0);
+        program->addBindAttribLocation("VertexColor", 1);
+        program->addShader(vertexShader.get());
+        program->addShader(fragmentShader.get());
+        stateSet->setAttributeAndModes(program);
+
+        // bind mvp update callback
+        osg::Uniform* mvpUniform = new osg::Uniform(osg::Uniform::FLOAT_MAT4, "ModelViewProjectionMatrix");
+        mvpUniform->setUpdateCallback(new MVPRedrawCallback(mainCamera, this));
+        stateSet->addUniform(mvpUniform);
+
+        // set line width
+        stateSet->setAttributeAndModes(new osg::LineWidth(3.0f), osg::StateAttribute::ON);
+
+        // set decay rate
+        stateSet->getOrCreateUniform("DecayRate", osg::Uniform::FLOAT)->set(0.94f);
+
+        // 如有需要，可开启 GL_BLEND 用于平滑透明效果
+        stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+        stateSet->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+        // 将 Geode 加入主场景根节点
+        root->addChild(streamlineGeode);
+
+        // for selection
         root->addChild(this->createTextPass());
-
         /* add pickHandler to viewer */
         viewer.addEventHandler(new PickHandler(this));
 
@@ -119,7 +165,7 @@ namespace osg_3d_vis {
         pointDensity = 5.0f;
         h = 0.5f;
         speedScaleFactor = 0.5f;
-        minLineLength = 10;
+        minLineLength = 30;
         pointsSum = int(dimX * dimY / pointDensity);
         linesSum = pointsSum;
         lines.resize(linesSum);
@@ -143,6 +189,7 @@ namespace osg_3d_vis {
         arrowGeometry->setDataVariance(osg::Object::DYNAMIC);
         arrowPoints = new osg::Vec3Array;
         arrowPoints->resize(linesSum * 4, osg::Vec3(0.0f, 0.0, 0.0));
+        arrowPoints->setDataVariance(osg::Object::DYNAMIC);
         arrowColors = new osg::Vec4Array();
         arrowColors->resize(linesSum * 4);
         arrowColors->setDataVariance(osg::Object::DYNAMIC);
@@ -150,7 +197,7 @@ namespace osg_3d_vis {
 
         arrowUseLineColor = false;
         showArrow = false;
-        arrowRGBA = osg::Vec4(0.0, 0.0, 0.0, 1.0);
+        arrowRGBA = osg::Vec4(0.0, 1.0, 0.0, 1.0);
     }
 
     void loadDataFromFile(const std::string &filePath, std::vector<float> &data) {
@@ -206,9 +253,9 @@ namespace osg_3d_vis {
         dz = (maxZ - minZ) / (dimZ - 1);
 
         idx = 0;
-        pointDensity = 5000.0f;
+        pointDensity = 200.0f;
         h = 0.5f;
-        speedScaleFactor = 5.0f;
+        speedScaleFactor = .1f;
         minLineLength = 30;
         pointsSum = int(dimX * dimY * dimZ / pointDensity);
         linesSum = pointsSum;
@@ -242,6 +289,7 @@ namespace osg_3d_vis {
         arrowGeometry->setDataVariance(osg::Object::DYNAMIC);
         arrowPoints = new osg::Vec3Array;
         arrowPoints->resize(linesSum * 4, osg::Vec3(0.0f, 0.0, 0.0));
+        arrowPoints->setDataVariance(osg::Object::DYNAMIC);
         arrowColors = new osg::Vec4Array();
         arrowColors->resize(linesSum * 4);
         arrowColors->setDataVariance(osg::Object::DYNAMIC);
@@ -353,11 +401,61 @@ namespace osg_3d_vis {
     }
 
     void StreamLineCPU::initializeArrowGeometryRenderState() {
+
         arrowGeometry->setVertexArray(arrowPoints.get());
         arrowGeometry->setColorArray(arrowColors.get());
         arrowGeometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
         arrowGeometry->addPrimitiveSet(arrowsDrawArray.get());
+        arrowGeometry->getOrCreateStateSet()->setAttributeAndModes(new osg::LineWidth(3.0f));
+
+        arrowcb = new ArrowGeometryUpdateCallback(
+                showArrow,
+                frameCounter,
+                arrowRGBA,
+                arrowUseLineColor,
+                lines,
+                arrowGeometry,
+                arrowPoints,
+                arrowColors,
+                arrowsDrawArray,
+                colors,
+                leftArrows,
+                rightArrows
+        );
+
+        root->addUpdateCallback(arrowcb);
+
         root->addChild(arrowGeometry);
+
+        // 加入数据但不渲染，防止OSG自动操作导致后续无法在运行时控制是否显示箭头
+//        int validArrows = 0;
+//        for (int i = 0; i < lines.size(); i++) {
+//            if(lines[i].size() < 4){
+//                continue;
+//            }else{
+//                validArrows++;
+//            }
+//
+//            int idx = (int)frameCounter % lines[i].size() ;
+//
+//
+//            osg::Vec4 c1 = colors[i][idx];
+//
+//
+//            // use l&r arrows to set arrowPoints
+//            (*arrowPoints)[i * 4].set(lines[i][idx]);
+//            (*arrowPoints)[i * 4 + 1].set(leftArrows[i][idx]);
+//            (*arrowPoints)[i * 4 + 2].set(lines[i][idx]);
+//            (*arrowPoints)[i * 4 + 3].set(rightArrows[i][idx]);
+//
+//
+//                (*arrowColors)[i * 4].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                (*arrowColors)[i * 4 + 1].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                (*arrowColors)[i * 4 + 2].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                (*arrowColors)[i * 4 + 3].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//
+//        }
+////        arrowsDrawArray->setCount(0);
     }
 
     void StreamLineCPU::regenerateRandomPointsAndSteamLines() {
@@ -452,7 +550,9 @@ namespace osg_3d_vis {
 
 
         std::cout << "randomPoints generation completed!" << std::endl;
-        updateGeometry(0);
+        //        updateGeometry(0);
+
+        updateStreamlineGeometry();
     }
 
     osg::Vec2 StreamLineCPU::Rotate(osg::Vec2 v, float theta) {
@@ -586,8 +686,8 @@ namespace osg_3d_vis {
         /* calculate arrows points */
         osg::Vec2 dir = osg::Vec2(speed[0], speed[1]);
         dir.normalize();
-        osg::Vec2 lArrowDir = Rotate(-dir, osg::PI / 6.0) * 0.1f;
-        osg::Vec2 rArrowDir = Rotate(-dir, -osg::PI / 6.0) * 0.1f;
+        osg::Vec2 lArrowDir = Rotate(-dir, osg::PI / 6.0) * 0.2f;
+        osg::Vec2 rArrowDir = Rotate(-dir, -osg::PI / 6.0) * 0.2f;
         osg::Vec2 lArrow = osg::Vec2(nextPos.x() + lArrowDir.x(), nextPos.y() + lArrowDir.y());
         osg::Vec2 rArrow = osg::Vec2(nextPos.x() + rArrowDir.x(), nextPos.y() + rArrowDir.y());
         llh2xyz_Ellipsoid(osg::DegreesToRadians(lArrow.x()),
@@ -605,10 +705,15 @@ namespace osg_3d_vis {
             for (int j = 0; j < speeds[i].size(); j++) {
                 osg::Vec3 tmpSpeed = speeds[i][j];
                 colors[i][j] = osg::Vec4(osg::Vec4(
-                    hsvToRgb(osg::Vec3(getHueByVector(osg::Vec2(tmpSpeed[0], tmpSpeed[1]), hueRange, hueOffset),
-                                       hsvSaturation, hsvValue)), 1.0f));
+                        hsvToRgb(osg::Vec3(getHueByVector(osg::Vec2(tmpSpeed[0], tmpSpeed[1]), hueRange, hueOffset),
+                                           hsvSaturation, hsvValue)), 1.0f));
+                if(lineUseSameColor){
+                    colors[i][j] = lineRGBA;
+                }
+
             }
         }
+        updateStreamlineGeometry();
     }
 
 
@@ -726,9 +831,50 @@ namespace osg_3d_vis {
         }
     }
 
+    void StreamLineCPU::updateSelection() {
+        selectedAvgSpeed = osg::Vec3();
+        for (int i = 0; i < lines.size(); i++) {
+            if(lines[i].size() < 1) continue;
+            // process per selected streamline appearance & info display
+            if (selected[i] == true && selectedLineCount > 0) {
+                osg::Vec3 currSpeed = speeds[i][0];
+                // x y using lat&lon, z using height
+                // scale xy to match z
+                currSpeed.x() *= 1000.0f;
+                currSpeed.y() *= 1000.0f;
+                selectedAvgSpeed += currSpeed / (float) selectedLineCount;
+
+                osg::ref_ptr LineText = LineToText[i];
+                char buffer[50];
+                std::snprintf(buffer, sizeof(buffer), "(%.1f,%.1f,%.1f)", currSpeed.x(), currSpeed.y(), currSpeed.z());
+
+                LineText->setText(buffer);
+
+                osg::Vec4 NDCCoord = osg::Vec4((*linePoints)[i * 2], 1.0) * mainCameraViewProjMatrix;
+                NDCCoord /= NDCCoord.w();
+                double screenPosX = (NDCCoord.x() * 0.5f + 0.5f) * ViewerMainCamera->getViewport()->width() - 200.0f;
+                double screenPosY = (NDCCoord.y() * 0.5f + 0.5f) * ViewerMainCamera->getViewport()->height() - 200.0f;
+                LineText->setPosition(osg::Vec3(screenPosX, screenPosY, 0));
+            }
+
+
+
+            if (selectedLineCount > 0) {
+
+                char buffer[50];
+                std::snprintf(buffer, sizeof(buffer),
+                              "average speed:(%.1f,%.1f,%.1f)",
+                              selectedAvgSpeed.x(), selectedAvgSpeed.y(), selectedAvgSpeed.z());
+
+                LineAvgSpeedText = buffer;
+                streamlineText->setText(LineCountText + LineAvgSpeedText);
+
+            }
+        }
+    }
     void StreamLineCPU::updateGeometry(int time_t) {
         selectedAvgSpeed = osg::Vec3();
-        for (int i = 0; i < linesSum; i++) {
+        for (int i = 0; i < lines.size(); i++) {
             if (lines[i].size() == 0 || lines[i].size() == 1) {
                 (*linePoints)[i * 2].set(osg::Vec3(0.0, 0.0, 0.0));
                 (*linePoints)[i * 2 + 1].set(osg::Vec3(0.0, 0.0, 0.0));
@@ -1078,8 +1224,84 @@ namespace osg_3d_vis {
     }
 
 
-    void StreamLineCPU::updateLineStyle(int value) {
-        lineStyle = value;
-        updateNodeGeometryCallbackPtr->updateLineStyle(lineStyle);
+
+
+// 新增一个函数，用于更新流线几何数据，直接绘制所有点（不使用 FBO 叠加）
+    void StreamLineCPU::updateStreamlineGeometry() {
+        osg::ref_ptr<osg::FloatArray> indexArray = new osg::FloatArray; // NormalizedProgress
+        osg::ref_ptr<osg::FloatArray> lifeArray = new osg::FloatArray;     // Life，单位为秒
+        osg::ref_ptr<osg::FloatArray> dottedArray = new osg::FloatArray;     // Life，单位为秒
+
+        // 清空原有顶点和颜色数据
+        linePoints->clear();
+        lineColors->clear();
+
+        // 同时需要移除 geometry 里旧的 PrimitiveSet
+        geometry->removePrimitiveSet(0, geometry->getNumPrimitiveSets());
+
+        // 用于累计顶点偏移量
+        unsigned int offset = 0;
+
+        // 遍历每条流线，按 LINE_STRIP 绘制
+        for (size_t i = 0; i < lines.size(); i++) {
+            // 忽略无效流线
+            if (lines[i].size() < 2) continue;
+            // 虚线时，必须大于4个顶点
+            if(lineStyle == DOTTED && lines[i].size() < 4){
+                continue;
+            }
+
+
+            float life = lines[i].size();
+
+            // 将当前流线所有顶点和对应颜色添加到总数组中
+            for (size_t j = 0; j < lines[i].size(); j++) {
+                linePoints->push_back(lines[i][j]);
+
+                // vertices on the samme line
+                // have different indexes, same life
+                float lineIndex = j;
+                indexArray->push_back(lineIndex);
+                lifeArray->push_back(life);
+
+
+                float dottedValue = j % 3 == 0 ? 1 : 0;
+                if(lineStyle == SOLID) dottedValue = 0.0f;
+                dottedArray->push_back(dottedValue);
+
+                // 如果 colors 数组已经存储好对应的颜色
+                if(j < colors[i].size())
+                    lineColors->push_back(colors[i][j]);
+                else
+                    lineColors->push_back(osg::Vec4(1.0,1.0,1.0,1.0)); // 默认白色
+
+            }
+
+            // 为当前流线添加一个 DrawArrays，模式为 LINE_STRIP
+            geometry->addPrimitiveSet(
+                    new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP, offset, lines[i].size()));
+            offset += lines[i].size();
+        }
+
+        // 绑定顶点与颜色数据
+        geometry->setVertexAttribArray(0, linePoints.get(), osg::Array::BIND_PER_VERTEX);
+        geometry->setVertexAttribArray(1, lineColors.get(), osg::Array::BIND_PER_VERTEX);
+
+        // 将 Index 绑定到顶点属性 2
+        geometry->setVertexAttribArray(2, indexArray.get());
+        geometry->setVertexAttribBinding(2, osg::Geometry::BIND_PER_VERTEX);
+
+        // 将 Life 绑定到顶点属性 3
+        geometry->setVertexAttribArray(3, lifeArray.get());
+        geometry->setVertexAttribBinding(3, osg::Geometry::BIND_PER_VERTEX);
+
+        // 将 Life 绑定到顶点属性 4
+        geometry->setVertexAttribArray(4, dottedArray.get());
+        geometry->setVertexAttribBinding(4, osg::Geometry::BIND_PER_VERTEX);
+
+
+        // 标记更新
+        geometry->dirtyDisplayList();
+        geometry->dirtyBound();
     }
 }

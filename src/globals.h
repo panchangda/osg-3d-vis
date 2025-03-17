@@ -54,7 +54,7 @@ namespace osg_3d_vis{
     };
 
 
-    constexpr bool bSetCameraToCity = true;
+    constexpr bool bSetCameraToCity = false;
     constexpr ECity cameraTargetCity = ECity::HangZhou;
     extern osg::Vec3d cameraPosition;
     extern osg::Vec3d cameraCenter;

@@ -37,6 +37,7 @@ namespace osg_3d_vis{
 
 		osg::ref_ptr<osg::Geode> tmpGeode = new osg::Geode;
 		tmpGeode->addDrawable(this->geometry);
+        // 每帧在CPU中更新流线
 		updateNodeGeometryCallbackPtr = new updateNodeGeometryCallback(this);
 		tmpGeode->addUpdateCallback(updateNodeGeometryCallbackPtr);
 

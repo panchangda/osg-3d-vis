@@ -1,7 +1,5 @@
 #version 330 core
 
-#extension GL_EXT_frag_depth : enable
-
 uniform sampler2D trailColorTexture;
 uniform sampler2D trailDepthTexture;
 uniform sampler2D segmentColorTexture;
@@ -34,7 +32,7 @@ void main(){
 //         gl_FragDepthEXT = min(trailDepth, segmentDepth);
 //     }
 
-    gl_FragDepthEXT = min(trailDepth, segmentDepth);
+    gl_FragDepth  = min(trailDepth, segmentDepth);
 
 //     if(gl_FragDepthEXT == trailDepth && FragColor.a <= 0.05){
 //         gl_FragDepthEXT = 1.0;
