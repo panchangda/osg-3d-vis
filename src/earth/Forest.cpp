@@ -23,8 +23,29 @@
 
 namespace osg_3d_vis{
 
+    // Tree GeometryCollector，为了优化树木的绘制效率
+    class TreeGeometryCollector : public osg::NodeVisitor
+    {
+    public:
+        TreeGeometryCollector()
+                : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) {}
 
-    // NodeVisitor，用于在读取好的场景中抓取所有 Geometry
+        void apply(osg::Geode& geode) override
+        {
+            for (unsigned int i = 0; i < geode.getNumDrawables(); ++i)
+            {
+                osg::Geometry* geom = dynamic_cast<osg::Geometry*>(geode.getDrawable(i));
+                if (geom) geometryList.push_back(geom);
+            }
+            traverse(geode);
+        }
+
+        std::vector< osg::ref_ptr<osg::Geometry> > geometryList;
+    };
+
+
+
+    // NodeVisitor，用于在读取好的OBJ中抓取所有 Geometry，由于读取的OBJ中有多颗树木，因此需要先对其进行分离
     class GeometryCollector : public osg::NodeVisitor
     {
     public:
@@ -103,7 +124,7 @@ namespace osg_3d_vis{
 
 
 
-        // use obj trees
+        // 处理树木Transform并分别加入场景
         for(auto const t:trees) {
             osg::MatrixTransform* mt = new osg::MatrixTransform;
 
@@ -123,6 +144,17 @@ namespace osg_3d_vis{
             mt->addChild(tree_geoms[t->_type]);
             _root->addChild(mt);
         }
+
+//        // 3) 调用合并函数
+//        osg::ref_ptr<osg::Geometry> mergedTreesGeom = mergeTreeGeometry(trees_node.get(), trees);
+//
+//        // 4) 若创建成功，则放到一个 Geode 中，然后加到场景根节点
+//        if (mergedTreesGeom.valid())
+//        {
+//            osg::ref_ptr<osg::Geode> geode = new osg::Geode();
+//            geode->addDrawable( mergedTreesGeom );
+//            _root->addChild( geode );
+//        }
 
         // use billboard trees
         // unsigned int maxNumTreesPerCell = sqrtf(static_cast<float>(numTreesToCreate));
@@ -518,6 +550,102 @@ osg::Geode* Forest::createTerrain(osg::Vec3d& origin, osg::Vec3& size)
         }
     }
 
+    /// \brief 将树模型(多几何)合并到一个 Geometry，然后对每棵树做矩阵变换，合并到最终大网格
+/// \param modelNode 加载的.obj树模型（可能内部包含多个 Geometry）
+/// \param trees     树的位姿、缩放等信息
+/// \return 合并后的 Geometry
+    osg::ref_ptr<osg::Geometry> Forest::mergeTreeGeometry(
+            osg::Node* modelNode,
+            const TreeList trees )
+    {
+        // 1) 收集原始几何
+        GeometryCollector collector;
+        modelNode->accept(collector);
+        if (collector.geometryList.empty())
+        {
+            osg::notify(osg::FATAL) << "[mergeTreeGeometry] No geometry in modelNode" << std::endl;
+            return nullptr;
+        }
+
+        // 为了示例，假设 modelNode 中只有 1 个或者少量 geom，这里只处理第一个 Geometry
+        osg::Geometry* baseGeom = collector.geometryList.front().get();
+
+        // 2) 从 baseGeom 中获取源顶点、法线、纹理坐标等
+        auto* srcVerts   = dynamic_cast<osg::Vec3Array*>( baseGeom->getVertexArray() );
+        auto* srcNormals = dynamic_cast<osg::Vec3Array*>( baseGeom->getNormalArray() );
+
+        // 如果还有纹理坐标、颜色数组，也类似拿到
+        // auto* srcTexcoords = dynamic_cast<osg::Vec2Array*>( baseGeom->getTexCoordArray(0) );
+
+        if (!srcVerts)
+        {
+            osg::notify(osg::WARN) << "[mergeTreeGeometry] baseGeom has no vertices!" << std::endl;
+            return nullptr;
+        }
+
+        // 3) 创建“目标”Geometry及其顶点法线缓冲
+        osg::ref_ptr<osg::Vec3Array> mergedVerts   = new osg::Vec3Array;
+        osg::ref_ptr<osg::Vec3Array> mergedNormals = new osg::Vec3Array;
+
+        // 也可以收集索引，如果源 geom 用的是 DrawElements，则需要合并索引
+        // 为示例简单，假设是 DrawArrays(TRIANGLES) 或其他非索引模式
+        // 处理索引逻辑时要注意 baseIndex offset
+
+        // 4) 遍历所有“树实例”，将源几何“复制 + 变换”到 mergedVerts / mergedNormals 中
+        for (auto tree : trees)
+        {
+            // 计算树的变换矩阵
+            // 1) 默认 up vector(0,0,1) 到 tree->_normal 的旋转
+            osg::Quat q;
+            q.makeRotate(osg::Vec3(0,0,1), tree->_normal);
+
+            osg::Matrix mat =
+                    osg::Matrix::scale(tree->_width, tree->_width, tree->_height) *
+                    osg::Matrix::rotate(q) *
+                    osg::Matrix::translate(tree->_position);
+
+            // 将 source 的所有顶点复制一遍到 merged
+            for (unsigned int i = 0; i < srcVerts->size(); ++i)
+            {
+                osg::Vec3 v = (*srcVerts)[i] * mat; // 应用变换
+                mergedVerts->push_back(v);
+
+                if (srcNormals && srcNormals->size() > i)
+                {
+                    // 法线只应用旋转部分(不包含平移,不建议包含缩放; 如果要缩放,需要mat的逆转置)
+                    osg::Vec3 n = (*srcNormals)[i] * mat;
+                    n.normalize();
+                    mergedNormals->push_back(n);
+                }
+            }
+        }
+
+        // 5) 创建最终的合并 Geometry
+        osg::ref_ptr<osg::Geometry> mergedGeom = new osg::Geometry;
+        mergedGeom->setVertexArray(mergedVerts);
+        if (mergedNormals->size() == mergedVerts->size())
+        {
+            mergedGeom->setNormalArray(mergedNormals, osg::Array::BIND_PER_VERTEX);
+        }
+
+        // 设定图元类型。例如假设 baseGeom 每次是三角形
+        // (如果 baseGeom->getPrimitiveSet(i) 是 DrawArrays(TRIANGLES, ...), 直接复制)
+        // 这里演示：把所有三角形数目合并后，作为一个 DrawArrays
+        unsigned int totalVerts = mergedVerts->size();
+        mergedGeom->addPrimitiveSet(
+                new osg::DrawArrays(GL_TRIANGLES, 0, totalVerts)
+        );
+
+        // 6) 一些优化
+        // 关闭 DisplayList, 开启 VBO
+        mergedGeom->setUseDisplayList(false);
+        mergedGeom->setUseVertexBufferObjects(true);
+
+        // 也可以调用平滑处理
+        // osgUtil::SmoothingVisitor::smooth(*mergedGeom);
+
+        return mergedGeom;
+    }
 
 
     osg::Geometry* Forest::createSprite( float w, float h, osg::Vec4ub color )

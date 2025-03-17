@@ -90,6 +90,8 @@ class Forest {
         bool uniformScale, unsigned int scale);
     osg::Node* createBillboardGraph(Cell* cell,osg::StateSet* stateset);
     osg::Geometry* createSprite( float w, float h, osg::Vec4ub color);
+    osg::ref_ptr<osg::Geometry> mergeTreeGeometry(osg::Node* modelNode, const TreeList trees);
+
 };
 
 };

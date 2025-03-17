@@ -21,8 +21,129 @@
 
 namespace osg_3d_vis {
 	class updateNodeGeometryCallback;
+    class ArrowGeometryUpdateCallback : public osg::NodeCallback{
+    public:
+        ArrowGeometryUpdateCallback(
+                bool& showArrow,
+                float &frameCounter,
+                osg::Vec4& arrowRGBA,
+                bool& arrowUseLineColor,
+                std::vector< std::vector<osg::Vec3> >& lines,
+                osg::ref_ptr<osg::Geometry>& arrowGeometry,
+                osg::ref_ptr<osg::Vec3Array>& arrowPoints,
+                osg::ref_ptr<osg::Vec4Array>& arrowColors,
+                osg::ref_ptr<osg::DrawArrays>& arrowsDrawArray,
+                std::vector< std::vector<osg::Vec4> >& colors,
+                std::vector< std::vector<osg::Vec3> >& leftArrows,
+                std::vector< std::vector<osg::Vec3> >& rightArrows
+        )
+                : showArrow(showArrow),
+                  frameCounter(frameCounter),
+                  arrowRGBA(arrowRGBA),
+                  arrowUseLineColor(arrowUseLineColor),
+                  lines(lines),
+                  arrowGeometry(arrowGeometry),
+                  arrowPoints(arrowPoints),
+                  arrowColors(arrowColors),
+                  arrowsDrawArray(arrowsDrawArray),
+                  colors(colors),
+                  leftArrows(leftArrows),
+                  rightArrows(rightArrows)
+        {
+            // 构造函数体内可根据需要添加其他初始化代码
+        }
 
-	inline 	osg::ref_ptr<osg::Geometry>createScreenQuad() {
+        virtual void operator()(osg::Node* node, osg::NodeVisitor* nv) override {
+            /* Arrow Geometry Update*/
+
+            arrowPoints->clear();
+            arrowColors->clear();
+
+            int validArrows = 0;
+            for (int i = 0; i < lines.size(); i++) {
+                if(lines[i].size() < 2){
+                    continue;
+                }else{
+                    validArrows++;
+                }
+
+
+                int idx = (int)frameCounter % lines[i].size();
+
+                osg::Vec4 c1 = colors[i][idx];
+
+
+                // calculate arrows dir
+                arrowPoints->push_back(lines[i][idx]);
+                arrowPoints->push_back(leftArrows[i][idx]);
+                arrowPoints->push_back(lines[i][idx]);
+                arrowPoints->push_back(rightArrows[i][idx]);
+//                (*arrowPoints)[i * 4].set(lines[i][idx]);
+//                (*arrowPoints)[i * 4 + 1].set(leftArrows[i][idx]);
+//                (*arrowPoints)[i * 4 + 2].set(lines[i][idx]);
+//                (*arrowPoints)[i * 4 + 3].set(rightArrows[i][idx]);
+
+                for(int i=0;i<4;i++)
+                arrowColors->push_back(c1);
+
+//                if (arrowUseLineColor) {
+//                    (*arrowColors)[i * 4].set(c1[0], c1[1], c1[2], c1[3]);
+//                    (*arrowColors)[i * 4 + 1].set(c1[0], c1[1], c1[2], c1[3]);
+//                    (*arrowColors)[i * 4 + 2].set(c1[0], c1[1], c1[2], c1[3]);
+//                    (*arrowColors)[i * 4 + 3].set(c1[0], c1[1], c1[2], c1[3]);
+//                } else {
+//                    (*arrowColors)[i * 4].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                    (*arrowColors)[i * 4 + 1].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                    (*arrowColors)[i * 4 + 2].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                    (*arrowColors)[i * 4 + 3].set(arrowRGBA[0], arrowRGBA[1], arrowRGBA[2], arrowRGBA[3]);
+//                }
+            }
+
+
+            if(showArrow){
+                arrowsDrawArray->setCount(validArrows * 4);
+//                arrowsDrawArray->dirty();
+//                arrowPoints->dirty();
+//                arrowColors->dirty();
+//                arrowGeometry->dirtyDisplayList();
+//                arrowGeometry->dirtyBound();
+                arrowGeometry->removePrimitiveSet(0, arrowGeometry->getNumPrimitiveSets());
+                arrowGeometry->setVertexArray(arrowPoints.get());
+                arrowGeometry->setColorArray(arrowColors.get());
+                arrowGeometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+                arrowGeometry->addPrimitiveSet(arrowsDrawArray.get());
+                arrowGeometry->getOrCreateStateSet()->setAttributeAndModes(new osg::LineWidth(3.0f));
+
+            }else{
+                arrowsDrawArray->setCount(0);
+                arrowsDrawArray->dirty();
+                arrowPoints->dirty();
+                arrowColors->dirty();
+                arrowGeometry->dirtyDisplayList();
+                arrowGeometry->dirtyBound();
+            }
+
+            traverse(node, nv);
+        }
+
+    private:
+        bool& showArrow;
+        float& frameCounter;
+        osg::Vec4& arrowRGBA;
+        bool& arrowUseLineColor;
+        std::vector< std::vector<osg::Vec3> >& lines;
+        osg::ref_ptr<osg::Geometry>& arrowGeometry;
+        osg::ref_ptr<osg::Vec3Array>& arrowPoints;
+        osg::ref_ptr<osg::Vec4Array>& arrowColors;
+        osg::ref_ptr<osg::DrawArrays>& arrowsDrawArray;
+        std::vector< std::vector<osg::Vec4> >& colors;
+        std::vector< std::vector<osg::Vec3> >& leftArrows;
+        std::vector< std::vector<osg::Vec3> >& rightArrows;
+
+    };
+
+
+    inline 	osg::ref_ptr<osg::Geometry>createScreenQuad() {
 		osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
 		osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array();
 		osg::ref_ptr<osg::Vec2Array> vt = new osg::Vec2Array();
@@ -44,9 +165,8 @@ namespace osg_3d_vis {
 
 	inline float getHueByVector(osg::Vec2 v, float hueRange, float hueOffset)
 	{
-        float hue = (atan2(v.y(), v.x()) / 3.1415926 + 1.0f) * 180;
-        auto k = hue * hueRange / 360.0 + hueOffset;
-        return k - (int)k/360*360;
+		float hue = (atan2(v.y(), v.x()) / 3.1415926 + 1.0f) * 180;
+		return std::fmodf(hue * hueRange / 360.0 + hueOffset, 360.0f);
 	}
 	inline osg::Vec3  hsvToRgb(osg::Vec3 hsv)
 	{
@@ -76,17 +196,23 @@ namespace osg_3d_vis {
 		return osg::Vec3(R, G, B);
 	}
 
+    // 主类声明与部分函数实现：
 	class StreamLineCPU {
 	public:
 		StreamLineCPU() {};
 		StreamLineCPU(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Group>& root, const osg::ref_ptr<osg::Camera>& mainCamera, osg_3d_vis::llhRange range);
 
+        osg::ref_ptr<osg::Geode> streamlineGeode;
+        osg::ref_ptr<ArrowGeometryUpdateCallback> arrowcb;
+        // for animation
+        float frameCounter;
+        // data dimension
 		enum class EDataDimension {
 			D2,
 			D3
 		};
 		// true: 2d, false: 3d
-        EDataDimension dataDim = EDataDimension::D2;
+		EDataDimension dataDim = EDataDimension::D2;
 
 		// data dimensions
 		float dimX, dimY, dimZ;
@@ -124,7 +250,7 @@ namespace osg_3d_vis {
 		float selectedLineMaxSpeed;
 		float selectedLineMinSpeed;
 		float selectedNDCXMin, selectedNDCXMax, selectedNDCYMin, selectedNDCYMax;
-		std::string LineCountText = "selected: 0, ";
+		std::string LineCountText = "selected: 0 lines, ";
 		std::string LineAvgSpeedText = "average speed: 0.0";
 
 		osg::ref_ptr<osgText::Text> streamlineText;
@@ -145,13 +271,17 @@ namespace osg_3d_vis {
 				perStreamlineTextGeode->addDrawable(newText);
 				texts.push_back(newText);
 				LineToText[lineIndex] = newText;
+
+                // update selected line color
+                for(int i = 0; i < lines[lineIndex].size();i++){
+                    colors[lineIndex][i] = selectionRGBA;
+                }
 			}
 
 		}
 		void updateSelectedInfo(float sxMin, float sxMax, float syMin, float syMax) {
 			// update units
-			LineCountText = std::string("selected: ") + std::to_string(selectedLineCount) + std::string(",");
-
+			LineCountText = std::string("selected: ") + std::to_string(selectedLineCount) + std::string(" lines,");
 
 			// show text
 			streamlineText->setColor(osg::Vec4(1.0f, 1.0f, 0.0f, 1.0f));  // 黄色
@@ -166,13 +296,33 @@ namespace osg_3d_vis {
 				PosX = (selectedNDCXMin*0.5f+0.5f)*1920;
 				PosY = (selectedNDCYMin*0.5f+0.5f)*1080;
 			}
+
+
+            selectedAvgSpeed = osg::Vec3f(0.0,0.0,0.0);
+            for (int i = 0; i < lines.size(); i++) {
+                if(lines[i].size() < 1) continue;
+                if (selected[i] == true && selectedLineCount > 0) {
+                    osg::Vec3 currSpeed = speeds[i][0];
+                    // x y using lat&lon, z using height
+                    // scale xy to match z
+                    currSpeed.x() *= 1000.0f;
+                    currSpeed.y() *= 1000.0f;
+                    selectedAvgSpeed += currSpeed / (float) selectedLineCount;
+                }
+            }
+            char buffer[50];
+            std::snprintf(buffer, sizeof(buffer),
+                          "average speed:(%.1f,%.1f,%.1f)",
+                          selectedAvgSpeed.x(), selectedAvgSpeed.y(), selectedAvgSpeed.z());
+
+            LineAvgSpeedText = buffer;
+            streamlineText->setText(LineCountText + LineAvgSpeedText);
 			// streamlineText->setPosition(osg::Vec3(PosX, PosY, 0.0f));
-
-
 		}
+
 		void clearSelected() {
 			selectedLineCount = 0;
-			LineCountText = "selected: 0, ";
+			LineCountText = "selected: 0 lines, ";
 			LineAvgSpeedText = "average speed: 0.0";
 			// clear selected map
 			selected.clear();
@@ -184,7 +334,11 @@ namespace osg_3d_vis {
 
 			// clear per stream line texts
 			perStreamlineTextGeode->removeChildren(0, perStreamlineTextGeode->getNumChildren());
-		}
+
+
+            // reset all line colors
+            regenerateLineColors();
+        }
 
 		void initFromDatFile(std::string str1, std::string str2, osg_3d_vis::llhRange range);
 		void initFromDatFile3D(std::string str1, std::string str2, std::string str3,
@@ -199,7 +353,12 @@ namespace osg_3d_vis {
 		osg::Vec3 calculateSpeed(osg::Vec3 y_n);
 		void regenerateRandomPointsAndSteamLines();
 		void regenerateLineColors();
+        // 每帧更新所有线段，但只存储该帧绘制所需要的顶点
 		void updateGeometry(int time_t);
+        // 每帧更新所有线段，并且将线段所有顶点存放在CPU，每条流线作为DrawArray提交
+        void updateStreamlineGeometry();
+        // 更新被选中的线段的信息显示与表现
+        void updateSelection();
 
 		osg::Vec3 linearInterpolation(osg::Vec3 lonLatLev);
 		osg::Vec2 Rotate(osg::Vec2 v, float theta);
@@ -237,7 +396,6 @@ namespace osg_3d_vis {
 		osg::Matrixd mainCameraViewMatrix;
 		osg::Matrixd mainCameraViewProjMatrix;
 
-        bool cameraMoving = false;
 		/* simple get & set value funcs */ 
 		bool isCameraSteady(osg::Matrixd _m) {
 			return mainCameraViewMatrix == _m;
@@ -265,12 +423,19 @@ namespace osg_3d_vis {
 		/* lines attribute */
 		void updateLineWidth(int value) {
 			geometry->getOrCreateStateSet()->setAttributeAndModes(new osg::LineWidth(float(value) / 10.0f));
-		}
+            arrowGeometry->getOrCreateStateSet()->setAttributeAndModes(new osg::LineWidth(float(value) / 10.0f));
+        }
 		void updateFadeOpacity(int value) {
-			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (this->trailDrawCamera->getChild(0));
-			osg::ref_ptr<osg::StateSet> stateset = tmpGeo->getDrawable(0)->getOrCreateStateSet();
-			stateset->getUniform("fadeOpacity")->set((float)value / 100.0f );
-		}
+            // muilti-pass way
+//			osg::ref_ptr<osg::Geode> tmpGeo = dynamic_cast<osg::Geode*> (this->trailDrawCamera->getChild(0));
+//			osg::ref_ptr<osg::StateSet> stateset = tmpGeo->getDrawable(0)->getOrCreateStateSet();
+//			stateset->getUniform("fadeOpacity")->set((float)value / 100.0f );
+
+
+            //current way
+            //更新流线的衰减速率
+            geometry->getStateSet()->getOrCreateUniform("DecayRate", osg::Uniform::FLOAT)->set((float)value / 100.0f);
+        }
 		void updateH(int value) {
 			h = (float) value;
 			this->regenerateRandomPointsAndSteamLines();
@@ -285,11 +450,14 @@ namespace osg_3d_vis {
 		}
 
 		/* lines styles */
-		int lineStyle;
+		int lineStyle = SOLID;
 		static constexpr int SOLID = 0;
 		static constexpr int DOTTED = 1;
 		updateNodeGeometryCallback* updateNodeGeometryCallbackPtr;
-		void updateLineStyle(int value);
+		void updateLineStyle(int value){
+            lineStyle = value;
+            regenerateRandomPointsAndSteamLines();
+        }
 
 		/* lines colors*/
 		bool lineUseSameColor;
@@ -327,19 +495,24 @@ namespace osg_3d_vis {
 		}
 		void updateLineUseSameColor(int value) {
 			lineUseSameColor = value;
+            regenerateLineColors();
 		}
 		void updateLineR(int value) {
 			this->lineRGBA.r() = (float)value / 255.0f;
+            regenerateLineColors();
 		}
 		void updateLineG(int value) {
 			this->lineRGBA.g() = (float)value / 255.0f;
-		}
+            regenerateLineColors();
+        }
 		void updateLineB(int value) {
 			this->lineRGBA.b() = (float)value / 255.0f;
-		}
+            regenerateLineColors();
+        }
 		void updateLineA(int value) {
 			this->lineRGBA.a() = (float)value / 255.0f;
-		}
+            regenerateLineColors();
+        }
 
 		/* selection styles */
 		osg::Vec4 selectionRGBA;
@@ -363,10 +536,10 @@ namespace osg_3d_vis {
 		bool showArrow;
 		bool arrowUseLineColor;
 		osg::Vec4 arrowRGBA = osg::Vec4(1.0, 1.0, 1.0 ,1.0);
-
-		void updateArrowVisibility(int value) {
-			this->showArrow = value;
-		}
+        // value switch between 2 & 0
+        void updateArrowVisibility(int value) {
+            this->showArrow = value;
+        }
 		void updateArrowUseLineColor(int value) {
 			this->arrowUseLineColor = value;
 		}
@@ -436,21 +609,22 @@ namespace osg_3d_vis {
 		osg::Vec3 constructBezierCurve3D(float t, osg::Vec3 prevPosition, osg::Vec3 currentPosition, osg::Vec3 nextPosition);
 
 
+
 		void initializeSmoothAlgorithm() {
 			smoothAlgorithm = STRAIGHT_LINE;
-			lineSegmentSubdivision = 5;
+			lineSegmentSubdivision = 2;
 			lineSegmentSubStep = 1.0f / lineSegmentSubdivision;
 
 
 		}
 		void updateSmoothAlgorithm(int value) {
-			if (smoothAlgorithm == STRAIGHT_LINE 
+			if (smoothAlgorithm == STRAIGHT_LINE
 				&& (value == CIRCULAR_ARC || value == BEZIER_CURVE) ) {
-				h *= lineSegmentSubdivision;
+//				h *= lineSegmentSubdivision;
 			}
 			if (value == STRAIGHT_LINE
 				&& (smoothAlgorithm == CIRCULAR_ARC || smoothAlgorithm == BEZIER_CURVE)) {
-				h /= lineSegmentSubdivision;
+//				h /= lineSegmentSubdivision;
 			}
 			smoothAlgorithm = value;
 			this->regenerateRandomPointsAndSteamLines();
@@ -474,8 +648,8 @@ namespace osg_3d_vis {
 
 	};
 
-	// line selection
 
+	/* line selection */
 	class PickHandler : public osgGA::GUIEventHandler {
 	public:
 		StreamLineCPU* sl;
@@ -531,29 +705,36 @@ namespace osg_3d_vis {
 		double my = ea.getYnormalized();
 		osg::ref_ptr<osgUtil::PolytopeIntersector> picker =
 			new osgUtil::PolytopeIntersector(osgUtil::Intersector::PROJECTION, mx - 0.02, my - 0.02, mx + 0.02, my + 0.02);
-        picker->setDimensionMask(osgUtil::PolytopeIntersector::DimZero | osgUtil::PolytopeIntersector::DimOne);
+		picker->setDimensionMask(osgUtil::PolytopeIntersector::POINT_PRIMITIVES | osgUtil::PolytopeIntersector::LINE_PRIMITIVES);
 		osgUtil::IntersectionVisitor iv(picker);
-		sl->segmentDrawCamera->accept(iv);
+		sl->geometry->accept(iv);
 
 		//BoundingBoxDisableNodeVisitor boundingBoxDisableVisitor = BoundingBoxDisableNodeVisitor();
 		//m_ptrSceneNode->accept(boundingBoxDisableVisitor);
 
 
-		float xMin = mx-0.02;
-		float xMax = mx+0.02;
-		float yMin = my-0.02;
-		float yMax = my+0.02;
+		float xMin = mx-0.03;
+		float xMax = mx+0.03;
+		float yMin = my-0.03;
+		float yMax = my+0.03;
 
 		float sxMin = 1.0f;
 		float sxMax = -1.0f;
 		float syMin = 1.0f;
 		float syMax = -1.0f;
+
+        bool bAnySelected = false;
 		// traverse all lines in linePoints
 		for(int i=0;i<sl->linesSum;i++)
 		{
-			osg::Vec3 linePoint1,linePoint2;
-			linePoint1 = (*sl->linePoints)[i*2];
-			linePoint2 = (*sl->linePoints)[i*2+1];
+            // 跳过空线
+            if(sl->lines[i].size() < 1) continue;
+            // 查找流线动画播放到哪一截
+            int idx = (int)sl->frameCounter % sl->lines[i].size();
+
+            osg::Vec3 linePoint1,linePoint2;
+			linePoint1 = sl->lines[i][idx];
+			linePoint2 = sl->lines[i][idx];
 			osg::Vec4 projLinePoints1,projLinePoints2;
 			projLinePoints1 = osg::Vec4(linePoint1, 1.0) * sl->mainCameraViewProjMatrix;
 			projLinePoints1/=projLinePoints1.w();
@@ -572,6 +753,7 @@ namespace osg_3d_vis {
 				std::cout << "line " << i <<  " is intersected" << std::endl;
 				if(sl->selected[i] == false) {
 					sl->addSelectedStreamline(i);
+                    bAnySelected = true;
 				}
 
 			}
@@ -580,7 +762,9 @@ namespace osg_3d_vis {
 			syMin = std::min(syMin, std::min(projLinePoints1.y(), projLinePoints2.y()));
 			syMax = std::max(syMax, std::max(projLinePoints1.y(), projLinePoints2.y()));
 		}
-
+        if(bAnySelected){
+            sl->updateStreamlineGeometry();
+        }
 		sl->updateSelectedInfo(sxMin, sxMax, syMin, syMax);
 		// std::cout << "all line points range are within: \n" <<
 		// 		"x:[ " << sxMin << ", " << sxMax << "]\n" <<
@@ -655,7 +839,12 @@ namespace osg_3d_vis {
 			// }
 
 			//std::cout << animation_t << std::endl;
-			sl->updateGeometry(animation_t);
+            // 多帧纹理叠加实现流线动画
+             sl->updateGeometry(animation_t);
+
+            // 纯CPU计算实现流线动画
+//            sl->updateStreamlineGeometry();
+
 			traverse(node, nv);
 		}
 		void updateUpdateFrameInterval(int value) {
@@ -684,41 +873,51 @@ namespace osg_3d_vis {
 
 			// dynamic redraw for non pixel texturing
 			if (!sl->isCameraSteady(viewMatrix)) {
-                // clear color texture
 				osg::ref_ptr<osg::Image> subImage = sl->nextTrailColorTexture->getImage();
 				osg::ref_ptr<osg::Image> tmpImage = new osg::Image;
 				// what's this used for?
-                // subImage->copySubImage(0, 0, 0, tmpImage);
-                subImage->dirty();
-
-                // clear depth texture
-                osg::ref_ptr<osg::Camera> trailDrawcamera = sl->trailDrawCamera;
-                osg::State* state = trailDrawcamera->getGraphicsContext()->getState();
-//                    if (state) {
-//                        // 确定帧缓冲是否已绑定
-//                        GLint framebufferID;
-//                        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebufferID);
-
-//                        if (framebufferID != 0) {
-//                            // 清除深度缓冲
-//                            glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
-//                            glClear(GL_DEPTH_BUFFER_BIT);
-//                            glBindFramebuffer(GL_FRAMEBUFFER, 0); // 解除绑定
-//                        }
-//                    }
-
+				// subImage->copySubImage(0, 0, 0, tmpImage);
+                if(subImage){
+                    subImage->dirty();
+                }
 				sl->updateMainCameraView(viewMatrix);
-
-                sl->cameraMoving = true;
-            }else{
-                sl->cameraMoving = false;
-            }
+			}
 		}
 	};
 
-	
+    class StreamlineTimeUpdateCallback : public osg::NodeCallback {
+    public:
+        StreamlineTimeUpdateCallback(StreamLineCPU* inStreamline)
+        : sl(inStreamline), _time(0.0f), _deltaTime(0.005f), _frameCounter(0.0f) {}
+
+        virtual void operator()(osg::Node* node, osg::NodeVisitor* nv) override {
+            // 更新时间戳与帧号
+            _time += _deltaTime;
+            _frameCounter+=1.0f;
+            osg::StateSet* stateSet = node->getOrCreateStateSet();
+//          stateSet->getOrCreateUniform("u_time", osg::Uniform::FLOAT)->set(_time);
+            stateSet->getOrCreateUniform("FrameCounter", osg::Uniform::FLOAT)->set(_frameCounter);
+            if(sl){
+                // 同步外部可见帧号
+                sl->frameCounter = _frameCounter;
+                // 更新流线选择信息
+//               sl->updateSelection();
+
+
+            }
+
+            traverse(node, nv);
+
+        }
+    private:
+        StreamLineCPU* sl;
+        float _frameCounter;
+        float _time;
+        float _deltaTime;
+    };
+
 
 }
 
 
-#endif 
+#endif
