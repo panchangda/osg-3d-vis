@@ -15,10 +15,10 @@
 namespace osg_3d_vis{
 
     // debug setups
-    constexpr osg::NotifySeverity osgNotifyLevel = osg::NOTICE;
+    constexpr osg::NotifySeverity osgNotifyLevel = osg::DEBUG_INFO;
 
     // Earth
-    constexpr bool drawEarth = true;
+    constexpr bool drawEarth = false;
     constexpr float earthScale = 1000.0f;
     constexpr bool drawGrass = false;
     constexpr  bool drawTree = false;

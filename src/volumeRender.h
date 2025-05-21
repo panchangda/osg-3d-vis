@@ -14,511 +14,510 @@
 
 namespace SciVis
 {
-	namespace ScalarViser
-	{
+    namespace ScalarViser
+    {
 
-		class DirectVolumeRenderer
-		{
-		public:
-			struct ShadingParam {
-				bool useShading;
-				float ka;
-				float kd;
-				float ks;
-				float shininess;
-				osg::Vec3 lightPos;
-			};
+        class DirectVolumeRenderer
+        {
+        public:
+            struct ShadingParam {
+                bool useShading;
+                float ka;
+                float kd;
+                float ks;
+                float shininess;
+                osg::Vec3 lightPos;
+            };
 
-		private:
-			struct PerRendererParam
-			{
-				osg::ref_ptr<osg::Group> grp;
-				osg::ref_ptr<osg::Program> program;
+        private:
+            struct PerRendererParam
+            {
+                osg::ref_ptr<osg::Group> grp;
+                osg::ref_ptr<osg::Program> program;
 
-				osg::ref_ptr<osg::Uniform> eyePos;
-				osg::ref_ptr<osg::Uniform> sliceCntr;
-				osg::ref_ptr<osg::Uniform> sliceDir;
-				osg::ref_ptr<osg::Uniform> dt;
-				osg::ref_ptr<osg::Uniform> maxStepCnt;
-				osg::ref_ptr<osg::Uniform> useSlice;
-				osg::ref_ptr<osg::Uniform> useDownSample;
+                osg::ref_ptr<osg::Uniform> eyePos;
+                osg::ref_ptr<osg::Uniform> sliceCntr;
+                osg::ref_ptr<osg::Uniform> sliceDir;
+                osg::ref_ptr<osg::Uniform> dt;
+                osg::ref_ptr<osg::Uniform> maxStepCnt;
+                osg::ref_ptr<osg::Uniform> useSlice;
+                osg::ref_ptr<osg::Uniform> useDownSample;
 
-				osg::ref_ptr<osg::Uniform> useShading;
-				osg::ref_ptr<osg::Uniform> ka;
-				osg::ref_ptr<osg::Uniform> kd;
-				osg::ref_ptr<osg::Uniform> ks;
-				osg::ref_ptr<osg::Uniform> shininess;
-				osg::ref_ptr<osg::Uniform> lightPos;
+                osg::ref_ptr<osg::Uniform> useShading;
+                osg::ref_ptr<osg::Uniform> ka;
+                osg::ref_ptr<osg::Uniform> kd;
+                osg::ref_ptr<osg::Uniform> ks;
+                osg::ref_ptr<osg::Uniform> shininess;
+                osg::ref_ptr<osg::Uniform> lightPos;
 
-				class Callback : public osg::NodeCallback
-				{
-				private:
-					osg::Vec3 eyePos;
+                class Callback : public osg::NodeCallback
+                {
+                private:
+                    osg::Vec3 eyePos;
 
-					osg::ref_ptr<osg::Uniform> eyePosUni;
-					osg::ref_ptr<osg::Uniform> useDownSampleUni;
+                    osg::ref_ptr<osg::Uniform> eyePosUni;
+                    osg::ref_ptr<osg::Uniform> useDownSampleUni;
 
-				public:
-					Callback(
-						osg::ref_ptr<osg::Uniform> eyePosUni,
-						osg::ref_ptr<osg::Uniform> useDownSampleUni)
-						: eyePosUni(eyePosUni), useDownSampleUni(useDownSampleUni)
-					{}
-					virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-					{
-						auto eyePos = nv->getEyePoint();
-						eyePosUni->set(eyePos);
+                public:
+                    Callback(
+                        osg::ref_ptr<osg::Uniform> eyePosUni,
+                        osg::ref_ptr<osg::Uniform> useDownSampleUni)
+                        : eyePosUni(eyePosUni), useDownSampleUni(useDownSampleUni)
+                    {}
+                    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+                    {
+                        auto eyePos = nv->getEyePoint();
+                        eyePosUni->set(eyePos);
 
-						if (this->eyePos != eyePos)
-							useDownSampleUni->set(1);
-						else
-							useDownSampleUni->set(0);
-						this->eyePos = eyePos;
+                        if (this->eyePos != eyePos)
+                            useDownSampleUni->set(1);
+                        else
+                            useDownSampleUni->set(0);
+                        this->eyePos = eyePos;
 
-						traverse(node, nv);
-					}
-				};
+                        traverse(node, nv);
+                    }
+                };
 
-				PerRendererParam()
-				{
-					grp = new osg::Group;
+                PerRendererParam()
+                {
+                    grp = new osg::Group;
 
-					osg::ref_ptr<osg::Shader> vertShader = osg::Shader::readShaderFile(
-						osg::Shader::VERTEX,
-						std::string(OSG_3D_VIS_SHADER_PREFIX) + "volumeRenderVS.glsl");
-					osg::ref_ptr<osg::Shader> fragShader = osg::Shader::readShaderFile(
-						osg::Shader::FRAGMENT,
-						std::string(OSG_3D_VIS_SHADER_PREFIX) + "volumeRenderPS.glsl");
-					program = new osg::Program;
-					program->addShader(vertShader);
-					program->addShader(fragShader);
+                    osg::ref_ptr<osg::Shader> vertShader = osg::Shader::readShaderFile(
+                        osg::Shader::VERTEX,
+                        std::string(OSG_3D_VIS_SHADER_PREFIX) + "volumeRenderVS.glsl");
+                    osg::ref_ptr<osg::Shader> fragShader = osg::Shader::readShaderFile(
+                        osg::Shader::FRAGMENT,
+                        std::string(OSG_3D_VIS_SHADER_PREFIX) + "volumeRenderPS.glsl");
+                    program = new osg::Program;
+                    program->addShader(vertShader);
+                    program->addShader(fragShader);
 
 #define STATEMENT(name, val) name = new osg::Uniform(#name, val)
-					STATEMENT(eyePos, osg::Vec3());
-					STATEMENT(dt, static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * .008f);
-					STATEMENT(maxStepCnt, 100);
-					STATEMENT(useSlice, 0);
-					STATEMENT(sliceCntr, osg::Vec3());
-					STATEMENT(sliceDir, osg::Vec3());
-					STATEMENT(useDownSample, 0);
+                    STATEMENT(eyePos, osg::Vec3());
+                    STATEMENT(dt, static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * .008f);
+                    STATEMENT(maxStepCnt, 100);
+                    STATEMENT(useSlice, 0);
+                    STATEMENT(sliceCntr, osg::Vec3());
+                    STATEMENT(sliceDir, osg::Vec3());
+                    STATEMENT(useDownSample, 0);
 
-					STATEMENT(useShading, 0);
-					STATEMENT(ka, .5f);
-					STATEMENT(kd, .5f);
-					STATEMENT(ks, .5f);
-					STATEMENT(shininess, 16.f);
-					STATEMENT(lightPos, osg::Vec3());
+                    STATEMENT(useShading, 0);
+                    STATEMENT(ka, .5f);
+                    STATEMENT(kd, .5f);
+                    STATEMENT(ks, .5f);
+                    STATEMENT(shininess, 16.f);
+                    STATEMENT(lightPos, osg::Vec3());
 #undef STATEMENT
 
-					grp->setCullCallback(new Callback(eyePos, useDownSample));
-				}
-			};
-			PerRendererParam param;
+                    grp->setCullCallback(new Callback(eyePos, useDownSample));
+                }
+            };
+            PerRendererParam param;
 
-			struct PerVolParam
-			{
-				bool isDisplayed;
+            struct PerVolParam
+            {
+                bool isDisplayed;
 
-				osg::ref_ptr<osg::Uniform> minLatitute;
-				osg::ref_ptr<osg::Uniform> maxLatitute;
-				osg::ref_ptr<osg::Uniform> minLongtitute;
-				osg::ref_ptr<osg::Uniform> maxLongtitute;
-				osg::ref_ptr<osg::Uniform> minHeight;
-				osg::ref_ptr<osg::Uniform> maxHeight;
-				osg::ref_ptr<osg::Uniform> volStartFromZeroLon;
-				osg::ref_ptr<osg::Uniform> rotMat;
-				osg::ref_ptr<osg::Uniform> dSamplePos;
+                osg::ref_ptr<osg::Uniform> minLatitute;
+                osg::ref_ptr<osg::Uniform> maxLatitute;
+                osg::ref_ptr<osg::Uniform> minLongtitute;
+                osg::ref_ptr<osg::Uniform> maxLongtitute;
+                osg::ref_ptr<osg::Uniform> minHeight;
+                osg::ref_ptr<osg::Uniform> maxHeight;
+                osg::ref_ptr<osg::Uniform> volStartFromZeroLon;
+                osg::ref_ptr<osg::Uniform> rotMat;
+                osg::ref_ptr<osg::Uniform> dSamplePos;
 
-				osg::ref_ptr<osg::ShapeDrawable> sphere;
-				osg::ref_ptr<osg::Texture3D> volTex;
-				osg::ref_ptr<osg::Texture1D> tfTex;
+                osg::ref_ptr<osg::ShapeDrawable> sphere;
+                osg::ref_ptr<osg::Texture3D> volTex;
+                osg::ref_ptr<osg::Texture1D> tfTex;
 
-				PerVolParam(
-					osg::ref_ptr<osg::Texture3D> volTex,
-					osg::ref_ptr<osg::Texture1D> tfTex,
-					const std::array<uint32_t, 3>& volDim,
-					PerRendererParam* renderer)
-					: volTex(volTex), tfTex(tfTex)
-				{
-					const auto MinHeight = static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * 1.1f;
-					const auto MaxHeight = static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * 1.3f;
+                PerVolParam(
+                    osg::ref_ptr<osg::Texture3D> volTex,
+                    osg::ref_ptr<osg::Texture1D> tfTex,
+                    const std::array<uint32_t, 3>& volDim,
+                    PerRendererParam* renderer)
+                    : volTex(volTex), tfTex(tfTex)
+                {
+                    const auto MinHeight = static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * 1.1f;
+                    const auto MaxHeight = static_cast<float>(osg::WGS_84_RADIUS_EQUATOR) * 1.3f;
 
-					auto tessl = new osg::TessellationHints;
-					tessl->setDetailRatio(10.f);
-					sphere = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(0.f, 0.f, 0.f), MaxHeight), tessl);
-
-					auto states = sphere->getOrCreateStateSet();
+                    auto tessl = new osg::TessellationHints;
+                    tessl->setDetailRatio(10.f);
+                    sphere = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(0.f, 0.f, 0.f), MaxHeight), tessl);
+                    auto states = sphere->getOrCreateStateSet();
 #define STATEMENT(name, val)                                                                       \
     name = new osg::Uniform(#name, val);                                                           \
     states->addUniform(name)
-					STATEMENT(minLatitute, deg2Rad(-10.f));
-					STATEMENT(maxLatitute, deg2Rad(+10.f));
-					STATEMENT(minLongtitute, deg2Rad(-20.f));
-					STATEMENT(maxLongtitute, deg2Rad(+20.f));
-					STATEMENT(minHeight, MinHeight);
-					STATEMENT(maxHeight, MaxHeight);
-					STATEMENT(volStartFromZeroLon, 0);
-					{
-						osg::Matrix3 tmpMat;
-						tmpMat.makeIdentity();
-						STATEMENT(rotMat, tmpMat);
-					}
-					STATEMENT(dSamplePos,
-						osg::Vec3(
-							1.f / volDim[0],
-							1.f / volDim[1],
-							1.f / volDim[2]));
+                    STATEMENT(minLatitute, deg2Rad(-10.f));
+                    STATEMENT(maxLatitute, deg2Rad(+10.f));
+                    STATEMENT(minLongtitute, deg2Rad(-20.f));
+                    STATEMENT(maxLongtitute, deg2Rad(+20.f));
+                    STATEMENT(minHeight, MinHeight);
+                    STATEMENT(maxHeight, MaxHeight);
+                    STATEMENT(volStartFromZeroLon, 0);
+                    {
+                        osg::Matrix3 tmpMat;
+                        tmpMat.makeIdentity();
+                        STATEMENT(rotMat, tmpMat);
+                    }
+                    STATEMENT(dSamplePos,
+                        osg::Vec3(
+                            1.f / volDim[0],
+                            1.f / volDim[1],
+                            1.f / volDim[2]));
 #undef STATEMENT
-					states->addUniform(renderer->eyePos);
-					states->addUniform(renderer->dt);
-					states->addUniform(renderer->maxStepCnt);
-					states->addUniform(renderer->useSlice);
-					states->addUniform(renderer->sliceCntr);
-					states->addUniform(renderer->sliceDir);
-					states->addUniform(renderer->useDownSample);
+                    states->addUniform(renderer->eyePos);
+                    states->addUniform(renderer->dt);
+                    states->addUniform(renderer->maxStepCnt);
+                    states->addUniform(renderer->useSlice);
+                    states->addUniform(renderer->sliceCntr);
+                    states->addUniform(renderer->sliceDir);
+                    states->addUniform(renderer->useDownSample);
 
-					states->addUniform(renderer->useShading);
-					states->addUniform(renderer->ka);
-					states->addUniform(renderer->kd);
-					states->addUniform(renderer->ks);
-					states->addUniform(renderer->shininess);
-					states->addUniform(renderer->lightPos);
+                    states->addUniform(renderer->useShading);
+                    states->addUniform(renderer->ka);
+                    states->addUniform(renderer->kd);
+                    states->addUniform(renderer->ks);
+                    states->addUniform(renderer->shininess);
+                    states->addUniform(renderer->lightPos);
 
-					states->setTextureAttributeAndModes(0, volTex, osg::StateAttribute::ON);
-					states->setTextureAttributeAndModes(1, tfTex, osg::StateAttribute::ON);
+                    states->setTextureAttributeAndModes(0, volTex, osg::StateAttribute::ON);
+                    states->setTextureAttributeAndModes(1, tfTex, osg::StateAttribute::ON);
 
-					auto volTexUni = new osg::Uniform(osg::Uniform::SAMPLER_3D, "volTex");
-					volTexUni->set(0);
-					auto tfTexUni = new osg::Uniform(osg::Uniform::SAMPLER_1D, "tfTex");
-					tfTexUni->set(1);
-					states->addUniform(volTexUni);
-					states->addUniform(tfTexUni);
+                    auto volTexUni = new osg::Uniform(osg::Uniform::SAMPLER_3D, "volTex");
+                    volTexUni->set(0);
+                    auto tfTexUni = new osg::Uniform(osg::Uniform::SAMPLER_1D, "tfTex");
+                    tfTexUni->set(1);
+                    states->addUniform(volTexUni);
+                    states->addUniform(tfTexUni);
 
-					osg::ref_ptr<osg::CullFace> cf = new osg::CullFace(osg::CullFace::BACK);
-					states->setAttributeAndModes(cf);
+                    osg::ref_ptr<osg::CullFace> cf = new osg::CullFace(osg::CullFace::BACK);
+                    states->setAttributeAndModes(cf);
 
-					states->setAttributeAndModes(renderer->program, osg::StateAttribute::ON);
-					states->setMode(GL_BLEND, osg::StateAttribute::ON);
-					states->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-				}
-				/*
-				* º¯Êı: SetTransferFunction
-				* ¹¦ÄÜ: ÉèÖÃ¸ÃÌå»æÖÆÊ±µÄ´«Êäº¯Êı
-				* ²ÎÊı:
-				* -- tfTex: ÌåµÄ´«Êäº¯ÊıµÄOSGÒ»Î¬ÎÆÀí
-				*/
-				void SetTransferFunction(osg::ref_ptr<osg::Texture1D> tfTex)
-				{
-					this->tfTex = tfTex;
-					auto states = sphere->getOrCreateStateSet();
-					states->setTextureAttributeAndModes(1, this->tfTex, osg::StateAttribute::ON);
-				}
-				/*
-				* º¯Êı: SetLongtituteRange
-				* ¹¦ÄÜ: ÉèÖÃ¸ÃÌå»æÖÆÊ±µÄ¾­¶È·¶Î§£¨µ¥Î»Îª½Ç¶È£©
-				* ²ÎÊı:
-				* -- minLonDeg: ¾­¶È×îĞ¡Öµ
-				* -- maxLonDeg: ¾­¶È×î´óÖµ
-				* ·µ»ØÖµ: ÈôÊäÈëµÄ²ÎÊı²»ºÏ·¨£¬·µ»Øfalse¡£ÈôÉèÖÃ³É¹¦£¬·µ»Øtrue
-				*/
-				bool SetLongtituteRange(float minLonDeg, float maxLonDeg)
-				{
-					if (minLonDeg < -180.f) return false;
-					if (maxLonDeg > +180.f) return false;
-					if (minLonDeg >= maxLonDeg) return false;
+                    states->setAttributeAndModes(renderer->program, osg::StateAttribute::ON);
+                    states->setMode(GL_BLEND, osg::StateAttribute::ON);
+                    states->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+                }
+                /*
+                * å‡½æ•°: SetTransferFunction
+                * åŠŸèƒ½: è®¾ç½®è¯¥ä½“ç»˜åˆ¶æ—¶çš„ä¼ è¾“å‡½æ•°
+                * å‚æ•°:
+                * -- tfTex: ä½“çš„ä¼ è¾“å‡½æ•°çš„OSGä¸€ç»´çº¹ç†
+                */
+                void SetTransferFunction(osg::ref_ptr<osg::Texture1D> tfTex)
+                {
+                    this->tfTex = tfTex;
+                    auto states = sphere->getOrCreateStateSet();
+                    states->setTextureAttributeAndModes(1, this->tfTex, osg::StateAttribute::ON);
+                }
+                /*
+                * å‡½æ•°: SetLongtituteRange
+                * åŠŸèƒ½: è®¾ç½®è¯¥ä½“ç»˜åˆ¶æ—¶çš„ç»åº¦èŒƒå›´ï¼ˆå•ä½ä¸ºè§’åº¦ï¼‰
+                * å‚æ•°:
+                * -- minLonDeg: ç»åº¦æœ€å°å€¼
+                * -- maxLonDeg: ç»åº¦æœ€å¤§å€¼
+                * è¿”å›å€¼: è‹¥è¾“å…¥çš„å‚æ•°ä¸åˆæ³•ï¼Œè¿”å›falseã€‚è‹¥è®¾ç½®æˆåŠŸï¼Œè¿”å›true
+                */
+                bool SetLongtituteRange(float minLonDeg, float maxLonDeg)
+                {
+                    if (minLonDeg < -180.f) return false;
+                    if (maxLonDeg > +180.f) return false;
+                    if (minLonDeg >= maxLonDeg) return false;
 
-					minLongtitute->set(deg2Rad(minLonDeg));
-					maxLongtitute->set(deg2Rad(maxLonDeg));
+                    minLongtitute->set(deg2Rad(minLonDeg));
+                    maxLongtitute->set(deg2Rad(maxLonDeg));
 
-					computeRotMat();
-					return true;
-				}
-				std::array<float, 2> GetLongtituteRange() const
-				{
-					std::array<float, 2> ret;
-					minLongtitute->get(ret[0]);
-					maxLongtitute->get(ret[1]);
-					return ret;
-				}
-				/*
-				* º¯Êı: SetLatituteRange
-				* ¹¦ÄÜ: ÉèÖÃ¸ÃÌå»æÖÆÊ±µÄÎ³¶È·¶Î§£¨µ¥Î»Îª½Ç¶È£©
-				* ²ÎÊı:
-				* -- minLatDeg: Î³¶È×îĞ¡Öµ
-				* -- maxLatDeg: Î³¶È×î´óÖµ
-				* ·µ»ØÖµ: ÈôÊäÈëµÄ²ÎÊı²»ºÏ·¨£¬·µ»Øfalse¡£ÈôÉèÖÃ³É¹¦£¬·µ»Øtrue
-				*/
-				bool SetLatituteRange(float minLatDeg, float maxLatDeg)
-				{
-					if (minLatDeg < -90.f) return false;
-					if (maxLatDeg > +90.f) return false;
-					if (minLatDeg >= maxLatDeg) return false;
+                    computeRotMat();
+                    return true;
+                }
+                std::array<float, 2> GetLongtituteRange() const
+                {
+                    std::array<float, 2> ret;
+                    minLongtitute->get(ret[0]);
+                    maxLongtitute->get(ret[1]);
+                    return ret;
+                }
+                /*
+                * å‡½æ•°: SetLatituteRange
+                * åŠŸèƒ½: è®¾ç½®è¯¥ä½“ç»˜åˆ¶æ—¶çš„çº¬åº¦èŒƒå›´ï¼ˆå•ä½ä¸ºè§’åº¦ï¼‰
+                * å‚æ•°:
+                * -- minLatDeg: çº¬åº¦æœ€å°å€¼
+                * -- maxLatDeg: çº¬åº¦æœ€å¤§å€¼
+                * è¿”å›å€¼: è‹¥è¾“å…¥çš„å‚æ•°ä¸åˆæ³•ï¼Œè¿”å›falseã€‚è‹¥è®¾ç½®æˆåŠŸï¼Œè¿”å›true
+                */
+                bool SetLatituteRange(float minLatDeg, float maxLatDeg)
+                {
+                    if (minLatDeg < -90.f) return false;
+                    if (maxLatDeg > +90.f) return false;
+                    if (minLatDeg >= maxLatDeg) return false;
 
-					minLatitute->set(deg2Rad(minLatDeg));
-					maxLatitute->set(deg2Rad(maxLatDeg));
+                    minLatitute->set(deg2Rad(minLatDeg));
+                    maxLatitute->set(deg2Rad(maxLatDeg));
 
-					computeRotMat();
-					return true;
-				}
-				std::array<float, 2> GetLatituteRange() const
-				{
-					std::array<float, 2> ret;
-					minLatitute->get(ret[0]);
-					maxLatitute->get(ret[1]);
-					return ret;
-				}
-				/*
-				* º¯Êı: SetHeightFromCenterRange
-				* ¹¦ÄÜ: ÉèÖÃ¸ÃÌå»æÖÆÊ±µÄ¸ß¶È£¨¾àÇòĞÄ£©·¶Î§
-				* ²ÎÊı:
-				* -- minH: ¸ß¶È×îĞ¡Öµ
-				* -- maxH: ¸ß¶È×î´óÖµ
-				* ·µ»ØÖµ: ÈôÊäÈëµÄ²ÎÊı²»ºÏ·¨£¬·µ»Øfalse¡£ÈôÉèÖÃ³É¹¦£¬·µ»Øtrue
-				*/
-				bool SetHeightFromCenterRange(float minH, float maxH)
-				{
-					if (minH < 0.f) return false;
-					if (minH >= maxH) return false;
+                    computeRotMat();
+                    return true;
+                }
+                std::array<float, 2> GetLatituteRange() const
+                {
+                    std::array<float, 2> ret;
+                    minLatitute->get(ret[0]);
+                    maxLatitute->get(ret[1]);
+                    return ret;
+                }
+                /*
+                * å‡½æ•°: SetHeightFromCenterRange
+                * åŠŸèƒ½: è®¾ç½®è¯¥ä½“ç»˜åˆ¶æ—¶çš„é«˜åº¦ï¼ˆè·çƒå¿ƒï¼‰èŒƒå›´
+                * å‚æ•°:
+                * -- minH: é«˜åº¦æœ€å°å€¼
+                * -- maxH: é«˜åº¦æœ€å¤§å€¼
+                * è¿”å›å€¼: è‹¥è¾“å…¥çš„å‚æ•°ä¸åˆæ³•ï¼Œè¿”å›falseã€‚è‹¥è®¾ç½®æˆåŠŸï¼Œè¿”å›true
+                */
+                bool SetHeightFromCenterRange(float minH, float maxH)
+                {
+                    if (minH < 0.f) return false;
+                    if (minH >= maxH) return false;
 
-					minHeight->set(minH);
-					maxHeight->set(maxH);
+                    minHeight->set(minH);
+                    maxHeight->set(maxH);
 
-					computeRotMat();
-					sphere->setShape(new osg::Sphere(osg::Vec3(0.f, 0.f, 0.f), maxH));
-					return true;
-				}
-				std::array<float, 2> GetHeightFromCenterRange() const
-				{
-					std::array<float, 2> ret;
-					minHeight->get(ret[0]);
-					maxHeight->get(ret[1]);
-					return ret;
-				}
-				/*
-				* º¯Êı: SetVolumeStartFromLongtituteZero
-				* ¹¦ÄÜ: ÈôÈ«ÇòÌåÊı¾İX=0¶ÔÓ¦µÄ¾­¶ÈÎª0¶È£¬ĞèÒª¿ªÆô¸Ã¹¦ÄÜ
-				* ²ÎÊı:
-				* -- flag: ÎªtrueÊ±£¬¿ªÆô¸Ã¹¦ÄÜ¡£ÎªfalseÊ±£¬¹Ø±Õ¸Ã¹¦ÄÜ
-				*/
-				void SetVolumeStartFromLongtituteZero(bool flag)
-				{
-					if (flag) volStartFromZeroLon->set(1);
-					else volStartFromZeroLon->set(0);
-				}
+                    computeRotMat();
+                    sphere->setShape(new osg::Sphere(osg::Vec3(0.f, 0.f, 0.f), maxH));
+                    return true;
+                }
+                std::array<float, 2> GetHeightFromCenterRange() const
+                {
+                    std::array<float, 2> ret;
+                    minHeight->get(ret[0]);
+                    maxHeight->get(ret[1]);
+                    return ret;
+                }
+                /*
+                * å‡½æ•°: SetVolumeStartFromLongtituteZero
+                * åŠŸèƒ½: è‹¥å…¨çƒä½“æ•°æ®X=0å¯¹åº”çš„ç»åº¦ä¸º0åº¦ï¼Œéœ€è¦å¼€å¯è¯¥åŠŸèƒ½
+                * å‚æ•°:
+                * -- flag: ä¸ºtrueæ—¶ï¼Œå¼€å¯è¯¥åŠŸèƒ½ã€‚ä¸ºfalseæ—¶ï¼Œå…³é—­è¯¥åŠŸèƒ½
+                */
+                void SetVolumeStartFromLongtituteZero(bool flag)
+                {
+                    if (flag) volStartFromZeroLon->set(1);
+                    else volStartFromZeroLon->set(0);
+                }
 
-			private:
-				float deg2Rad(float deg)
-				{
-					return deg * osg::PI / 180.f;
-				};
-				void computeRotMat()
-				{
-					float minLon, maxLon;
-					float minLat, maxLat;
-					float minH, maxH;
-					minLongtitute->get(minLon);
-					maxLongtitute->get(maxLon);
-					minLatitute->get(minLat);
-					maxLatitute->get(maxLat);
-					minHeight->get(minH);
-					maxHeight->get(maxH);
+            private:
+                float deg2Rad(float deg)
+                {
+                    return deg * osg::PI / 180.f;
+                };
+                void computeRotMat()
+                {
+                    float minLon, maxLon;
+                    float minLat, maxLat;
+                    float minH, maxH;
+                    minLongtitute->get(minLon);
+                    maxLongtitute->get(maxLon);
+                    minLatitute->get(minLat);
+                    maxLatitute->get(maxLat);
+                    minHeight->get(minH);
+                    maxHeight->get(maxH);
 
-					auto lon = .5f * (maxLon + minLon);
-					auto lat = .5f * (maxLat + minLat);
-					auto h = .5f * (maxH + minH);
-					osg::Vec3 dir;
-					dir.z() = h * sin(lat);
-					h = h * cos(lat);
-					dir.y() = h * sin(lon);
-					dir.x() = h * cos(lon);
-					dir.normalize();
+                    auto lon = .5f * (maxLon + minLon);
+                    auto lat = .5f * (maxLat + minLat);
+                    auto h = .5f * (maxH + minH);
+                    osg::Vec3 dir;
+                    dir.z() = h * sin(lat);
+                    h = h * cos(lat);
+                    dir.y() = h * sin(lon);
+                    dir.x() = h * cos(lon);
+                    dir.normalize();
 
-					osg::Matrix3 rotMat;
-					rotMat(2, 0) = dir.x();
-					rotMat(2, 1) = dir.y();
-					rotMat(2, 2) = dir.z();
-					auto tmp = osg::Vec3(0.f, 0.f, 1.f);
-					tmp = tmp ^ dir;
-					rotMat(0, 0) = tmp.x();
-					rotMat(0, 1) = tmp.y();
-					rotMat(0, 2) = tmp.z();
-					tmp = dir ^ tmp;
-					rotMat(1, 0) = tmp.x();
-					rotMat(1, 1) = tmp.y();
-					rotMat(1, 2) = tmp.z();
+                    osg::Matrix3 rotMat;
+                    rotMat(2, 0) = dir.x();
+                    rotMat(2, 1) = dir.y();
+                    rotMat(2, 2) = dir.z();
+                    auto tmp = osg::Vec3(0.f, 0.f, 1.f);
+                    tmp = tmp ^ dir;
+                    rotMat(0, 0) = tmp.x();
+                    rotMat(0, 1) = tmp.y();
+                    rotMat(0, 2) = tmp.z();
+                    tmp = dir ^ tmp;
+                    rotMat(1, 0) = tmp.x();
+                    rotMat(1, 1) = tmp.y();
+                    rotMat(1, 2) = tmp.z();
 
-					this->rotMat->set(rotMat);
-				}
+                    this->rotMat->set(rotMat);
+                }
 
-				friend class DirectVolumeRenderer;
-			};
-			std::map<std::string, PerVolParam> vols;
+                friend class DirectVolumeRenderer;
+            };
+            std::map<std::string, PerVolParam> vols;
 
-		public:
-			DirectVolumeRenderer()
-			{}
+        public:
+            DirectVolumeRenderer()
+            {}
 
-			/*
-			* º¯Êı: GetGroup
-			* ¹¦ÄÜ: »ñÈ¡¸Ã»æÖÆ×é¼şµÄOSG½Úµã
-			* ·µ»ØÖµ: OSG½Úµã
-			*/
-			osg::Group* GetGroup()
-			{
-				return param.grp.get();
-			}
-			/*
-			* º¯Êı: AddVolume
-			* ¹¦ÄÜ: Ïò¸Ã»æÖÆ×é¼şÌí¼ÓÒ»¸öÌå
-			* ²ÎÊı:
-			* -- name: Ìí¼ÓÌåµÄÃû³Æ¡£²»Í¬ÌåµÄÃû³ÆĞè²»Í¬£¬ÓÃÓÚÇø·Ö
-			* -- volTex: ÌåµÄOSGÈıÎ¬ÎÆÀí
-			* -- tfTex: ÌåµÄ´«Êäº¯ÊıµÄOSGÒ»Î¬ÎÆÀí
-			* -- volDim: ÌåµÄÈıÎ¬³ß´ç
-			* -- isDisplayed: ÎªtrueÊ±£¬Ìå±»¼ÓÈëºó»á±»»æÖÆ¡£·ñÔòÌåÖ»±»¼ÓÈë»æÖÆ×é¼ş£¬µ«²»»á±»»æÖÆ
-			*/
-			void AddVolume(
-				const std::string& name,
-				osg::ref_ptr<osg::Texture3D> volTex,
-				osg::ref_ptr<osg::Texture1D> tfTex,
-				const std::array<uint32_t, 3>& volDim,
-				bool isDisplayed = true)
-			{
-				auto itr = vols.find(name);
-				if (itr != vols.end() && itr->second.isDisplayed) {
-					param.grp->removeChild(itr->second.sphere);
-					vols.erase(itr);
-				}
-				auto opt = vols.emplace(
-					std::piecewise_construct,
-					std::forward_as_tuple(name),
-					std::forward_as_tuple(volTex, tfTex, volDim, &param));
+            /*
+            * å‡½æ•°: GetGroup
+            * åŠŸèƒ½: è·å–è¯¥ç»˜åˆ¶ç»„ä»¶çš„OSGèŠ‚ç‚¹
+            * è¿”å›å€¼: OSGèŠ‚ç‚¹
+            */
+            osg::Group* GetGroup()
+            {
+                return param.grp.get();
+            }
+            /*
+            * å‡½æ•°: AddVolume
+            * åŠŸèƒ½: å‘è¯¥ç»˜åˆ¶ç»„ä»¶æ·»åŠ ä¸€ä¸ªä½“
+            * å‚æ•°:
+            * -- name: æ·»åŠ ä½“çš„åç§°ã€‚ä¸åŒä½“çš„åç§°éœ€ä¸åŒï¼Œç”¨äºåŒºåˆ†
+            * -- volTex: ä½“çš„OSGä¸‰ç»´çº¹ç†
+            * -- tfTex: ä½“çš„ä¼ è¾“å‡½æ•°çš„OSGä¸€ç»´çº¹ç†
+            * -- volDim: ä½“çš„ä¸‰ç»´å°ºå¯¸
+            * -- isDisplayed: ä¸ºtrueæ—¶ï¼Œä½“è¢«åŠ å…¥åä¼šè¢«ç»˜åˆ¶ã€‚å¦åˆ™ä½“åªè¢«åŠ å…¥ç»˜åˆ¶ç»„ä»¶ï¼Œä½†ä¸ä¼šè¢«ç»˜åˆ¶
+            */
+            void AddVolume(
+                const std::string& name,
+                osg::ref_ptr<osg::Texture3D> volTex,
+                osg::ref_ptr<osg::Texture1D> tfTex,
+                const std::array<uint32_t, 3>& volDim,
+                bool isDisplayed = true)
+            {
+                auto itr = vols.find(name);
+                if (itr != vols.end() && itr->second.isDisplayed) {
+                    param.grp->removeChild(itr->second.sphere);
+                    vols.erase(itr);
+                }
+                auto opt = vols.emplace(
+                    std::piecewise_construct,
+                    std::forward_as_tuple(name),
+                    std::forward_as_tuple(volTex, tfTex, volDim, &param));
 
-				opt.first->second.isDisplayed = isDisplayed;
-				if (isDisplayed)
-					param.grp->addChild(opt.first->second.sphere);
-			}
-			/*
-			* º¯Êı: DisplayVolume
-			* ¹¦ÄÜ: »æÖÆ¸Ã»æÖÆ×é¼şÖĞµÄÒ»¸öÌå£¬Î»ÓÚ×é¼şÖĞµÄÆäËûÌå½«²»±»»æÖÆ¡£Ò»°ãÓÃÓÚ²úÉúÌå¶¯»­¡£µ±ÊäÈëµÄÌå²»ÔÚ¸Ã×é¼şÖĞÊ±£¬ËùÓĞÌå¶¼²»»á±»»æÖÆ¡£
-			* ²ÎÊı:
-			* -- name: ÌåµÄÃû³Æ
-			*/
-			void DisplayVolume(const std::string& name)
-			{
-				for (auto itr = vols.begin(); itr != vols.end(); ++itr) {
-					if (itr->first == name) {
-						itr->second.isDisplayed = true;
-						param.grp->addChild(itr->second.sphere);
-					}
-					else if (itr->second.isDisplayed == true) {
-						itr->second.isDisplayed = false;
-						param.grp->removeChild(itr->second.sphere);
-					}
-				}
-			}
-			/*
-			* º¯Êı: GetVolumes
-			* ¹¦ÄÜ: »ñÈ¡¸Ã×é¼şÖĞ£¬ÌåÔÚ»æÖÆÊ±ËùĞèµÄËùÓĞÊı¾İ
-			*/
-			std::map<std::string, PerVolParam>& GetVolumes()
-			{
-				return vols;
-			}
-			/*
-			* º¯Êı: GetVolume
-			* ¹¦ÄÜ: »ñÈ¡¸Ã×é¼şÖĞ£¬ÌåÔÚ»æÖÆÊ±ËùĞèµÄÊı¾İ
-			* ²ÎÊı:
-			* -- name: ÌåµÄÃû³Æ
-			* ·µ»ØÖµ: ÌåµÄ»æÖÆÊı¾İ
-			*/
-			PerVolParam* GetVolume(const std::string& name)
-			{
-				auto itr = vols.find(name);
-				if (itr == vols.end())
-					return nullptr;
-				return &(itr->second);
-			}
-			/*
-			* º¯Êı: GetVolumeNum
-			* ¹¦ÄÜ: »ñÈ¡¸Ã»æÖÆ×é¼şÖĞÌåµÄÊıÁ¿
-			* ·µ»ØÖµ: ÌåµÄÊıÁ¿
-			*/
-			size_t GetVolumeNum() const
-			{
-				return vols.size();
-			}
-			/*
-			* º¯Êı: SetDeltaT
-			* ¹¦ÄÜ: ÉèÖÃÌå»æÖÆÊ±£¬¹âÏß´«²¥µÄ²½³¤
-			* ²ÎÊı:
-			* -- dt: ¹âÏß´«²¥µÄ²½³¤
-			*/
-			void SetDeltaT(float dt)
-			{
-				param.dt->set(dt);
-			}
-			float GetDeltaT() const
-			{
-				float ret;
-				param.dt->get(ret);
-				return ret;
-			}
-			/*
-			* º¯Êı: SetMaxStepCount
-			* ¹¦ÄÜ: ÉèÖÃÌå»æÖÆÊ±£¬¹âÏß´«²¥µÄ×î´ó²½Êı
-			* ²ÎÊı:
-			* -- maxStepCnt: ¹âÏß´«²¥µÄ×î´ó²½Êı
-			*/
-			void SetMaxStepCount(int maxStepCnt)
-			{
-				param.maxStepCnt->set(maxStepCnt);
-			}
-			int GetMaxStepCount() const
-			{
-				int ret;
-				param.maxStepCnt->get(ret);
-				return ret;
-			}
-			/*
-			* º¯Êı: SetSlicing
-			* ¹¦ÄÜ: ÉèÖÃÌå»æÖÆÖĞµÄÇĞÃæ
-			* ²ÎÊı:
-			* -- cntr: ÇĞÃæµÄÖĞĞÄµã£¨Ğı×ªÊ±µÄ²Î¿¼µã£©£¬Î»ÓÚÌå¾Ö²¿£¬Èı·ÖÁ¿È¡Öµ·¶Î§Îª[0, 1]
-			* -- dir: ÇĞÃæµÄµ¥Î»·¨ÏòÁ¿£¬Î»ÓÚÇò¾Ö²¿×ø±ê
-			*/
-			void SetSlicing(const osg::Vec3& cntr, const osg::Vec3& dir)
-			{
-				param.useSlice->set(1);
-				param.sliceCntr->set(cntr);
-				param.sliceDir->set(dir);
-			}
-			void DisableSlicing()
-			{
-				param.useSlice->set(0);
-			}
-			/*
-			* º¯Êı: SetShading
-			* ¹¦ÄÜ: ÉèÖÃÌå»æÖÆÖĞµÄ¹âÕÕ×ÅÉ«²ÎÊı
-			* ²ÎÊı:
-			* -- param: Blinn-Phong¹âÕÕ×ÅÉ«²ÎÊı
-			*/
-			void SetShading(const ShadingParam& param)
-			{
-				if (!param.useShading)
-					this->param.useShading->set(0);
-				else {
-					this->param.useShading->set(1);
-					this->param.ka->set(param.ka);
-					this->param.kd->set(param.kd);
-					this->param.ks->set(param.ks);
-					this->param.shininess->set(param.shininess);
-					this->param.lightPos->set(param.lightPos);
-				}
-			}
-		};
+                opt.first->second.isDisplayed = isDisplayed;
+                if (isDisplayed)
+                    param.grp->addChild(opt.first->second.sphere);
+            }
+            /*
+            * å‡½æ•°: DisplayVolume
+            * åŠŸèƒ½: ç»˜åˆ¶è¯¥ç»˜åˆ¶ç»„ä»¶ä¸­çš„ä¸€ä¸ªä½“ï¼Œä½äºç»„ä»¶ä¸­çš„å…¶ä»–ä½“å°†ä¸è¢«ç»˜åˆ¶ã€‚ä¸€èˆ¬ç”¨äºäº§ç”Ÿä½“åŠ¨ç”»ã€‚å½“è¾“å…¥çš„ä½“ä¸åœ¨è¯¥ç»„ä»¶ä¸­æ—¶ï¼Œæ‰€æœ‰ä½“éƒ½ä¸ä¼šè¢«ç»˜åˆ¶ã€‚
+            * å‚æ•°:
+            * -- name: ä½“çš„åç§°
+            */
+            void DisplayVolume(const std::string& name)
+            {
+                for (auto itr = vols.begin(); itr != vols.end(); ++itr) {
+                    if (itr->first == name) {
+                        itr->second.isDisplayed = true;
+                        param.grp->addChild(itr->second.sphere);
+                    }
+                    else if (itr->second.isDisplayed == true) {
+                        itr->second.isDisplayed = false;
+                        param.grp->removeChild(itr->second.sphere);
+                    }
+                }
+            }
+            /*
+            * å‡½æ•°: GetVolumes
+            * åŠŸèƒ½: è·å–è¯¥ç»„ä»¶ä¸­ï¼Œä½“åœ¨ç»˜åˆ¶æ—¶æ‰€éœ€çš„æ‰€æœ‰æ•°æ®
+            */
+            std::map<std::string, PerVolParam>& GetVolumes()
+            {
+                return vols;
+            }
+            /*
+            * å‡½æ•°: GetVolume
+            * åŠŸèƒ½: è·å–è¯¥ç»„ä»¶ä¸­ï¼Œä½“åœ¨ç»˜åˆ¶æ—¶æ‰€éœ€çš„æ•°æ®
+            * å‚æ•°:
+            * -- name: ä½“çš„åç§°
+            * è¿”å›å€¼: ä½“çš„ç»˜åˆ¶æ•°æ®
+            */
+            PerVolParam* GetVolume(const std::string& name)
+            {
+                auto itr = vols.find(name);
+                if (itr == vols.end())
+                    return nullptr;
+                return &(itr->second);
+            }
+            /*
+            * å‡½æ•°: GetVolumeNum
+            * åŠŸèƒ½: è·å–è¯¥ç»˜åˆ¶ç»„ä»¶ä¸­ä½“çš„æ•°é‡
+            * è¿”å›å€¼: ä½“çš„æ•°é‡
+            */
+            size_t GetVolumeNum() const
+            {
+                return vols.size();
+            }
+            /*
+            * å‡½æ•°: SetDeltaT
+            * åŠŸèƒ½: è®¾ç½®ä½“ç»˜åˆ¶æ—¶ï¼Œå…‰çº¿ä¼ æ’­çš„æ­¥é•¿
+            * å‚æ•°:
+            * -- dt: å…‰çº¿ä¼ æ’­çš„æ­¥é•¿
+            */
+            void SetDeltaT(float dt)
+            {
+                param.dt->set(dt);
+            }
+            float GetDeltaT() const
+            {
+                float ret;
+                param.dt->get(ret);
+                return ret;
+            }
+            /*
+            * å‡½æ•°: SetMaxStepCount
+            * åŠŸèƒ½: è®¾ç½®ä½“ç»˜åˆ¶æ—¶ï¼Œå…‰çº¿ä¼ æ’­çš„æœ€å¤§æ­¥æ•°
+            * å‚æ•°:
+            * -- maxStepCnt: å…‰çº¿ä¼ æ’­çš„æœ€å¤§æ­¥æ•°
+            */
+            void SetMaxStepCount(int maxStepCnt)
+            {
+                param.maxStepCnt->set(maxStepCnt);
+            }
+            int GetMaxStepCount() const
+            {
+                int ret;
+                param.maxStepCnt->get(ret);
+                return ret;
+            }
+            /*
+            * å‡½æ•°: SetSlicing
+            * åŠŸèƒ½: è®¾ç½®ä½“ç»˜åˆ¶ä¸­çš„åˆ‡é¢
+            * å‚æ•°:
+            * -- cntr: åˆ‡é¢çš„ä¸­å¿ƒç‚¹ï¼ˆæ—‹è½¬æ—¶çš„å‚è€ƒç‚¹ï¼‰ï¼Œä½äºä½“å±€éƒ¨ï¼Œä¸‰åˆ†é‡å–å€¼èŒƒå›´ä¸º[0, 1]
+            * -- dir: åˆ‡é¢çš„å•ä½æ³•å‘é‡ï¼Œä½äºçƒå±€éƒ¨åæ ‡
+            */
+            void SetSlicing(const osg::Vec3& cntr, const osg::Vec3& dir)
+            {
+                param.useSlice->set(1);
+                param.sliceCntr->set(cntr);
+                param.sliceDir->set(dir);
+            }
+            void DisableSlicing()
+            {
+                param.useSlice->set(0);
+            }
+            /*
+            * å‡½æ•°: SetShading
+            * åŠŸèƒ½: è®¾ç½®ä½“ç»˜åˆ¶ä¸­çš„å…‰ç…§ç€è‰²å‚æ•°
+            * å‚æ•°:
+            * -- param: Blinn-Phongå…‰ç…§ç€è‰²å‚æ•°
+            */
+            void SetShading(const ShadingParam& param)
+            {
+                if (!param.useShading)
+                    this->param.useShading->set(0);
+                else {
+                    this->param.useShading->set(1);
+                    this->param.ka->set(param.ka);
+                    this->param.kd->set(param.kd);
+                    this->param.ks->set(param.ks);
+                    this->param.shininess->set(param.shininess);
+                    this->param.lightPos->set(param.lightPos);
+                }
+            }
+        };
 
-	} // namespace ScalarViser
+    } // namespace ScalarViser
 } // namespace SciVis
 
 #endif // !SCIVIS_SCALAR_VISER_DIRECT_VOLUME_RENDERER_H

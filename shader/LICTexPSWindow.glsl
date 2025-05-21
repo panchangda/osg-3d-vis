@@ -1,6 +1,8 @@
-#version 330
-out vec4 fragmentColor;
-in vec2 texCoord;
+//#version 330
+// out vec4 fragmentColor;
+// in vec2 texCoord;
+
+varying vec2 texCoord;
 uniform sampler2D velocityTex;
 uniform sampler2D noiseTex;
 uniform vec4 texSize;
@@ -15,7 +17,7 @@ float PI = 3.1415926536;
 float getWindowCoef(int i, int isSingleMoving)
 {
     if(isSingleMoving == 0)
-        return 1.0;
+        return 1;
     return 1 + sin(2 * PI * (i + phi) / T) / 2;
 }
 // 将所有texture(noiseTex, temptexCoord).x改为windowCoef * texture(noiseTex, temptexCoord).x，实现时变效果
@@ -104,11 +106,11 @@ void main()
     //Fsum = Fsum*2-0.5;
     Fsum = Fsum * 4 - 1.25;
 
-    if(isUniformColor != 0)fragmentColor = vec4(vec3(1)*Fsum,1);
+    if(isUniformColor != 0)gl_FragColor = vec4(vec3(1)*Fsum,1);
     else
     {
         float hue =  getHueByVector(velocity);
         vec3 color = hsvToRgb(vec3(hue,0.75,1));
-        fragmentColor = vec4(color*Fsum, alpha);
+        gl_FragColor = vec4(color*Fsum, alpha);
     }
 }

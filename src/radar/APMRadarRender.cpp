@@ -83,6 +83,7 @@ void ApmRadarPara::MakeRGridFromFile(const string fn)
 	ifstream f_in(fn);
 	if (!f_in.is_open())
 	{
+		std::cout << "Not Open "+ fn<< std::endl;
 		return;
 	}
 	std::string line;
@@ -183,7 +184,7 @@ void ApmRadarPara::getIsoLineConcave(std::vector<osg::Vec2f>& line, double pd, f
 	_makePointSet(pointsset, m_curd);
 
 	std::list<osg::Vec3i> pointlist_line;
-	//获取凹包线，参数分别为：点集合；点集范围（最小x，x方向的size，最小y，y方向的size），凹包结果，最短边aaa   
+	//鑾峰彇鍑瑰寘绾匡紝鍙傛暟鍒嗗埆涓猴細鐐归泦鍚堬紱鐐归泦鑼冨洿锛堟渶灏弜锛寈鏂瑰悜鐨剆ize锛屾渶灏弝锛寉鏂瑰悜鐨剆ize锛夛紝鍑瑰寘缁撴灉锛屾渶鐭竟aaa 
 	_concave->getIsoLineConcave(pointsset, osg::Vec4f(-1, dcount, -1, hcount), pointlist_line, edge_length);
 
 
@@ -194,7 +195,7 @@ void ApmRadarPara::getIsoLineConcave(std::vector<osg::Vec2f>& line, double pd, f
 		line.push_back(osg::Vec2f(curpoint.x * dstep, curpoint.y * hstep * 10));
 	}
 
-	//// 遍历pointsset
+	//// 閬嶅巻pointsset
 	//for (int i = 0; i < pointsset.size(); i++)
 	//{
 	//	Vec2_X& curpoint = pointsset[i];

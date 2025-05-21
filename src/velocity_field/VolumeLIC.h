@@ -1,9 +1,10 @@
 #pragma once
 #include <osg/ShapeDrawable>
 #include <osg/Texture3D>
-#include "Util.h"
+#include "../util.h"
 
 namespace VolumeLIC {
+    using namespace osg_3d_vis;
 	int row = 128;
 	int col = 128;
 	int lyr = 128;

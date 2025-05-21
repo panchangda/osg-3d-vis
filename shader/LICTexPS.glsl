@@ -1,6 +1,9 @@
-#version 330
-out vec4 fragmentColor;
-in vec2 texCoord;
+//#version 330
+// out vec4 fragmentColor;
+// in vec2 texCoord;
+
+varying vec2 texCoord;
+
 uniform sampler2D velocityTex;
 uniform sampler2D noiseTex;
 uniform vec4 texSize;
@@ -84,11 +87,11 @@ void main()
     }
     Fsum /= count;
     Fsum = Fsum*2-0.5;
-    if(isUniformColor.x==1)fragmentColor = vec4(vec3(1)*Fsum,1);
+    if(isUniformColor.x==1)gl_FragColor = vec4(vec3(1)*Fsum,1);
     else
     {
         float hue =  getHueByVector(velocity);
         vec3 color = hsvToRgb(vec3(hue,0.75,1));
-        fragmentColor = vec4(color*Fsum,0.5);
+        gl_FragColor = vec4(color*Fsum,0.5);
     }
 }

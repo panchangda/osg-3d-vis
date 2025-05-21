@@ -18,17 +18,22 @@ CONFIG(debug, debug|release) {
 OSG_RELEASE = /data/SDK/osg3.4
 OSG_DEBUG = /data/SDK/osg3.4d
 
+
 # 根据构建类型设置 OSG 的库和包含路径
 CONFIG(debug, debug|release) {
     INCLUDEPATH += $$OSG_DEBUG/include
     LIBS += -L$$OSG_DEBUG/lib -losgd -losgViewerd -losgDBd -losgGAd -losgTextd -lOpenThreadsd -losgUtild -losgParticled
 } else {
-    INCLUDEPATH += $$OSG_RELEASE/include
-    LIBS += -L$$OSG_RELEASE/lib -losg -losgViewer -losgDB -losgGA -losgText -lOpenThreads -losgUtil -losgParticle
+    INCLUDEPATH += $$OSG_RELEASE/include \
+                    /usr/local/include/pcl-1.14 \
+                    /usr/local/include/eigen3
+    LIBS += -L$$OSG_RELEASE/lib -losg -losgViewer -losgDB -losgGA -losgText -lOpenThreads -losgUtil -losgParticle \
+            -L/usr/local/lib -lpcl_common -lpcl_io
 }
 
 # 添加头文件、源文件和资源文件
-HEADERS += $$files($$PWD/src/*.h, true)
+HEADERS += $$files($$PWD/src/*.h, true) \
+    src/loader/OSGPCDLoader.h
 HEADERS += $$files($$PWD/src/*.hpp, true)
 SOURCES += $$files($$PWD/src/*.cpp, true)
 RESOURCES += 
